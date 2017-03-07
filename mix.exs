@@ -19,6 +19,7 @@ defmodule Curator.Mixfile do
       package: package(),
       source_url: @url,
       homepage_url: @url,
+      docs: docs(),
       dialyzer: [plt_add_deps: :project],
     ]
   end
@@ -32,11 +33,19 @@ defmodule Curator.Mixfile do
       {:credo, "~> 0.5", only: [:dev, :test]},
       {:dialyxir, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ecto, "~> 2.0"},
+      {:ex_doc, "~> 0.10", only: :dev},
       {:guardian, "~> 0.14"},
       {:phoenix, "~> 1.2.1"},
       {:plug, "~> 1.2"},
       {:timex, "~> 3.0"},
       {:timex_ecto, "~> 3.0"},
+    ]
+  end
+
+  def docs do
+    [
+      extras: ["README.md", "CHANGELOG.md"],
+      source_ref: "v#{@version}"
     ]
   end
 
