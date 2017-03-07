@@ -158,6 +158,18 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
   5. Testing. That's important right?
 
+    With a protected route:
+
+    ```elixir
+    scope "/", PhoenixCurator do
+      pipe_through :authenticated_browser # Use the default browser stack
+
+      get "/secret", PageController, :secret
+    end
+    ```
+
+    You can use test authentication with the session_helper function sign_in_and_create_user:
+
     ```elixir
     defmodule PhoenixCurator.PageControllerTest do
       use PhoenixCurator.ConnCase
@@ -204,6 +216,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     Your authentication library is looking a bit spartan... Time to add to you collection.
 
     You probably want a session page, so try out [Database Authenticatable](https://github.com/curator-ex/curator_database_authenticatable).
+
+  7. Curations
+
+    TODO: I'd love to support the idea of a curation, a collection of curator modules that can be installed with a single command. Unfortunatly, the generator code isn't advanced enough to edit existing files so it's a manual process for now.
 
 
 ## Curator Hooks Module
