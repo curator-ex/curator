@@ -19,7 +19,9 @@ defmodule Mix.Tasks.Curator.Install do
 
     * a schema in web/models
     * a migration file for the repository
-    * a curator_hooks module in the lib/ot_app
+    * a curator_hooks module in the lib/otp_app
+    * a session_helper in test/support
+    * an error_handler in web/controllers
 
   If you already have a model, the generated model can be skipped
   with `--no-model`.
@@ -29,9 +31,15 @@ defmodule Mix.Tasks.Curator.Install do
 
   If you already have a curator_hooks module, the generated hooks can be skipped
   with `--no-hooks`.
+
+  If you already have a session_helper module, it can be skipped
+  with `--no-session_helper`.
+
+   If you already have a error_handler module, it can be skipped
+  with `--no-error_handler`.
   """
   def run(args) do
-    switches = [model: :boolean, migration: :boolean, hooks: :boolean]
+    switches = [model: :boolean, migration: :boolean, hooks: :boolean, session_helper: :boolean, error_handler: :boolean]
 
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
@@ -50,6 +58,8 @@ defmodule Mix.Tasks.Curator.Install do
     files = hooks(opts[:hooks], otp_app)
       ++ model(opts[:model], path)
       ++ migration(opts[:migration], path)
+      ++ session_helper(opts[:session_helper])
+      ++ error_handler(opts[:error_handler])
 
     Mix.Phoenix.copy_from paths(), "priv/templates/curator.install", "", binding, files
 
@@ -92,18 +102,28 @@ defmodule Mix.Tasks.Curator.Install do
 
   defp hooks(false, _otp_app), do: []
   defp hooks(_, otp_app) do
-    [{:eex, "curator_hooks.ex",    "lib/#{otp_app}/curator_hooks.ex"}]
+    [{:eex, "curator_hooks.ex", "lib/#{otp_app}/curator_hooks.ex"}]
   end
 
   defp model(false, _path), do: []
   defp model(_, path) do
-    [{:eex, "model.ex",           "web/models/#{path}.ex"},]
+    [{:eex, "model.ex", "web/models/#{path}.ex"},]
   end
 
   defp migration(false, _path), do: []
   defp migration(_, path) do
     [{:eex, "migration.exs",
       "priv/repo/migrations/#{timestamp()}_create_#{String.replace(path, "/", "_")}.exs"}]
+  end
+
+  defp session_helper(false), do: []
+  defp session_helper(_) do
+    [{:eex, "session_helper.ex", "test/support/session_helper.ex"},]
+  end
+
+  defp error_handler(false), do: []
+  defp error_handler(_) do
+    [{:eex, "error_handler.ex", "web/controllers/error_handler.ex"},]
   end
 
   defp timestamp do

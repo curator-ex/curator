@@ -15,12 +15,12 @@ defmodule Curator.Config do
   end
 
   def session_handler do
-    config(:hooks_module, Guardian) # or CuratorSession
+    config(:session_handler, Curator.SessionHandlers.Guardian) # or CuratorSession
   end
 
-  def api_session_handler do
-    config(:hooks_module, Guardian) # or CuratorToken
-  end
+  # def api_session_handler do
+  #   config(:api_session_handler, Curator.ApiSessionHandlers.Guardian) # or CuratorToken
+  # end
 
   def repo do
     config(:repo)

@@ -33,18 +33,20 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     config :curator, Curator,
       hooks_module: AuthApp.CuratorHooks,
       repo: AuthApp.Repo,
-      user_schema: AuthApp.User
+      user_schema: AuthApp.User,
+      session_handler: Curator.SessionHandlers.Guardian
     ```
 
   3. Run the install command
-    This will generate a user migration, a user module, and curator_hooks module.
-
     ```elixir
       mix curator.install User users
     ```
 
+    This will generate:
+    1. A user migration (priv/repo/migrations/<timestamp>_create_user.exs)
+
     ```elixir
-    defmodule PhoenixCurator.Repo.Migrations.CreateUser do
+    defmodule <YourApp>.Repo.Migrations.CreateUser do
       use Ecto.Migration
 
       def change do
@@ -59,9 +61,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
+    2. A User Schema (web/models/user.ex)
     ```elixir
-    defmodule PhoenixCurator.User do
-      use PhoenixCurator.Web, :model
+    defmodule <YourApp>.User do
+      use <YourApp>.Web, :model
 
       # Use Curator Modules (as needed).
       # use CuratorDatabaseAuthenticatable.Schema
@@ -83,14 +86,120 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
+    3. An empty CuratorHooks Module (lib/<YourApp>/curator_hooks.ex)
     ```elixir
-    defmodule PhoenixCurator.CuratorHooks do
-      use PhoenixCurator.Web, :controller
+    defmodule <YourApp>.CuratorHooks do
+      use <YourApp>.Web, :controller
       use Curator.Hooks
     end
     ```
 
-  4. Curate.
+    4. A session_helper (test/session_helper.ex)
+
+    The session_helper should be added to your test/support/conn_case.ex
+
+    ```elixir
+    using do
+      quote do
+        ...
+
+        import <YourApp>.SessionHelper
+      end
+    end
+    ```
+
+    5. An error_handler (web/controller/error_handler.ex)
+
+    You'll want to customize the redirect paths. For instance, if you use a session
+
+    ```elixir
+    def unauthenticated(conn, %{reason: {:error, reason}}) do
+      respond(conn, response_type(conn), 401, reason, session_path(conn, :new))
+    end
+    ```
+
+    TODO: This file is kinda messy and is built as a Guardian.ErrorHandler (which has a few extra callbacks)
+
+  4. Add Plugs to the router
+
+    ```elixir
+    pipeline :browser do
+      plug :accepts, ["html"]
+      plug :fetch_session
+      plug :fetch_flash
+      plug :protect_from_forgery
+      plug :put_secure_browser_headers
+
+      plug Curator.Plug.LoadSession
+
+      # Insert other Curator Plugs as necessary:
+      # plug CuratorConfirmable.Plug
+
+      plug Curator.Plug.EnsureResourceOrNoSession, handler: <YourApp>.ErrorHandler
+    end
+
+    pipeline :authenticated_browser do
+      plug :accepts, ["html"]
+      plug :fetch_session
+      plug :fetch_flash
+      plug :protect_from_forgery
+      plug :put_secure_browser_headers
+
+      plug Curator.Plug.LoadSession
+
+      # Insert other Curator Plugs as necessary:
+      # plug CuratorConfirmable.Plug
+
+      plug Curator.Plug.EnsureResourceAndSession, handler: <YourApp>.ErrorHandler
+    end
+    ```
+
+    The browser session will still cause a log out if the user is invalid, but will allow a non-session through. This allows plugs that alter the conn to still fire (timeoutable), but also allows new visitors to get to you splash page. Your prtected resources should all be piped through authenticated_browser pipeline. The addition curator pages are designed to be run through the new browser pipeline (unless otherwise indicated).
+
+  5. Testing. That's important right?
+
+    ```elixir
+    defmodule PhoenixCurator.PageControllerTest do
+      use PhoenixCurator.ConnCase
+
+      alias Auth.User
+
+      test "GET /", %{conn: conn} do
+        conn = get conn, "/"
+        assert html_response(conn, 200) =~ "Welcome to Phoenix!"
+      end
+
+      describe "testing authentication" do
+        setup do
+          conn = Phoenix.ConnTest.build_conn()
+          |> conn_with_fetched_session
+
+          {:ok, conn: conn}
+        end
+
+        test "visiting a secret page w/o a user", %{conn: conn} do
+          conn = get conn, "/secret"
+
+          assert Phoenix.Controller.get_flash(conn, :danger) == "Please Log In"
+
+          # Customize this with as your redirect paths changes
+          assert Phoenix.ConnTest.redirected_to(conn) == page_path(conn, :index)
+        end
+
+        test "sign_in_and_create_user", %{conn: conn} do
+          {conn, _user} = sign_in_and_create_user(conn)
+
+          conn = get conn, "/secret"
+
+          # [Text Here](https://github.com/curator-ex/phoenix_curator/blob/master/web/templates/page/secret.html.eex)
+          assert html_response(conn, 200) =~ "Sneaky, Sneaky, Sneaky..."
+        end
+      end
+    end
+
+    ```
+
+  6. Curate.
 
     Your authentication library is looking a bit spartan... Time to add to you collection.
 
@@ -137,8 +246,20 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
 ## Session Management
 
-### CuratorSession
-  TODO
+### Simple
+  TODO. This is not working yet.
+
+  The Simple Session Handler is a port of Guardian without JWT. Why? Some Blogs have raised objectsion that a JWT is too heavyweight (when you already have a session). Since we're making Curator modular, we made the session configurable as well. We owe a huge debt to the Guardian team for making such a great pattern to follow.
+
+  Configure `config.exs`
+
+  ```elixir
+  config :curator, Curator,
+    hooks_module: AuthApp.CuratorHooks,
+    repo: AuthApp.Repo,
+    user_schema: AuthApp.User,
+    session_handler: Curator.SessionHandlers.Simple
+  ```
 
 ### Guardian
 
@@ -159,10 +280,14 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     allowed_drift: 2000,
     verify_issuer: true,
     secret_key: <guardian secret key>,
-    serializer: AuthApp.GuardianSerializer
-  ```
+    serializer: Curator.UserSerializer
 
-3. TODO...
+  config :curator, Curator,
+    hooks_module: AuthApp.CuratorHooks,
+    repo: AuthApp.Repo,
+    user_schema: AuthApp.User,
+    session_handler: Curator.SessionHandlers.Guardian
+  ```
 
 ## Debt
   Thanks go out to the [Phoenix Team](https://github.com/phoenixframework/phoenix), the original rails project [Devise](https://github.com/plataformatec/devise), and the other elixir authentication solutions:

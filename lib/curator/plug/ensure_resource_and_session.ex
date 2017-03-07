@@ -1,4 +1,4 @@
-defmodule Curator.Plug.EnsureResource do
+defmodule Curator.Plug.EnsureResourceAndSession do
   @moduledoc """
   This plug ensures that the current_resource has been set, usually in
   Guardian.Plug.LoadResource.
@@ -9,10 +9,10 @@ defmodule Curator.Plug.EnsureResource do
   ## Example
 
       # Will call the no_resource/2 function on your handler
-      plug Curator.Plug.EnsureResource, handler: SomeModule
+      plug Curator.Plug.EnsureResourceAndSession, handler: SomeModule
 
       # look in the :secret location.
-      plug Curator.Plug.EnsureResource, handler: SomeModule, key: :secret
+      plug Curator.Plug.EnsureResourceAndSession, handler: SomeModule, key: :secret
 
   If the handler option is not passed, `Guardian.Plug.ErrorHandler` will provide
   the default behavior.

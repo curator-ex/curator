@@ -1,6 +1,14 @@
 defmodule Curator.Keys do
   @moduledoc false
 
+  def claims_key(key \\ :default) do
+    String.to_atom("#{base_key(key)}_claims")
+  end
+
+  # def session_key(key \\ :default) do
+  #   String.to_atom("#{base_key(key)}_session")
+  # end
+
   @doc false
   def resource_key(key \\ :default) do
     String.to_atom("#{base_key(key)}_resource")

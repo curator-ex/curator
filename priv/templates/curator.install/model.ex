@@ -9,6 +9,8 @@ defmodule <%= module %> do
 
     # Add Curator Module fields (as needed).
     # curator_database_authenticatable_schema
+
+    timestamps
   end
 
   def changeset(struct, params \\ %{}) do
