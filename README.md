@@ -222,6 +222,26 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     TODO: I'd love to support the idea of a curation, a collection of curator modules that can be installed with a single command. Unfortunatly, the generator code isn't advanced enough to edit existing files so it's a manual process for now.
 
+  8. Accessing current_user
+
+    in `web/web.ex`
+
+    ```elixir
+    def view do
+      quote do
+        ...
+
+        def current_user(conn) do
+          Curator.PlugHelper.current_resource(conn)
+        end
+      end
+    end
+    ```
+
+    Alternatively, you can see current_user in the contollers:
+
+    TODO: Document
+
 
 ## Curator Hooks Module
 
