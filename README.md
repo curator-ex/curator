@@ -16,6 +16,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [Database Authenticatable](https://github.com/curator-ex/curator_database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Confirmable](https://github.com/curator-ex/curator_confirmable): Account email verification.
 * [Approvable](https://github.com/curator-ex/curator_approvable): Require an approval step before user sign-in.
+* [Registerable](https://github.com/curator-ex/curator_registerable): A Generator to support user registration.
 
 ## Installation
 
@@ -215,7 +216,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     Your authentication library is looking a bit spartan... Time to add to you collection.
 
-    You probably want a session page, so try out [Database Authenticatable](https://github.com/curator-ex/curator_database_authenticatable).
+    You probably want a session page, so try out [Database Authenticatable](https://github.com/curator-ex/curator_database_authenticatable). Without being able to sign up it won't be too helpful though... Maybe [Registerable](https://github.com/curator-ex/curator_registerable)?
 
   7. Curations
 
