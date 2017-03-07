@@ -35,7 +35,7 @@ defmodule Mix.Tasks.Curator.Install do
   If you already have a session_helper module, it can be skipped
   with `--no-session_helper`.
 
-   If you already have a error_handler module, it can be skipped
+  If you already have a error_handler module, it can be skipped
   with `--no-error_handler`.
   """
   def run(args) do
