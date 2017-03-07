@@ -34,14 +34,14 @@ defmodule Curator.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      # {:guardian, "~> 0.14"},
+      {:credo, "~> 0.5", only: [:dev, :test]},
+      {:dialyxir, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ecto, "~> 2.0"},
-      {:guardian, github: "ueberauth/guardian"},
+      {:guardian, "~> 0.14"},
+      {:phoenix, "~> 1.2.1"},
       {:plug, "~> 1.2"},
       {:timex, "~> 3.0"},
       {:timex_ecto, "~> 3.0"},
-      {:credo, "~> 0.5", only: [:dev, :test]},
-      {:dialyxir, "~> 0.4", only: [:dev, :test], runtime: false},
     ]
   end
 end

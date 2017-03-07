@@ -1,5 +1,5 @@
 defmodule Curator.UserSerializer do
-  import Curator.Config
+  alias Curator.Config
 
   def for_token(user) when user != "" and user != nil, do: { :ok, "User:#{user.id}" }
   def for_token(_), do: { :error, "Unknown resource type" }
