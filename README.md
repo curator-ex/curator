@@ -28,6 +28,11 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
+    IMPORTANT: Update you applications to include:
+    ```elixir
+    [:timex, :timex_ecto, :tzdata]
+    ```
+
   2. Configure `config.exs`
 
     ```elixir
