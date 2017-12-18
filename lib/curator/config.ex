@@ -15,11 +15,11 @@ defmodule Curator.Config do
   end
 
   def session_handler do
-    config(:session_handler, Curator.SessionHandlers.Guardian) # or CuratorSession
+    config(:session_handler, Curator.SessionHandlers.SimpleSession)
   end
 
   # def api_session_handler do
-  #   config(:api_session_handler, Curator.ApiSessionHandlers.Guardian) # or CuratorToken
+  #   config(:api_session_handler, Curator.ApiSessionHandlers.Guardian)
   # end
 
   def repo do
@@ -28,6 +28,26 @@ defmodule Curator.Config do
 
   def user_schema do
     config(:user_schema)
+  end
+
+  def error_handler do
+    config(:error_handler)
+  end
+
+  def context do
+    config(:context)
+  end
+
+  def modules do
+    config(:modules, [])
+  end
+
+  def module_enabled?(module) do
+    Enum.member?(modules(), module)
+  end
+
+  def web_module do
+    config(:web_module)
   end
 
   @doc false

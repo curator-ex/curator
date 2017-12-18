@@ -1,4 +1,4 @@
-defmodule Curator.Plug.EnsureAuthenticated do
+defmodule Curator.Plug.EEnsureAuthenticated do
   alias Curator.Config
 
   def init(opts) do

@@ -35,7 +35,7 @@ defmodule Curator.Mixfile do
       {:ecto, "~> 2.0"},
       {:ex_doc, "~> 0.10", only: :dev},
       {:guardian, "~> 0.14"},
-      {:phoenix, "~> 1.2"},
+      {:phoenix, "~> 1.3"},
       {:plug, "~> 1.2"},
       {:timex, "~> 3.0"},
       {:timex_ecto, "~> 3.0"},
@@ -55,7 +55,7 @@ defmodule Curator.Mixfile do
       maintainers: @maintainers,
       licenses: ["MIT"],
       links: %{github: @url},
-      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG.md"],
     ]
   end
 end

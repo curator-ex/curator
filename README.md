@@ -24,28 +24,25 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     def deps do
-      [{:curator, "~> 0.1.0"}]
+      [{:curator, "~> 0.2.0"}]
     end
-    ```
-
-    IMPORTANT: Update you applications to include:
-    ```elixir
-    [:timex, :timex_ecto, :tzdata]
     ```
 
   2. Configure `config.exs`
 
     ```elixir
     config :curator, Curator,
-      hooks_module: AuthApp.CuratorHooks,
-      repo: AuthApp.Repo,
-      user_schema: AuthApp.User,
-      session_handler: Curator.SessionHandlers.Guardian
+      hooks_module: YourAppWeb.CuratorHooks,
+      repo: YourApp.Repo,
+      user_schema: YourApp.Auth.User,
+      session_handler: Curator.SessionHandlers.SimpleSession,
+      error_handler: YourAppWeb.Auth.ErrorHandler,
+      context: YourApp.Auth
     ```
 
   3. Run the install command
     ```elixir
-      mix curator.install User users
+      mix curator.install
     ```
 
     This will generate:
@@ -300,7 +297,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     hooks_module: AuthApp.CuratorHooks,
     repo: AuthApp.Repo,
     user_schema: AuthApp.User,
-    session_handler: Curator.SessionHandlers.Simple
+    session_handler: Curator.SessionHandlers.SimpleSession
   ```
 
 ### Guardian
