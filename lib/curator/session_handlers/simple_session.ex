@@ -77,7 +77,7 @@ defmodule Curator.SessionHandlers.SimpleSession.LoadSession do
       nil -> conn
       id ->
         resource = load_resource(id)
-        SimpleSession.set_current_resource(conn, resource, key)
+        SimpleSession.set_current_resource(conn, {:ok, resource}, key)
     end
   end
 
@@ -104,9 +104,9 @@ defmodule Curator.SessionHandlers.SimpleSession.EnsureResourceAndSession do
     key = Keyword.get(opts, :key, @default_key)
 
     case SimpleSession.current_resource(conn, key) do
-      nil ->
-        apply(Config.error_handler(), :unauthenticated, [conn])
-      _ -> conn
+      nil -> apply(Config.error_handler(), :auth_error, [conn, {:no_session, :no_session}, opts])
+      {:error, error} -> apply(Config.error_handler(), :auth_error, [conn, {:error, error}, opts])
+      {:ok, _resource} -> conn
     end
   end
 end
@@ -129,11 +129,12 @@ defmodule Curator.SessionHandlers.SimpleSession.EnsureResourceOrNoSession do
     key = Keyword.get(opts, :key, @default_key)
 
     case SimpleSession.current_resource(conn, key) do
-      _resource -> conn
-      _ ->
+      {:ok, _resource} -> conn
+      {:error, error} -> apply(Config.error_handler(), :auth_error, [conn, {:error, error}, opts])
+      nil ->
         case get_session(conn, token_key(key)) do
           nil -> conn
-          _id -> apply(Config.error_handler(), :unauthenticated, [conn])
+          _id -> apply(Config.error_handler(), :auth_error, [conn, {:no_session, :no_session}, opts])
         end
     end
   end

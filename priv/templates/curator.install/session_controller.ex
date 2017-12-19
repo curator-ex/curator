@@ -4,7 +4,7 @@ defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   def delete(conn, _params) do
     conn
     |> Curator.PlugHelper.sign_out
-    |> put_flash(:error, "You have been signed out")
+    |> put_flash(:info, "You have been signed out")
     |> redirect(to: page_path(conn, :index))
   end
 end

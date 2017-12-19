@@ -47,7 +47,9 @@ end
 
 defmodule Curator.Hooks.Default do
   @moduledoc """
-  Default implementation of GuardianHooks.
+  Default implementation of CuratorHooks.
   """
   use Curator.Hooks
+
+
 end

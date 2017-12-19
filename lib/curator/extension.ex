@@ -3,6 +3,8 @@ defmodule Curator.Extension do
     quote do
       @behaviour Curator.Extension
 
+      use Curator.Hooks
+
       def unauthenticated_plugs(), do: nil
       def authenticated_plugs(), do: nil
       def unauthenticated_routes(), do: nil

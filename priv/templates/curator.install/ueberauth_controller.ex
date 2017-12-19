@@ -4,7 +4,7 @@ if Code.ensure_loaded?(Curator.Config) && Curator.Config.module_enabled?(Curator
 
     plug Ueberauth
 
-    alias Ueberauth.Strategy.Helpers
+    # alias Ueberauth.Strategy.Helpers
 
     # def request(conn, _params) do
     #   render(conn, "request.html", callback_url: Helpers.callback_url(conn))

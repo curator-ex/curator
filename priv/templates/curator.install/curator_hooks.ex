@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Controller do
+defmodule <%= inspect context.web_module %>.Auth.CuratorHooks do
   use <%= inspect context.web_module %>, :controller
   use Curator.Hooks
 end

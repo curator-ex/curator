@@ -2,9 +2,10 @@ defmodule Curator.Router do
   require Curator.Ueberauth
 
   defmacro __using__(_) do
+    # For Future Use
   end
 
-  defmacro mount_unauthenticated_plugs do
+  defmacro mount_unauthenticated_plugs(modules \\ nil) do
     module_quotes = get_module_quotes(modules, :unauthenticated_plugs)
 
     quote do
@@ -16,7 +17,7 @@ defmodule Curator.Router do
     end
   end
 
-  defmacro mount_authenticated_plugs do
+  defmacro mount_authenticated_plugs(modules \\ nil) do
     module_quotes = get_module_quotes(modules, :authenticated_plugs)
 
     quote do
@@ -49,6 +50,8 @@ defmodule Curator.Router do
 
     quote do
       scope "/auth", unquote(web_module) do
+        delete "/session", SessionController, :delete
+
         unquote(module_quotes)
       end
     end
@@ -60,9 +63,7 @@ defmodule Curator.Router do
       _ -> modules
     end
 
-    all_module_routes = Enum.reduce(modules, [], fn (module, acc) ->
-      acc ++ [apply(module, method_name, [])]
-    end)
+    Enum.map(modules, &(apply(&1, method_name, [])))
     |> Enum.filter(&(&1))
   end
 end

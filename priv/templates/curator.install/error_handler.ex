@@ -1,15 +1,15 @@
 defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   use <%= inspect context.web_module %>, :controller
 
-  def unauthenticated(conn) do
+  def auth_error(conn, {:no_session, _reason}, _opts) do
     conn
     |> put_flash(:error, "Please sign in")
-    |> redirect(to: page_path(conn, :index))
+    |> redirect(to: "/")
   end
 
-  def unauthorized(conn) do
+  def auth_error(conn, {type, reason}, _opts) do
     conn
-    |> put_flash(:error, "You do not have permission to access this resource")
-    |> redirect(to: page_path(conn, :index))
+    |> put_flash(:error, reason)
+    |> redirect(to: "/")
   end
 end
