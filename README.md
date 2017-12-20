@@ -255,7 +255,7 @@ TODO: Document
 1. Want your_verification to run on every request? Check out the pattern in [Confirmable](https://github.com/curator-ex/curator_confirmable). It requires an update to your curator_hooks module:
 
 ```elixir
-def before_sign_in(user, type) do
+def before_sign_in(user) do
   with :ok <- your_verification(user) do
     :ok
   end

@@ -1,12 +1,29 @@
 defmodule Curator.Router do
-  require Curator.Ueberauth
+  @router_macros [
+    :unauthenticated_plugs,
+    :authenticated_plugs,
+    :unauthenticated_routes,
+    :authenticated_routes,
+  ]
 
-  defmacro __using__(_) do
-    # For Future Use
+  def get_module_quotes(curator_module, method_name) when method_name in @router_macros do
+    modules = modules(curator_module)
+
+    Enum.map(modules, &(apply(&1, method_name, [])))
+    |> Enum.filter(&(&1))
   end
 
-  defmacro mount_unauthenticated_plugs(modules \\ nil) do
-    module_quotes = get_module_quotes(modules, :unauthenticated_plugs)
+  defp modules(curator_module) do
+    apply(curator_module, :config, [:modules, []])
+  end
+
+  def web_module(curator_module) do
+    apply(curator_module, :config, [:web_module])
+  end
+
+  defmacro mount_unauthenticated_plugs(curator) do
+    curator = Macro.expand(curator, __CALLER__)
+    module_quotes = get_module_quotes(curator, :unauthenticated_plugs)
 
     quote do
       plug Curator.Plug.LoadSession
@@ -17,8 +34,9 @@ defmodule Curator.Router do
     end
   end
 
-  defmacro mount_authenticated_plugs(modules \\ nil) do
-    module_quotes = get_module_quotes(modules, :authenticated_plugs)
+  defmacro mount_authenticated_plugs(curator) do
+    curator = Macro.expand(curator, __CALLER__)
+    module_quotes = get_module_quotes(curator, :authenticated_plugs)
 
     quote do
       plug Curator.Plug.LoadSession
@@ -29,9 +47,10 @@ defmodule Curator.Router do
     end
   end
 
-  defmacro mount_unauthenticated_routes(modules \\ nil) do
-    web_module = Curator.Config.web_module()
-    module_quotes = get_module_quotes(modules, :unauthenticated_routes)
+  defmacro mount_unauthenticated_routes(curator) do
+    curator = Macro.expand(curator, __CALLER__)
+    web_module = web_module(curator)
+    module_quotes = get_module_quotes(curator, :unauthenticated_routes)
 
     quote do
       scope "/auth", unquote(web_module) do
@@ -44,9 +63,10 @@ defmodule Curator.Router do
     end
   end
 
-  defmacro mount_authenticated_routes(modules \\ nil) do
-    web_module = Curator.Config.web_module()
-    module_quotes = get_module_quotes(modules, :authenticated_routes)
+  defmacro mount_authenticated_routes(curator) do
+    curator = Macro.expand(curator, __CALLER__)
+    web_module = web_module(curator)
+    module_quotes = get_module_quotes(curator, :authenticated_routes)
 
     quote do
       scope "/auth", unquote(web_module) do
@@ -55,15 +75,5 @@ defmodule Curator.Router do
         unquote(module_quotes)
       end
     end
-  end
-
-  defp get_module_quotes(modules, method_name) do
-    modules = case modules do
-      nil -> Curator.Config.modules()
-      _ -> modules
-    end
-
-    Enum.map(modules, &(apply(&1, method_name, [])))
-    |> Enum.filter(&(&1))
   end
 end

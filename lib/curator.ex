@@ -15,18 +15,18 @@ defmodule Curator do
   @doc """
   call the hooks_module before_sign_in method
   """
-  # @spec before_sign_in(term, atom) :: :ok | {:error, atom | String.t}
-  def before_sign_in(resource, type \\ @default_token_type) do
-    Config.hooks_module.before_sign_in(resource, type)
-  end
+  # @spec before_sign_in(term) :: :ok | {:error, atom | String.t}
+  # def before_sign_in(resource) do
+  #   Config.hooks_module.before_sign_in(resource)
+  # end
 
   @doc """
   call the hooks_module after_sign_in method
   """
-  @spec after_sign_in(Plug.Conn.t, term, atom) :: Plug.Conn.t
-  def after_sign_in(conn, user, the_key \\ @default_key) do
-    Config.hooks_module.after_sign_in(conn, user, the_key)
-  end
+  # @spec after_sign_in(Plug.Conn.t, term, atom) :: Plug.Conn.t
+  # def after_sign_in(conn, user, the_key \\ @default_key) do
+  #   Config.hooks_module.after_sign_in(conn, user, the_key)
+  # end
 
   @doc """
   call the hooks_module after_failed_sign_in method

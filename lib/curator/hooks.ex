@@ -7,13 +7,13 @@ defmodule Curator.Hooks do
     quote do
       @behaviour Curator.Hooks
 
-      def before_sign_in(_, _), do: :ok
+      def before_sign_in(_), do: :ok
       def after_sign_in(conn, _, _), do: conn
       def after_failed_sign_in(conn, _, _), do: conn
       def after_extension(conn, _, _), do: conn
 
       defoverridable [
-        {:before_sign_in, 2},
+        {:before_sign_in, 1},
         {:after_sign_in, 3},
         {:after_failed_sign_in, 3},
         {:after_extension, 3}
@@ -22,8 +22,7 @@ defmodule Curator.Hooks do
   end
 
   @callback before_sign_in(
-    resource :: term,
-    type :: atom
+    resource :: term
   ) :: :ok | {:error, atom | String.t}
 
   @callback after_sign_in(
@@ -43,13 +42,4 @@ defmodule Curator.Hooks do
     type :: atom,
     resource :: term
   ) :: Plug.Conn.t
-end
-
-defmodule Curator.Hooks.Default do
-  @moduledoc """
-  Default implementation of CuratorHooks.
-  """
-  use Curator.Hooks
-
-
 end
