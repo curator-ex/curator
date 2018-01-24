@@ -89,6 +89,7 @@ defmodule Mix.Tasks.Curator.Timeoutable.Install do
           plug Curator.Timeoutable.Plug, timeoutable_module: #{inspect context.web_module}.Auth.Timeoutable
         end
 
+    NOTE: Don't forget to update your conn_case
     """
   end
 end

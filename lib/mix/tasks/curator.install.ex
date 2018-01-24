@@ -84,6 +84,7 @@ defmodule Mix.Tasks.Curator.Install do
         end
 
         pipeline :authenticated_browser do
+          ...
           plug #{inspect context.web_module}.Auth.Curator.AuthenticatedPipeline
         end
 
@@ -96,7 +97,7 @@ defmodule Mix.Tasks.Curator.Install do
         end
 
         scope "/", #{inspect context.web_module} do
-          pipe_through [:browser, :authenticated_browser]
+          pipe_through :authenticated_browser
 
           ...
 
