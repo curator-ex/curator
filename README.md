@@ -2,21 +2,23 @@
 
 An Authentication Framework for Phoenix.
 
-Curator is meant to mimic [Devise](https://github.com/plataformatec/devise), as such it provides [several modules](#curator-modules) to accomplish authentication and various aspects of user lifecycle mangement (see modules below). It's build with a module architecture that differs from existing Elixir Authentication solutions. Each curator module is a separate Hex package which can be combined to handle various authentication scenarios, passing coordination though a [CuratorHooks module](#curator-hooks-module).
-
-TODO: Curator uses [Guardian](https://github.com/ueberauth/guardian) for session management. However, a JWT approach may be inappropriate for some applications, and so API and Browser [session management](#session-management) is configurable.
+Curator is meant to mimic [Devise](https://github.com/plataformatec/devise), as such it provides [several modules](#curator-modules) to accomplish authentication and various aspects of user lifecycle mangement. It's build with a modular architecture that differs from existing Elixir Authentication solutions. Each curator module can be combined to handle various authentication scenarios, passing coordination through a [curator module](#curator-module). Under the hood, this uses [Guardian](https://github.com/ueberauth/guardian) for session management.
 
 For an example, see the [PhoenixCurator Application](https://github.com/curator-ex/phoenix_curator)
 
 ## Curator Modules
 
-* [Timeoutable](https://github.com/curator-ex/curator_timeoutable): Session Timeout (after configurable inactivity).
-* [Recoverable](https://github.com/curator-ex/curator_recoverable): Reset the User Password.
-* [Lockable](https://github.com/curator-ex/curator_lockable): Lock Account after configurbale count of invalid sign-ins.
-* [Database Authenticatable](https://github.com/curator-ex/curator_database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
-* [Confirmable](https://github.com/curator-ex/curator_confirmable): Account email verification.
-* [Approvable](https://github.com/curator-ex/curator_approvable): Require an approval step before user sign-in.
-* [Registerable](https://github.com/curator-ex/curator_registerable): A Generator to support user registration.
+* [Ueberauth](#ueberauth): Ueberauth Integration.
+* [Timeoutable](#timeoutable): Session Timeout (after configurable inactivity).
+
+(TODO)
+
+* [Registerable](#registerable): A Generator to support user registration.
+* [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
+* [Confirmable](#confirmable): Account email verification.
+* [Recoverable](#recoverable): Reset the User Password.
+* [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
+* [Approvable](#approvable): Require an approval step before user sign-in.
 
 ## Installation
 
@@ -28,142 +30,104 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
   end
   ```
 
-  IMPORTANT: Update you applications to include:
+2. Run the install command
   ```elixir
-  [:timex, :timex_ecto, :tzdata]
-  ```
-
-2. Configure `config.exs`
-
-  ```elixir
-  config :curator, Curator,
-    hooks_module: YourAppWeb.CuratorHooks,
-    repo: YourApp.Repo,
-    user_schema: YourApp.Auth.User,
-    error_handler: YourAppWeb.Auth.ErrorHandler,
-    context: YourApp.Auth
-  ```
-
-3. Run the install command
-  ```elixir
-    mix curator.install User users
+  mix curator.install
   ```
 
   This will generate:
-  1. A user migration (priv/repo/migrations/<timestamp>_create_user.exs)
 
-  ```elixir
-  defmodule <YourApp>.Repo.Migrations.CreateUser do
-    use Ecto.Migration
+  1. A User context, migration, and schema (in the Ecto application if an umbrella)
 
-    def change do
-      create table(:users) do
-        add :email, :string
+    1. A user migration (priv/repo/migrations/<timestamp>_create_users.exs)
 
-        timestamps()
-      end
+    2. A user schema (<my_app>/lib/<my_app>/auth/user.ex)
 
-      create unique_index(:users, [:email])
+    3. A user context (<my_app>/lib/<my_app>/auth/auth.ex)
+
+  2. An empty Curator module (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
+
+  3. A Guardian Configuration
+
+    1. A Guardian module (<my_app_web>/lib/<my_app_web>/auth/guardian.ex)
+
+    2. An error handler  (<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex)
+
+  4. A view helper (<my_app_web>/lib/<my_app_web>/views/auth/curator_helper.ex)
+
+  5. A Session Controller
+
+    1. A controller (<my_app_web>/lib/<my_app_web>/controllers/auth/session_controller.ex)
+
+    2. A view helper (<my_app_web>/lib/<my_app_web>/views/auth/curator_helper.ex)
+
+    3. A new template (<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex)
+
+  6. Test Helper (TODO)
+
+3. The generators aren't perfect (TODO), so finish the installation
+
+  1. Update your router (<my_app_web>/lib/<my_app_web>/router.ex)
+
+    ```elixir
+    require Curator.Router
+
+    pipeline :browser do
+      ...
+      plug <MyWebApp>.Auth.Curator.UnauthenticatedPipeline
     end
-  end
-  ```
 
-  2. A User Schema (web/models/user.ex)
-  ```elixir
-  defmodule <YourApp>.User do
-    use <YourApp>.Web, :model
-
-    # Use Curator Modules (as needed).
-    # use CuratorDatabaseAuthenticatable.Schema
-
-    schema "users" do
-      field :email, :string
-
-      # Add Curator Module fields (as needed).
-      # curator_database_authenticatable_schema
+    pipeline :authenticated_browser do
+      plug <MyWebApp>.Auth.Curator.AuthenticatedPipeline
     end
 
-    def changeset(struct, params \\ %{}) do
-      struct
-      |> cast(params, [:email])
-      |> validate_required([:email])
-      |> validate_format(:email, ~r/@/)
-      |> unique_constraint(:email)
-    end
-  end
-  ```
+    scope "/", <MyWebApp> do
+      pipe_through :browser
 
-  3. An empty CuratorHooks Module (lib/<YourApp>/curator_hooks.ex)
-  ```elixir
-  defmodule <YourApp>.CuratorHooks do
-    use <YourApp>.Web, :controller
-    use Curator.Hooks
-  end
-  ```
-
-  4. A session_helper (test/session_helper.ex)
-
-  The session_helper should be added to your test/support/conn_case.ex
-
-  ```elixir
-  using do
-    quote do
       ...
 
-      import <YourApp>.SessionHelper
+      Curator.Router.mount_unauthenticated_routes(<MyWebApp>.Auth.Curator)
     end
-  end
-  ```
 
-  5. An error_handler (web/controller/error_handler.ex)
+    scope "/", <MyWebApp> do
+      pipe_through [:browser, :authenticated_browser]
 
-  You'll want to customize the redirect paths. For instance, if you use a session
+      ...
 
+      Curator.Router.mount_authenticated_routes(<MyWebApp>.Auth.Curator)
+    end
+    ```
+
+  2. Add the view_helper to your web module (<my_app_web>/lib/<my_app_web>.ex)
+
+    ```elixir
+    def view do
+      quote do
+        ...
+
+        import <MyAppWeb>.Auth.CuratorHelper
+      end
+    end
+    ```
+
+    This allows you to call `current_user(conn)` in your templates
+
+  3. [Configure Guardian](https://github.com/ueberauth/guardian#installation) in `config.exs`
+
+    ```elixir
+    config :<my_app_web>, <MyAppWeb>.Guardian,
+      issuer: "<my_app_web>",
+      secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
+    ```
+
+4. Add a signout link to your layout
   ```elixir
-  def unauthenticated(conn, %{reason: {:error, reason}}) do
-    respond(conn, response_type(conn), 401, reason, session_path(conn, :new))
-  end
+  <%= if current_user(@conn) do %>
+    <%= link "Sign Out", to: session_path(@conn, :delete), method: :delete %>
+  <% end %>
   ```
 
-  TODO: This file is kinda messy and is built as a Guardian.ErrorHandler (which has a few extra callbacks)
-
-4. Add Plugs to the router
-
-  ```elixir
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-
-    plug Curator.Plug.LoadSession
-
-    # Insert other Curator Plugs as necessary:
-    # plug CuratorConfirmable.Plug
-
-    plug Curator.Plug.EnsureResourceOrNoSession, handler: <YourApp>.ErrorHandler
-  end
-
-  pipeline :authenticated_browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-
-    plug Curator.Plug.LoadSession
-
-    # Insert other Curator Plugs as necessary:
-    # plug CuratorConfirmable.Plug
-
-    plug Curator.Plug.EnsureResourceAndSession, handler: <YourApp>.ErrorHandler
-  end
-  ```
-
-  The browser session will still cause a log out if the user is invalid, but will allow a non-session through. This allows plugs that alter the conn to still fire (timeoutable), but also allows new visitors to get to you splash page. Your prtected resources should all be piped through authenticated_browser pipeline. The addition curator pages are designed to be run through the new browser pipeline (unless otherwise indicated).
-
-5. Testing. That's important right?
+5. Testing
 
   With a protected route:
 
@@ -215,10 +179,9 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
       end
     end
   end
-
   ```
 
-6. Curate.
+5. Curate.
 
   Your authentication library is looking a bit spartan... Time to add to you collection.
 
@@ -228,26 +191,113 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
   TODO: I'd love to support the idea of a curation, a collection of curator modules that can be installed with a single command. Unfortunatly, the generator code isn't advanced enough to edit existing files so it's a manual process for now.
 
-8. Accessing current_user
+## Module Documentation
 
-in `web/web.ex`
+### Ueberauth
 
-```elixir
-def view do
-  quote do
-    ...
+#### Description
+Ueberauth Integration
 
-    def current_user(conn) do
-      Curator.PlugHelper.current_resource(conn)
+#### Installation
+
+1. Run the install command
+  ```elixir
+  mix curator.ueberauth.install
+  ```
+
+2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
+  ```elixir
+  use Curator, otp_app: :my_app_web,
+    modules: [
+      MyAppWeb.Auth.Ueberauth,
+    ]
+  ```
+
+3. Install Ueberauth and the desired [strategies](https://github.com/ueberauth/ueberauth#configuring-providers). For example, to add google oauth:
+
+  1. Update mix.exs
+    ```elixir
+    defp deps do
+      [
+        {:ueberauth, "~> 0.4"},
+        {:ueberauth_google, "~> 0.7"},
+      ]
     end
+    ```
+
+  2. Update config.exs
+    ```elixir
+    config :ueberauth, Ueberauth,
+      providers: [
+        google: {Ueberauth.Strategy.Google, []}
+      ]
+
+    config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+      client_id: System.get_env("GOOGLE_CLIENT_ID"),
+      client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+    ```
+
+  3. Put some links to the providers (<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex)
+    ```elixir
+    <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
+    ```
+
+
+### Timeoutable
+
+#### Description
+Session Timeout (after configurable inactivity)
+
+#### Installation
+
+1. Run the install command
+  ```elixir
+  mix curator.timeoutable.install
+  ```
+
+2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
+  ```elixir
+  use Curator, otp_app: :my_app_web,
+    modules: [
+      MyAppWeb.Auth.Timeoutable,
+    ]
+  ```
+
+3. Add to the curator plugs
+  ```elixir
+  defmodule <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline do
+    ...
+    plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
   end
-end
-```
 
-Alternatively, you can see current_user in the contollers:
+  defmodule <MyAppWeb>.Auth.Curator.AuthenticatedPipeline do
+    ...
+    plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
+  end
+  ```
 
-TODO: Document
+4. (optional) Configure Timeoutable (<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex)
 
+  ```elixir
+  use Curator.Timeoutable, otp_app: :<my_app_web>,
+    timeout_in: 1800
+  ```
+
+### Registerable
+
+### Database Authenticatable
+
+### Confirmable
+
+### Recoverable
+
+### Lockable
+
+### Approvable
+
+# Extending Curator
+
+## Design Pattern
 
 ## Curator Hooks Module
 
@@ -287,53 +337,9 @@ end
 
 4. Need More? There's a Curator.Hooks.after_extension callback which can be pattern matched for additional functionality, as seen in the [Approvable](https://github.com/curator-ex/curator_approvable) Module.
 
-## Session Management
+# Debt
+Thanks go out to the [Phoenix Team](https://github.com/phoenixframework/phoenix), the original rails gem [Devise](https://github.com/plataformatec/devise), [Guardian](https://github.com/ueberauth/guardian), and the other elixir authentication solutions:
 
-### Simple
-TODO. This is not working yet.
-
-The Simple Session Handler is a port of Guardian without JWT. Why? Some Blogs have raised objectsion that a JWT is too heavyweight (when you already have a session). Since we're making Curator modular, we made the session configurable as well. We owe a huge debt to the Guardian team for making such a great pattern to follow.
-
-Configure `config.exs`
-
-```elixir
-config :curator, Curator,
-  hooks_module: AuthApp.CuratorHooks,
-  repo: AuthApp.Repo,
-  user_schema: AuthApp.User
-```
-
-### Guardian
-
-1. `mix.exs`
-
-```elixir
-def deps do
-  [{:guardian, "~> 0.14"}]
-end
-```
-
-2. `config.exs`
-
-```elixir
-config :guardian, Guardian,
-  issuer: "AuthApp",
-  ttl: { 1, :days },
-  allowed_drift: 2000,
-  verify_issuer: true,
-  secret_key: <guardian secret key>,
-  serializer: Curator.UserSerializer
-
-config :curator, Curator,
-  hooks_module: AuthApp.CuratorHooks,
-  repo: AuthApp.Repo,
-  user_schema: AuthApp.User
-```
-
-## Debt
-Thanks go out to the [Phoenix Team](https://github.com/phoenixframework/phoenix), the original rails project [Devise](https://github.com/plataformatec/devise), and the other elixir authentication solutions:
-
-[Guardian](https://github.com/ueberauth/guardian)
 [Coherence](https://github.com/smpallen99/coherence)
 [Sentinel](https://github.com/britton-jb/sentinel)
 [Openmaize](https://github.com/riverrun/openmaize)

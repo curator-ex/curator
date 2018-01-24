@@ -17,12 +17,18 @@ defmodule Curator do
       use Curator.Config, unquote(opts)
       @behaviour Curator
 
+      # Extensions
       def before_sign_in(resource, opts \\ []),
         do: Curator.before_sign_in(__MODULE__, resource, opts)
 
       def after_sign_in(conn, resource, opts \\ []),
         do: Curator.after_sign_in(__MODULE__, conn, resource, opts)
 
+      # TODO
+      # def after_failed_sign_in(conn, resource, opts \\ [])
+      # def after_extension(conn, type, resource, opts \\ [])
+
+      # Delegate to Guardian
       def sign_in(conn, resource, opts \\ []),
         do: Curator.sign_in(__MODULE__, conn, resource, opts)
 
@@ -32,17 +38,13 @@ defmodule Curator do
       def current_resource(conn, opts \\ []),
         do: Curator.current_resource(__MODULE__, conn, opts)
 
-      # def after_failed_sign_in(conn, resource, opts \\ [])
-      # def after_extension(conn, type, resource, opts \\ [])
-
       defoverridable before_sign_in: 2,
-                     after_sign_in: 3,
-                     sign_in: 3,
-                     sign_out: 2,
-                     current_resource: 2
+                     after_sign_in: 3
+
     end
   end
 
+  # Extensions
   def before_sign_in(mod, resource, opts) do
     modules = modules(mod)
 

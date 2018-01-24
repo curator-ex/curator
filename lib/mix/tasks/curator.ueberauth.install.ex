@@ -27,14 +27,10 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
       Mix.raise "mix curator.ueberauth.install can only be run inside an application directory"
     end
 
-    # Gen.Context.run(args)
-
     {context, schema} = Gen.Context.build(args)
 
     binding = [context: context, schema: schema]
     paths = generator_paths()
-
-    # prompt_for_conflicts(context)
 
     context
     |> copy_new_files(paths, binding)
@@ -110,26 +106,22 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
   end
 
   @doc false
-  def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
-    if schema.web_namespace do
-      Mix.shell.info """
-      """
-    else
-      Mix.shell.info """
+  def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
+    Mix.shell.info """
 
-      Configure Ueberauth:
+    Setup Ueberauth:
 
-          config :ueberauth, Ueberauth,
-            providers: [
-              google: {Ueberauth.Strategy.Google, []}
-            ]
+        config :ueberauth, Ueberauth,
+          providers: [
+            google: {Ueberauth.Strategy.Google, []}
+          ]
 
-          config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-            client_id: System.get_env("GOOGLE_CLIENT_ID"),
-            client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+        config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+          client_id: System.get_env("GOOGLE_CLIENT_ID"),
+          client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
-      """
-    end
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    More info: https://github.com/ueberauth/ueberauth#setup
+
+    """
   end
 end
