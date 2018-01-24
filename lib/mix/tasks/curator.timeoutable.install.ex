@@ -79,17 +79,17 @@ defmodule Mix.Tasks.Curator.Timeoutable.Install do
         use Curator, otp_app: :#{Mix.Phoenix.otp_app()},
           modules: [#{inspect context.web_module}.Auth.Timeoutable]
 
-        defmodule TimeStatsViewerWeb.Auth.Curator.UnauthenticatedPipeline do
+        defmodule #{inspect context.web_module}.Auth.Curator.UnauthenticatedPipeline do
           ...
           plug Curator.Timeoutable.Plug, timeoutable_module: #{inspect context.web_module}.Auth.Timeoutable
         end
 
-        defmodule TimeStatsViewerWeb.Auth.Curator.AuthenticatedPipeline do
+        defmodule #{inspect context.web_module}.Auth.Curator.AuthenticatedPipeline do
           ...
           plug Curator.Timeoutable.Plug, timeoutable_module: #{inspect context.web_module}.Auth.Timeoutable
         end
 
-    NOTE: Don't forget to update your conn_case
+    NOTE: Don't forget to update your conn_case!
     """
   end
 end

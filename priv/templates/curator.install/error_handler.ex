@@ -1,23 +1,21 @@
 defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   use <%= inspect context.web_module %>, :controller
 
-  # From Guardian.Plug.EnsureAuthenticated
-  def auth_error(conn, {:unauthenticated, :unauthenticated}, _opts) do
+  def auth_error(conn, error, _opts) do
     conn
-    |> put_flash(:error, "Please Sign In")
+    |> put_flash(:error, translate_error(error))
     |> redirect(to: "/auth/session/new")
   end
 
   # From Guardian.Plug.LoadResource
-  def auth_error(conn, {:no_resource_found, :no_resource_found}, _opts) do
-    conn
-    |> put_flash(:error, "Please Sign In")
-    |> redirect(to: "/auth/session/new")
-  end
+  defp translate_error({:unauthenticated, :unauthenticated}), do: "Please Sign In"
 
-  def auth_error(conn, {_type, reason}, _opts) do
-    conn
-    |> put_flash(:error, reason)
-    |> redirect(to: "/")
-  end
+  # From Guardian.Plug.LoadResource
+  defp translate_error({:no_resource_found, :no_resource_found}), do: "Please Sign In"
+
+  # Add Additional Translations as needed:
+  # From Curator.Timeoutable.Plug
+  # defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
+
+  defp translate_error({_type, reason}), do: reason
 end

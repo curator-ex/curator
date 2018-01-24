@@ -112,7 +112,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
   3. [Configure Guardian](https://github.com/ueberauth/guardian#installation) in `config.exs`
 
     ```elixir
-    config :<my_app_web>, <MyAppWeb>.Guardian,
+    config :<my_app_web>, <MyAppWeb>.Auth.Guardian,
       issuer: "<my_app_web>",
       secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
     ```
@@ -256,7 +256,7 @@ Ueberauth Integration
   ```elixir
   use Curator, otp_app: :my_app_web,
     modules: [
-      MyAppWeb.Auth.Ueberauth,
+      <MyAppWeb>.Auth.Ueberauth,
     ]
   ```
 
@@ -272,6 +272,8 @@ Ueberauth Integration
       ]
     end
     ```
+
+    NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto application.
 
   2. Update config.exs
 
@@ -309,9 +311,9 @@ Session Timeout (after configurable inactivity)
 2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
 
   ```elixir
-  use Curator, otp_app: :my_app_web,
+  use Curator, otp_app: :<my_app_web>,
     modules: [
-      MyAppWeb.Auth.Timeoutable,
+     <MyAppWeb>.Auth.Timeoutable,
     ]
   ```
 
@@ -334,6 +336,24 @@ Session Timeout (after configurable inactivity)
   ```elixir
   use Curator.Timeoutable, otp_app: :<my_app_web>,
     timeout_in: 1800
+  ```
+
+5. Update tests (<my_app_web>/test/support/conn_case.ex)
+
+  ```elixir
+  auth_conn = conn
+  |> Plug.Test.init_test_session(%{
+    guardian_default_token: token,
+    guardian_default_timeoutable: Curator.Time.timestamp(),
+  })
+  ```
+
+  This session key usually is set as part of the after_sign_in extension.
+
+6. (optional) Update ErrorHandler (<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex)
+
+  ```elixir
+  defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
   ```
 
 ### Registerable

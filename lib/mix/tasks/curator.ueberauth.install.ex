@@ -107,6 +107,9 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
+    web_prefix = Mix.Phoenix.web_path(context_app)
+    web_path = to_string(schema.web_path)
+
     Mix.shell.info """
 
     Setup Ueberauth:
@@ -121,6 +124,13 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
           client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
     More info: https://github.com/ueberauth/ueberauth#setup
+
+    The Ueberauth module was created at: #{Path.join([web_prefix, web_path, "auth", "ueberauth.ex"])}
+
+    Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
+
+        use Curator, otp_app: :#{Mix.Phoenix.otp_app()},
+          modules: [#{inspect context.web_module}.Auth.Ueberauth]
 
     """
   end
