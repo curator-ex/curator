@@ -137,6 +137,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
 
     # Create w/ ExMachina (or your preferred method)
+    # Note: As you add additional modules, make sure this user is valid for them too.
     auth_user = <MyApp>.Factory.insert(:auth_user)
 
     {:ok, token, claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
