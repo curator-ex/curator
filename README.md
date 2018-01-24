@@ -40,7 +40,6 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     hooks_module: YourAppWeb.CuratorHooks,
     repo: YourApp.Repo,
     user_schema: YourApp.Auth.User,
-    session_handler: Curator.SessionHandlers.SimpleSession,
     error_handler: YourAppWeb.Auth.ErrorHandler,
     context: YourApp.Auth
   ```
@@ -301,8 +300,7 @@ Configure `config.exs`
 config :curator, Curator,
   hooks_module: AuthApp.CuratorHooks,
   repo: AuthApp.Repo,
-  user_schema: AuthApp.User,
-  session_handler: Curator.SessionHandlers.SimpleSession
+  user_schema: AuthApp.User
 ```
 
 ### Guardian
@@ -329,8 +327,7 @@ config :guardian, Guardian,
 config :curator, Curator,
   hooks_module: AuthApp.CuratorHooks,
   repo: AuthApp.Repo,
-  user_schema: AuthApp.User,
-  session_handler: Curator.SessionHandlers.Guardian
+  user_schema: AuthApp.User
 ```
 
 ## Debt

@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Curator.Install do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
     if Mix.Project.umbrella? do
-      Mix.raise "mix phx.gen.context can only be run inside an application directory"
+      Mix.raise "mix curator.install can only be run inside an application directory"
     end
 
     # Gen.Context.run(args)
@@ -66,12 +66,12 @@ defmodule Mix.Tasks.Curator.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "curator_hooks.ex",          Path.join([web_prefix, "controllers", web_path, "auth", "curator_hooks.ex"])},
-      # {:eex,     "view.ex",                 Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
-      # {:eex,     "controller_test.exs",     Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
-      # {:new_eex, "changeset_view.ex",       Path.join([web_prefix, "views/changeset_view.ex"])},
+      {:eex,     "curator.ex",                Path.join([web_prefix, web_path, "auth", "curator.ex"])},
+      {:eex,     "curator_helper.ex",         Path.join([web_prefix, "views", web_path, "auth", "curator_helper.ex"])},
       {:eex,     "error_handler.ex",          Path.join([web_prefix, "controllers", web_path, "auth", "error_handler.ex"])},
-      {:eex,     "ueberauth_controller.ex",   Path.join([web_prefix, "controllers", web_path, "auth", "ueberauth_controller.ex"])},
+      {:eex,     "view.ex",                   Path.join([web_prefix, "views", web_path, "auth", "session_view.ex"])},
+      {:eex,     "new.html.eex",              Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
+      {:eex,     "session_controller.ex",     Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
       {:eex,     "guardian.ex",               Path.join([web_prefix, web_path, "auth", "guardian.ex"])},
     ]
   end
@@ -103,7 +103,14 @@ defmodule Mix.Tasks.Curator.Install do
 
       Add the resource to your :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect schema.alias}Controller, except: [:new, :edit]
+          resources "/#{schema.plural}", #{inspect schema.alias}Controller
+
+      Configure Guardian:
+
+          config :#{Mix.Phoenix.otp_app()}, #{inspect context.web_module}.Auth.Guardian,
+            issuer: "#{Mix.Phoenix.otp_app()}",
+            secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
+
       """
     end
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

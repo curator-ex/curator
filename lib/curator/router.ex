@@ -26,11 +26,7 @@ defmodule Curator.Router do
     module_quotes = get_module_quotes(curator, :unauthenticated_plugs)
 
     quote do
-      plug Curator.Plug.LoadSession
-
       unquote(module_quotes)
-
-      plug Curator.Plug.EnsureResourceOrNoSession
     end
   end
 
@@ -39,11 +35,7 @@ defmodule Curator.Router do
     module_quotes = get_module_quotes(curator, :authenticated_plugs)
 
     quote do
-      plug Curator.Plug.LoadSession
-
       unquote(module_quotes)
-
-      plug Curator.Plug.EnsureResourceAndSession
     end
   end
 
@@ -53,10 +45,10 @@ defmodule Curator.Router do
     module_quotes = get_module_quotes(curator, :unauthenticated_routes)
 
     quote do
-      scope "/auth", unquote(web_module) do
-        # get "/session/new", AuthController, :new
-        # post "/session", AuthController, :create
-        delete "/session", SessionController, :delete
+      scope "/auth" do
+        get "/session/new", Auth.SessionController, :new
+        # post "/session", Auth.SessionController, :create
+        # delete "/session", Auth.SessionController, :delete
 
         unquote(module_quotes)
       end
@@ -69,8 +61,8 @@ defmodule Curator.Router do
     module_quotes = get_module_quotes(curator, :authenticated_routes)
 
     quote do
-      scope "/auth", unquote(web_module) do
-        delete "/session", SessionController, :delete
+      scope "/auth" do
+        delete "/session", Auth.SessionController, :delete
 
         unquote(module_quotes)
       end

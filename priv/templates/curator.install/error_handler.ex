@@ -1,13 +1,21 @@
 defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   use <%= inspect context.web_module %>, :controller
 
-  def auth_error(conn, {:no_session, _reason}, _opts) do
+  # From Guardian.Plug.EnsureAuthenticated
+  def auth_error(conn, {:unauthenticated, :unauthenticated}, _opts) do
     conn
-    |> put_flash(:error, "Please sign in")
-    |> redirect(to: "/")
+    |> put_flash(:error, "Please Sign In")
+    |> redirect(to: "/auth/session/new")
   end
 
-  def auth_error(conn, {type, reason}, _opts) do
+  # From Guardian.Plug.LoadResource
+  def auth_error(conn, {:no_resource_found, :no_resource_found}, _opts) do
+    conn
+    |> put_flash(:error, "Please Sign In")
+    |> redirect(to: "/auth/session/new")
+  end
+
+  def auth_error(conn, {_type, reason}, _opts) do
     conn
     |> put_flash(:error, reason)
     |> redirect(to: "/")

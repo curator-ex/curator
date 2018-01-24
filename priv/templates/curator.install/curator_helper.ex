@@ -1,4 +1,4 @@
-defmodule Curator.ViewHelpers do
+defmodule <%= inspect context.web_module %>.Auth.CuratorHelper do
   @moduledoc """
   A helper for views & templates to interact with Curator.
   """
@@ -8,11 +8,6 @@ defmodule Curator.ViewHelpers do
   """
   @spec current_user(Plug.Conn.t) :: any | nil
   def current_user(conn) do
-    case Curator.PlugHelper.current_resource(conn) do
-      {:ok, resource} -> resource
-      {:error, _error} -> nil
-      nil -> nil
-    end
+    <%= inspect context.web_module %>.Auth.Curator.current_resource(conn)
   end
 end
-
