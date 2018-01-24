@@ -5,8 +5,6 @@ defmodule Curator.Ueberauth do
     quote do
       use Curator.Config, unquote(opts)
       use Curator.Extension, mod: Curator.Ueberauth
-
-      # @behaviour Curator.Ueberauth
     end
   end
 

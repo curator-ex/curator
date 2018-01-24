@@ -69,19 +69,21 @@ defmodule Curator do
     # end)
   end
 
+  # Delegate to Guardian
   def sign_in(mod, conn, resource, opts) do
-    guardian_module = apply(mod, :config, [:guardian, []])
-    Module.concat(guardian_module, Plug).sign_in(conn, resource)
+    Module.concat(guardian_module(mod), Plug).sign_in(conn, resource, opts)
   end
 
   def sign_out(mod, conn, opts) do
-    guardian_module = apply(mod, :config, [:guardian, []])
-    Module.concat(guardian_module, Plug).sign_out(conn)
+    Module.concat(guardian_module(mod), Plug).sign_out(conn, opts)
   end
 
   def current_resource(mod, conn, opts) do
-    guardian_module = apply(mod, :config, [:guardian, []])
-    Module.concat(guardian_module, Plug).current_resource(conn)
+    Module.concat(guardian_module(mod), Plug).current_resource(conn, opts)
+  end
+
+  def guardian_module(mod) do
+    apply(mod, :config, [:guardian, []])
   end
 
   def modules(mod) do
