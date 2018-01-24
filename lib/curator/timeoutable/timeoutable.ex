@@ -11,7 +11,7 @@ defmodule Curator.Timeoutable do
       use Curator.Extension, mod: Curator.Timeoutable
 
       def update_timeoutable_timestamp(conn, opts \\ []) do
-        Curator.Timeoutable.update_timeoutable_timestamp( conn, opts)
+        Curator.Timeoutable.update_timeoutable_timestamp(conn, opts)
       end
 
       def verify_timeoutable_timestamp(conn, opts \\ []) do
