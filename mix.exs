@@ -21,6 +21,7 @@ defmodule Curator.Mixfile do
       homepage_url: @url,
       docs: docs(),
       dialyzer: [plt_add_deps: :project],
+      aliases: aliases(),
     ]
   end
 
@@ -57,5 +58,13 @@ defmodule Curator.Mixfile do
       links: %{github: @url},
       files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG.md"],
     ]
+  end
+
+  defp aliases do
+    ["publish": ["hex.publish", &git_tag/1]]
+  end
+
+  defp git_tag(_args) do
+    System.cmd "git", ["tag", "v" <> Mix.Project.config[:version]]
   end
 end
