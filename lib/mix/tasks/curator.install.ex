@@ -1,136 +1,121 @@
 defmodule Mix.Tasks.Curator.Install do
-  @shortdoc "Install initial Curator templates"
-
-  use Mix.Task
+  @shortdoc "Install Curator"
 
   @moduledoc """
-  Install and configure Curator
+  Generates required Curator files.
 
       mix curator.install
 
-  Optionally, you can provide a name for the users module
-
-      mix curator.install User users
-
-  The first argument is the module name followed by
-  its plural name (used for schema).
-
-  The generated resource will contain:
-
-    * a schema in web/models
-    * a migration file for the repository
-    * a curator_hooks module in the lib/otp_app
-    * a session_helper in test/support
-    * an error_handler in web/controllers
-
-  If you already have a model, the generated model can be skipped
-  with `--no-model`.
-
-  If you already have a migration, the generated migration can be skipped
-  with `--no-migration`.
-
-  If you already have a curator_hooks module, the generated hooks can be skipped
-  with `--no-hooks`.
-
-  If you already have a session_helper module, it can be skipped
-  with `--no-session_helper`.
-
-  If you already have a error_handler module, it can be skipped
-  with `--no-error_handler`.
+  NOTE: This was copied and adapted from: mix phx.gen.context
   """
+
+  use Mix.Task
+
+  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Tasks.Phx.Gen
+
+  @switches [binary_id: :boolean, table: :string, web: :string,
+             schema: :boolean, context: :boolean, context_app: :string]
+
+  @default_opts [schema: true, context: true]
+
+  @doc false
   def run(args) do
-    switches = [model: :boolean, migration: :boolean, hooks: :boolean, session_helper: :boolean, error_handler: :boolean]
+    args = ["Auth", "User", "users", "email:unique"] ++ args
 
-    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
-    [singular, plural | attrs] = validate_args!(parsed)
-
-    default_opts = Application.get_env(:curator, :generators, [])
-    opts = Keyword.merge(default_opts, opts)
-
-    attrs   = Mix.Phoenix.attrs(attrs)
-    binding = Mix.Phoenix.inflect(singular)
-    path    = binding[:path]
-    otp_app = Mix.Phoenix.otp_app()
-    binding = binding ++ [plural: plural,
-                          attrs: attrs,
-                          params: Mix.Phoenix.params(attrs)]
-
-    files = hooks(opts[:hooks], otp_app)
-      ++ model(opts[:model], path)
-      ++ migration(opts[:migration], path)
-      ++ session_helper(opts[:session_helper])
-      ++ error_handler(opts[:error_handler])
-
-    Mix.Phoenix.copy_from paths(), "priv/templates/curator.install", "", binding, files
-
-    if opts[:migration] != false do
-      Mix.shell.info """
-      Remember to update your repository by running migrations:
-
-          $ mix ecto.migrate
-      """
+    if Mix.Project.umbrella? do
+      Mix.raise "mix curator.install can only be run inside an application directory"
     end
+
+    Gen.Context.run(args)
+
+    {context, schema} = Gen.Context.build(args)
+
+    binding = [context: context, schema: schema]
+    paths = generator_paths()
+
+    context
+    |> copy_new_files(paths, binding)
+    |> print_shell_instructions()
   end
 
-  defp validate_args!([_, plural | _] = args) do
-    cond do
-      String.contains?(plural, ":") ->
-        raise_with_help()
-      plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "Expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
-      true ->
-        args
-    end
-  end
-
-  defp validate_args!(_) do
-    ["User", "users"]
-  end
-
-  @spec raise_with_help() :: no_return()
-  defp raise_with_help do
-    Mix.raise """
-    mix curator.install expects both singular and plural names
-
-        mix curator.install User users
-    """
-  end
-
-  defp paths do
+  def generator_paths do
     [".", :curator]
   end
 
-  defp hooks(false, _otp_app), do: []
-  defp hooks(_, otp_app) do
-    [{:eex, "curator_hooks.ex", "lib/#{otp_app}/curator_hooks.ex"}]
+  @doc false
+  def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
+    web_prefix = Mix.Phoenix.web_path(context_app)
+    # test_prefix = Mix.Phoenix.web_test_path(context_app)
+    web_path = to_string(schema.web_path)
+
+    [
+      {:eex,     "curator.ex",                Path.join([web_prefix, web_path, "auth", "curator.ex"])},
+      {:eex,     "curator_helper.ex",         Path.join([web_prefix, "views", web_path, "auth", "curator_helper.ex"])},
+      {:eex,     "error_handler.ex",          Path.join([web_prefix, "controllers", web_path, "auth", "error_handler.ex"])},
+      {:eex,     "view.ex",                   Path.join([web_prefix, "views", web_path, "auth", "session_view.ex"])},
+      {:eex,     "new.html.eex",              Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
+      {:eex,     "session_controller.ex",     Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
+      {:eex,     "guardian.ex",               Path.join([web_prefix, web_path, "auth", "guardian.ex"])},
+    ]
   end
 
-  defp model(false, _path), do: []
-  defp model(_, path) do
-    [{:eex, "model.ex", "web/models/#{path}.ex"},]
+  @doc false
+  def copy_new_files(%Context{} = context, paths, binding) do
+    files = files_to_be_generated(context)
+    Mix.Phoenix.copy_from paths, "priv/templates/curator.install", binding, files
+
+    context
   end
 
-  defp migration(false, _path), do: []
-  defp migration(_, path) do
-    [{:eex, "migration.exs",
-      "priv/repo/migrations/#{timestamp()}_create_#{String.replace(path, "/", "_")}.exs"}]
-  end
+  @doc false
+  def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
+    web_prefix = Mix.Phoenix.web_path(context_app)
 
-  defp session_helper(false), do: []
-  defp session_helper(_) do
-    [{:eex, "session_helper.ex", "test/support/session_helper.ex"},]
-  end
+    Mix.shell.info """
 
-  defp error_handler(false), do: []
-  defp error_handler(_) do
-    [{:eex, "error_handler.ex", "web/controllers/error_handler.ex"},]
-  end
+    Add curator to your router #{Mix.Phoenix.web_path(context_app)}/router.ex:
 
-  defp timestamp do
-    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
-    "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
-  end
+        require Curator.Router
 
-  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
-  defp pad(i), do: to_string(i)
+        pipeline :browser do
+          ...
+          plug #{inspect context.web_module}.Auth.Curator.UnauthenticatedPipeline
+        end
+
+        pipeline :authenticated_browser do
+          ...
+          plug #{inspect context.web_module}.Auth.Curator.AuthenticatedPipeline
+        end
+
+        scope "/", #{inspect context.web_module} do
+          pipe_through :browser
+
+          ...
+
+          Curator.Router.mount_unauthenticated_routes(#{inspect context.web_module}.Auth.Curator)
+        end
+
+        scope "/", #{inspect context.web_module} do
+          pipe_through :authenticated_browser
+
+          ...
+
+          Curator.Router.mount_authenticated_routes(#{inspect context.web_module}.Auth.Curator)
+        end
+
+    Add the view_helper to your Web module: #{Path.join([web_prefix, "#{web_prefix}.ex"])}
+
+        def view do
+          quote do
+            ...
+
+            import #{inspect context.web_module}.Auth.CuratorHelper
+          end
+        end
+
+    """
+
+    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+  end
 end

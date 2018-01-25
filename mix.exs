@@ -1,7 +1,7 @@
 defmodule Curator.Mixfile do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.2.0"
   @url "https://github.com/curator-ex/curator"
   @maintainers [
     "Eric Sullivan",
@@ -14,7 +14,7 @@ defmodule Curator.Mixfile do
       elixir: "~> 1.3",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
-      deps: deps,
+      deps: deps(),
       description: "An Authentication and User Lifecycle Framework for Phoenix",
       package: package(),
       source_url: @url,
@@ -34,8 +34,8 @@ defmodule Curator.Mixfile do
       {:dialyxir, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ecto, "~> 2.0"},
       {:ex_doc, "~> 0.10", only: :dev},
-      {:guardian, "~> 0.14"},
-      {:phoenix, "~> 1.2.1"},
+      {:guardian, "~> 1.0"},
+      {:phoenix, "~> 1.3"},
       {:plug, "~> 1.2"},
       {:timex, "~> 3.0"},
       {:timex_ecto, "~> 3.0"},
@@ -55,7 +55,7 @@ defmodule Curator.Mixfile do
       maintainers: @maintainers,
       licenses: ["MIT"],
       links: %{github: @url},
-      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG.md"],
     ]
   end
 end
