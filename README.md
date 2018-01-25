@@ -24,17 +24,17 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
 1. Add `curator` to your list of dependencies in `mix.exs`:
 
-  ```elixir
-  def deps do
-    [{:curator, "~> 0.2.0"}]
-  end
-  ```
+```elixir
+def deps do
+  [{:curator, "~> 0.2.0"}]
+end
+```
 
 2. Run the install command
 
-  ```elixir
-  mix curator.install
-  ```
+```
+mix curator.install
+```
 
   This will generate:
 
@@ -97,136 +97,136 @@ end
 
   2. Add the view_helper to your web module (<my_app_web>/lib/<my_app_web>.ex)
 
-    ```elixir
-    def view do
-      quote do
-        ...
+```elixir
+def view do
+  quote do
+    ...
 
-        import <MyAppWeb>.Auth.CuratorHelper
-      end
-    end
-    ```
+    import <MyAppWeb>.Auth.CuratorHelper
+  end
+end
+```
 
     This allows you to call `current_user(conn)` in your templates
 
   3. [Configure Guardian](https://github.com/ueberauth/guardian#installation) in `config.exs`
 
-    ```elixir
-    config :<my_app_web>, <MyAppWeb>.Auth.Guardian,
-      issuer: "<my_app_web>",
-      secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
-    ```
+```elixir
+config :<my_app_web>, <MyAppWeb>.Auth.Guardian,
+  issuer: "<my_app_web>",
+  secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
+```
 
 4. Add a signout link to your layout
 
-  ```elixir
-  <%= if current_user(@conn) do %>
-    <%= link "Sign Out", to: session_path(@conn, :delete), method: :delete %>
-  <% end %>
-  ```
+```elixir
+<%= if current_user(@conn) do %>
+  <%= link "Sign Out", to: session_path(@conn, :delete), method: :delete %>
+<% end %>
+```
 
 5. Testing
 
   Update conn_case.ex:
 
-  ```elixir
-  setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(<MyApp>.Repo)
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(<MyApp>.Repo, {:shared, self()})
-    end
-
-    # Create w/ ExMachina (or your preferred method)
-    # Note: As you add additional modules, make sure this user is valid for them too.
-    auth_user = <MyApp>.Factory.insert(:auth_user)
-
-    {:ok, token, claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
-
-    conn = Phoenix.ConnTest.build_conn()
-
-    auth_conn = conn
-    |> Plug.Test.init_test_session(%{
-      guardian_default_token: token,
-      guardian_default_timeoutable: Curator.Time.timestamp(),
-    })
-
-    {:ok, unauth_conn: conn, auth_user: auth_user, conn: auth_conn}
+```elixir
+setup tags do
+  :ok = Ecto.Adapters.SQL.Sandbox.checkout(<MyApp>.Repo)
+  unless tags[:async] do
+    Ecto.Adapters.SQL.Sandbox.mode(<MyApp>.Repo, {:shared, self()})
   end
-  ```
+
+  # Create w/ ExMachina (or your preferred method)
+  # Note: As you add additional modules, make sure this user is valid for them too.
+  auth_user = <MyApp>.Factory.insert(:auth_user)
+
+  {:ok, token, claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
+
+  conn = Phoenix.ConnTest.build_conn()
+
+  auth_conn = conn
+  |> Plug.Test.init_test_session(%{
+    guardian_default_token: token,
+    guardian_default_timeoutable: Curator.Time.timestamp(),
+  })
+
+  {:ok, unauth_conn: conn, auth_user: auth_user, conn: auth_conn}
+end
+```
 
   Note: This uses conn as an authenticated connection, so existing tests won't need to be updated.
 
   To test, I created some special routes:
 
-  ```elixir
-  scope "/", <MyAppWeb> do
-    pipe_through :browser
+```elixir
+scope "/", <MyAppWeb> do
+  pipe_through :browser
 
-    if Mix.env == :test do
-      get "/insecure", PageController, :insecure
-    end
-
-    Curator.Router.mount_unauthenticated_routes(<MyAppWeb>.Auth.Curator)
+  if Mix.env == :test do
+    get "/insecure", PageController, :insecure
   end
 
-  scope "/", <MyAppWeb> do
-    pipe_through :authenticated_browser
+  Curator.Router.mount_unauthenticated_routes(<MyAppWeb>.Auth.Curator)
+end
 
-    if Mix.env == :test do
-      get "/secure", PageController, :secure
-    end
+scope "/", <MyAppWeb> do
+  pipe_through :authenticated_browser
 
-    Curator.Router.mount_authenticated_routes(<MyAppWeb>.Auth.Curator)
+  if Mix.env == :test do
+    get "/secure", PageController, :secure
   end
-  ```
+
+  Curator.Router.mount_authenticated_routes(<MyAppWeb>.Auth.Curator)
+end
+```
 
   Update the PageController:
 
-  ```elixir
-  defmodule <MyAppWeb>.PageController do
-    use <MyAppWeb>, :controller
+```elixir
+defmodule <MyAppWeb>.PageController do
+  use <MyAppWeb>, :controller
 
-    def index(conn, _params) do
-      render conn, "index.html"
-    end
-
-    def secure(conn, _params) do
-      text conn, "!!!SECURE!!!"
-    end
-
-    def insecure(conn, _params) do
-      text conn, "INSECURE"
-    end
+  def index(conn, _params) do
+    render conn, "index.html"
   end
-  ```
+
+  def secure(conn, _params) do
+    text conn, "!!!SECURE!!!"
+  end
+
+  def insecure(conn, _params) do
+    text conn, "INSECURE"
+  end
+end
+```
 
   And wrote tests:
 
-  ```
-  defmodule <MyAppWeb>.PageControllerTest do
-    use <MyAppWeb>.ConnCase
+```
+defmodule <MyAppWeb>.PageControllerTest do
+  use <MyAppWeb>.ConnCase
 
-    test "GET /secure (Unauthenticated)", %{unauth_conn: conn} do
-      conn = get conn, "/secure"
-      assert redirected_to(conn) == session_path(conn, :new)
-    end
-
-    test "GET /secure (Authenticated)", %{conn: conn} do
-      conn = get conn, "/secure"
-      assert text_response(conn, 200) == "!!!SECURE!!!"
-    end
-
-    test "GET /insecure (Unauthenticated)", %{unauth_conn: conn} do
-      conn = get conn, "/insecure"
-      assert text_response(conn, 200) == "INSECURE"
-    end
-
-    test "GET /insecure (Authenticated)", %{conn: conn} do
-      conn = get conn, "/insecure"
-      assert text_response(conn, 200) == "INSECURE"
-    end
+  test "GET /secure (Unauthenticated)", %{unauth_conn: conn} do
+    conn = get conn, "/secure"
+    assert redirected_to(conn) == session_path(conn, :new)
   end
-  ```
+
+  test "GET /secure (Authenticated)", %{conn: conn} do
+    conn = get conn, "/secure"
+    assert text_response(conn, 200) == "!!!SECURE!!!"
+  end
+
+  test "GET /insecure (Unauthenticated)", %{unauth_conn: conn} do
+    conn = get conn, "/insecure"
+    assert text_response(conn, 200) == "INSECURE"
+  end
+
+  test "GET /insecure (Authenticated)", %{conn: conn} do
+    conn = get conn, "/insecure"
+    assert text_response(conn, 200) == "INSECURE"
+  end
+end
+```
 
   Other scenarios can also be tested here with difference setups (ex. using Confirmable with a user that hasn't been confirmed)
 
@@ -247,52 +247,52 @@ Ueberauth Integration
 
 1. Run the install command
 
-  ```elixir
-  mix curator.ueberauth.install
-  ```
+```
+mix curator.ueberauth.install
+```
 
 2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
 
-  ```elixir
-  use Curator, otp_app: :my_app_web,
-    modules: [
-      <MyAppWeb>.Auth.Ueberauth,
-    ]
-  ```
+```elixir
+use Curator, otp_app: :my_app_web,
+  modules: [
+    <MyAppWeb>.Auth.Ueberauth,
+  ]
+```
 
 3. Install Ueberauth and the desired [strategies](https://github.com/ueberauth/ueberauth#configuring-providers). For example, to add google oauth:
 
   1. Update mix.exs
 
-    ```elixir
-    defp deps do
-      [
-        {:ueberauth, "~> 0.4"},
-        {:ueberauth_google, "~> 0.7"},
-      ]
-    end
-    ```
+```elixir
+defp deps do
+  [
+    {:ueberauth, "~> 0.4"},
+    {:ueberauth_google, "~> 0.7"},
+  ]
+end
+```
 
     NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto application.
 
   2. Update config.exs
 
-    ```elixir
-    config :ueberauth, Ueberauth,
-      providers: [
-        google: {Ueberauth.Strategy.Google, []}
-      ]
+```elixir
+config :ueberauth, Ueberauth,
+  providers: [
+    google: {Ueberauth.Strategy.Google, []}
+  ]
 
-    config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-      client_id: System.get_env("GOOGLE_CLIENT_ID"),
-      client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
-    ```
+config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+  client_id: System.get_env("GOOGLE_CLIENT_ID"),
+  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+```
 
   3. Put some links to the providers (<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex)
 
-    ```elixir
-    <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
-    ```
+```elixir
+<%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
+```
 
 
 ### Timeoutable
@@ -304,57 +304,57 @@ Session Timeout (after configurable inactivity)
 
 1. Run the install command
 
-  ```elixir
-  mix curator.timeoutable.install
-  ```
+```
+mix curator.timeoutable.install
+```
 
 2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
 
-  ```elixir
-  use Curator, otp_app: :<my_app_web>,
-    modules: [
-     <MyAppWeb>.Auth.Timeoutable,
-    ]
-  ```
+```elixir
+use Curator, otp_app: :<my_app_web>,
+  modules: [
+   <MyAppWeb>.Auth.Timeoutable,
+  ]
+```
 
 3. Add to the curator plugs
 
-  ```elixir
-  defmodule <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline do
-    ...
-    plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
-  end
+```elixir
+defmodule <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline do
+  ...
+  plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
+end
 
-  defmodule <MyAppWeb>.Auth.Curator.AuthenticatedPipeline do
-    ...
-    plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
-  end
-  ```
+defmodule <MyAppWeb>.Auth.Curator.AuthenticatedPipeline do
+  ...
+  plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
+end
+```
 
 4. (optional) Configure Timeoutable (<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex)
 
-  ```elixir
-  use Curator.Timeoutable, otp_app: :<my_app_web>,
-    timeout_in: 1800
-  ```
+```elixir
+use Curator.Timeoutable, otp_app: :<my_app_web>,
+  timeout_in: 1800
+```
 
 5. Update tests (<my_app_web>/test/support/conn_case.ex)
 
-  ```elixir
-  auth_conn = conn
-  |> Plug.Test.init_test_session(%{
-    guardian_default_token: token,
-    guardian_default_timeoutable: Curator.Time.timestamp(),
-  })
-  ```
+```elixir
+auth_conn = conn
+|> Plug.Test.init_test_session(%{
+  guardian_default_token: token,
+  guardian_default_timeoutable: Curator.Time.timestamp(),
+})
+```
 
   This session key usually is set as part of the after_sign_in extension.
 
 6. (optional) Update ErrorHandler (<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex)
 
-  ```elixir
-  defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
-  ```
+```elixir
+defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
+```
 
 ### Registerable
 
