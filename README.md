@@ -40,28 +40,28 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     1. A User context, migration, and schema (in the Ecto application if an umbrella)
 
-        * A user migration (priv/repo/migrations/<timestamp>_create_users.exs)
-        * A user schema (<my_app>/lib/<my_app>/auth/user.ex)
-        * A user context (<my_app>/lib/<my_app>/auth/auth.ex)
+        * A user migration (`priv/repo/migrations/<timestamp>_create_users.exs`)
+        * A user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+        * A user context (`<my_app>/lib/<my_app>/auth/auth.ex`)
 
-    2. An empty Curator module (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
+    2. An empty Curator module (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     3. A Guardian Configuration
 
-        * A Guardian module (<my_app_web>/lib/<my_app_web>/auth/guardian.ex)
-        * An error handler  (<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex)
+        * A Guardian module (`<my_app_web>/lib/<my_app_web>/auth/guardian.ex`)
+        * An error handler  (`<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex`)
 
-    4. A view helper (<my_app_web>/lib/<my_app_web>/views/auth/curator_helper.ex)
+    4. A view helper (`<my_app_web>/lib/<my_app_web>/views/auth/curator_helper.ex`)
 
     5. A Session Controller
 
-        * controller (<my_app_web>/lib/<my_app_web>/controllers/auth/session_controller.ex)
-        * view helper (<my_app_web>/lib/<my_app_web>/views/auth/curator_helper.ex)
-        * new template (<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex). Note: this is just a placeholder that you'll want to update when you decide on a sign-in strategy.
+        * controller (`<my_app_web>/lib/<my_app_web>/controllers/auth/session_controller.ex`)
+        * view helper (`<my_app_web>/lib/<my_app_web>/views/auth/curator_helper.ex`)
+        * new template (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`). Note: this is just a placeholder that you'll want to update when you decide on a sign-in strategy.
 
 3. The generators aren't perfect (TODO), so finish the installation
     
-    1. Update your router (<my_app_web>/lib/<my_app_web>/router.ex)
+    1. Update your router (`<my_app_web>/lib/<my_app_web>/router.ex`)
     
     ```elixir
     require Curator.Router
@@ -97,7 +97,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
     
-    2. Add the view_helper to your web module (<my_app_web>/lib/<my_app_web>.ex)
+    2. Add the view_helper to your web module (`<my_app_web>/lib/<my_app_web>.ex`)
     
     ```elixir
     def view do
@@ -129,7 +129,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     
 5. Testing
 
-    Update conn_case.ex:
+    Update `conn_case.ex`:
 
     ```elixir
     setup tags do
@@ -182,7 +182,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
-    Update the PageController:
+    Update the `page_controller.ex`:
 
     ```elixir
     defmodule <MyAppWeb>.PageController do
@@ -198,7 +198,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
-    And wrote tests:
+    And wrote tests in `page_controller_test.exs`:
 
     ```
     defmodule <MyAppWeb>.PageControllerTest do
@@ -249,7 +249,7 @@ Ueberauth Integration
     mix curator.ueberauth.install
     ```
 
-2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
+2. Add to curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
     use Curator, otp_app: :my_app_web,
@@ -260,7 +260,7 @@ Ueberauth Integration
 
 3. Install Ueberauth and the desired [strategies](https://github.com/ueberauth/ueberauth#configuring-providers). For example, to add google oauth:
     
-    1. Update mix.exs
+    1. Update `mix.exs`
     
         ```elixir
         defp deps do
@@ -273,7 +273,7 @@ Ueberauth Integration
     
         NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto application.
     
-    2. Update config.exs
+    2. Update `config.exs`
     
         ```elixir
         config :ueberauth, Ueberauth,
@@ -286,7 +286,7 @@ Ueberauth Integration
           client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
         ```
 
-    3. Put some links to the providers (<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex)
+    3. Put some links to the providers (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
     
         ```elixir
         <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
@@ -305,7 +305,7 @@ Session Timeout (after configurable inactivity)
     mix curator.timeoutable.install
     ```
 
-2. Add to curator modules (<my_app_web>/lib/<my_app_web>/auth/curator.ex)
+2. Add to curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
     use Curator, otp_app: :<my_app_web>,
@@ -328,14 +328,14 @@ Session Timeout (after configurable inactivity)
     end
     ```
 
-4. (optional) Configure Timeoutable (<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex)
+4. (optional) Configure Timeoutable (`<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex`)
 
     ```elixir
     use Curator.Timeoutable, otp_app: :<my_app_web>,
       timeout_in: 1800
     ```
 
-5. Update tests (<my_app_web>/test/support/conn_case.ex)
+5. Update tests (`<my_app_web>/test/support/conn_case.ex`)
 
     ```elixir
     auth_conn = conn
@@ -347,7 +347,7 @@ Session Timeout (after configurable inactivity)
 
     This session key usually is set as part of the after_sign_in extension.
 
-6. (optional) Update ErrorHandler (<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex)
+6. (optional) Update the ErrorHandler (`<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex`)
 
     ```elixir
     defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
