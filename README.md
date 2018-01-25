@@ -113,11 +113,11 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     
     3. [Configure Guardian](https://github.com/ueberauth/guardian#installation) in `config.exs`
     
-    ```elixir
-    config :<my_app_web>, <MyAppWeb>.Auth.Guardian,
-      issuer: "<my_app_web>",
-      secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
-    ```
+        ```elixir
+        config :<my_app_web>, <MyAppWeb>.Auth.Guardian,
+          issuer: "<my_app_web>",
+          secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
+        ```
     
 4. Add a signout link to your layout
     
@@ -156,7 +156,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
-    Note: This uses conn as an authenticated connection, so existing tests won't need to be updated.
+    Note: This uses `conn` as an authenticated connection, so existing tests won't need to be updated.
 
     To test, I created some special routes:
 
@@ -249,7 +249,7 @@ Ueberauth Integration
     mix curator.ueberauth.install
     ```
 
-2. Add to curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
     use Curator, otp_app: :my_app_web,
@@ -271,7 +271,7 @@ Ueberauth Integration
         end
         ```
     
-        NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto application.
+        NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto applications `mix.exs`.
     
     2. Update `config.exs`
     
@@ -305,7 +305,7 @@ Session Timeout (after configurable inactivity)
     mix curator.timeoutable.install
     ```
 
-2. Add to curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
     use Curator, otp_app: :<my_app_web>,
