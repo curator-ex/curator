@@ -262,35 +262,35 @@ Ueberauth Integration
     
     1. Update mix.exs
     
-    ```elixir
-    defp deps do
-      [
-        {:ueberauth, "~> 0.4"},
-        {:ueberauth_google, "~> 0.7"},
-      ]
-    end
-    ```
+        ```elixir
+        defp deps do
+          [
+            {:ueberauth, "~> 0.4"},
+            {:ueberauth_google, "~> 0.7"},
+          ]
+        end
+        ```
     
-    NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto application.
+        NOTE: If you're using an umbrella app you'll also need to add ueberauth to your ecto application.
     
     2. Update config.exs
     
-    ```elixir
-    config :ueberauth, Ueberauth,
-      providers: [
-        google: {Ueberauth.Strategy.Google, []}
-      ]
-    
-    config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-      client_id: System.get_env("GOOGLE_CLIENT_ID"),
-      client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
-    ```
+        ```elixir
+        config :ueberauth, Ueberauth,
+          providers: [
+            google: {Ueberauth.Strategy.Google, []}
+          ]
+        
+        config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+          client_id: System.get_env("GOOGLE_CLIENT_ID"),
+          client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+        ```
 
     3. Put some links to the providers (<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex)
     
-    ```elixir
-    <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
-    ```
+        ```elixir
+        <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
+        ```
 
 ### Timeoutable
 
