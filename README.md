@@ -65,35 +65,35 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
   1. Update your router (<my_app_web>/lib/<my_app_web>/router.ex)
 
-    ```elixir
-    require Curator.Router
+```elixir
+require Curator.Router
 
-    pipeline :browser do
-      ...
-      plug <MyWebApp>.Auth.Curator.UnauthenticatedPipeline
-    end
+pipeline :browser do
+  ...
+  plug <MyWebApp>.Auth.Curator.UnauthenticatedPipeline
+end
 
-    pipeline :authenticated_browser do
-      ... (copy the code from browser)
-      plug <MyWebApp>.Auth.Curator.AuthenticatedPipeline
-    end
+pipeline :authenticated_browser do
+  ... (copy the code from browser)
+  plug <MyWebApp>.Auth.Curator.AuthenticatedPipeline
+end
 
-    scope "/", <MyWebApp> do
-      pipe_through :browser
+scope "/", <MyWebApp> do
+  pipe_through :browser
 
-      ...
+  ...
 
-      Curator.Router.mount_unauthenticated_routes(<MyWebApp>.Auth.Curator)
-    end
+  Curator.Router.mount_unauthenticated_routes(<MyWebApp>.Auth.Curator)
+end
 
-    scope "/", <MyWebApp> do
-      pipe_through :authenticated_browser
+scope "/", <MyWebApp> do
+  pipe_through :authenticated_browser
 
-      ...
+  ...
 
-      Curator.Router.mount_authenticated_routes(<MyWebApp>.Auth.Curator)
-    end
-    ```
+  Curator.Router.mount_authenticated_routes(<MyWebApp>.Auth.Curator)
+end
+```
 
   2. Add the view_helper to your web module (<my_app_web>/lib/<my_app_web>.ex)
 
