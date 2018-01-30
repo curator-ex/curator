@@ -1,7 +1,7 @@
 defmodule Curator.Mixfile do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.2.1"
   @url "https://github.com/curator-ex/curator"
   @maintainers [
     "Eric Sullivan",
@@ -56,7 +56,7 @@ defmodule Curator.Mixfile do
       maintainers: @maintainers,
       licenses: ["MIT"],
       links: %{github: @url},
-      files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG.md"],
+      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*", "CHANGELOG.md"],
     ]
   end
 
