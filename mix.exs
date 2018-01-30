@@ -26,7 +26,7 @@ defmodule Curator.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :timex, :timex_ecto, :tzdata]]
+    [applications: [:logger, :timex, :timex_ecto, :tzdata, :guardian]]
   end
 
   defp deps do
