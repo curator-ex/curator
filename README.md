@@ -26,7 +26,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     def deps do
-      [{:curator, "~> 0.2.0"}]
+      [{:curator, "~> 0.2.2"}]
     end
     ```
 
@@ -118,6 +118,12 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
           issuer: "<my_app_web>",
           secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
         ```
+        
+    4. Add to your Auth Context (`<my_app>/lib/<my_app>/auth/auth.ex`)
+        
+        ```elixir
+          def get_user(id), do: Repo.get(User, id)
+        ```
     
 4. Add a signout link to your layout
     
@@ -207,26 +213,41 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
       test "GET /secure (Unauthenticated)", %{unauth_conn: conn} do
         conn = get conn, "/secure"
         assert redirected_to(conn) == session_path(conn, :new)
+        assert get_flash(conn, :error) == "Please Sign In"
       end
-    
+        
       test "GET /secure (Authenticated)", %{conn: conn} do
         conn = get conn, "/secure"
         assert text_response(conn, 200) == "!!!SECURE!!!"
       end
-    
+        
+      test "GET /secure (Authenticated - User Delete)", %{conn: conn, auth_user: user} do
+        <MyApp>.Auth.delete_user(user)
+        conn = get conn, "/secure"
+        assert redirected_to(conn) == session_path(conn, :new)
+        assert get_flash(conn, :error) == "Please Sign In"
+      end
+        
       test "GET /insecure (Unauthenticated)", %{unauth_conn: conn} do
         conn = get conn, "/insecure"
         assert text_response(conn, 200) == "INSECURE"
       end
-    
+        
       test "GET /insecure (Authenticated)", %{conn: conn} do
         conn = get conn, "/insecure"
         assert text_response(conn, 200) == "INSECURE"
       end
+        
+      test "GET /insecure (Authenticated - User Delete)", %{conn: conn, auth_user: user} do
+        <MyApp>.Auth.delete_user(user)
+        conn = get conn, "/insecure"
+        assert redirected_to(conn) == session_path(conn, :new)
+        assert get_flash(conn, :error) == "Please Sign In"
+      end
     end
     ```
 
-    Other scenarios can also be tested here with difference setups (ex. using Confirmable with a user that hasn't been confirmed)
+    These examples can be extended as additional modules are integrated (ex. using Confirmable with a user that hasn't been confirmed).
 
 6. Curate.
 
