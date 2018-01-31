@@ -1,7 +1,7 @@
 defmodule Curator.Mixfile do
   use Mix.Project
 
-  @version "0.2.1"
+  @version "0.2.2"
   @url "https://github.com/curator-ex/curator"
   @maintainers [
     "Eric Sullivan",
@@ -12,6 +12,7 @@ defmodule Curator.Mixfile do
       app: :curator,
       version: @version,
       elixir: "~> 1.3",
+      elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
@@ -24,6 +25,9 @@ defmodule Curator.Mixfile do
       aliases: aliases(),
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def application do
     [applications: [:logger, :timex, :timex_ecto, :tzdata, :guardian]]

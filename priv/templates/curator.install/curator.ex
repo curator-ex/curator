@@ -11,7 +11,9 @@ defmodule <%= inspect context.web_module %>.Auth.Curator.UnauthenticatedPipeline
                                error_handler: <%= inspect context.web_module %>.Auth.ErrorHandler
 
   plug Guardian.Plug.VerifySession
-  plug Guardian.Plug.LoadResource, allow_blank: true
+  plug Curator.Plug.LoadResource, allow_unauthenticated: true
+
+  # plug Curator.Timeoutable.Plug, timeoutable_module: <%= inspect context.web_module %>.Auth.Timeoutable
 end
 
 defmodule <%= inspect context.web_module %>.Auth.Curator.AuthenticatedPipeline do
@@ -21,5 +23,7 @@ defmodule <%= inspect context.web_module %>.Auth.Curator.AuthenticatedPipeline d
                                error_handler: <%= inspect context.web_module %>.Auth.ErrorHandler
 
   plug Guardian.Plug.VerifySession
-  plug Guardian.Plug.LoadResource
+  plug Curator.Plug.LoadResource
+
+  # plug Curator.Timeoutable.Plug, timeoutable_module: <%= inspect context.web_module %>.Auth.Timeoutable
 end

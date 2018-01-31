@@ -8,7 +8,9 @@ defmodule <%= inspect context.web_module %>.Auth.Guardian do
 
   def resource_from_claims(claims) do
     id = claims["sub"]
-    resource = <%= inspect context.module %>.get_user!(id)
-    {:ok, resource}
+    case <%= inspect context.module %>.get_user(id) do
+      nil -> {:error, :no_resource_found}
+      resource -> {:ok, resource}
+    end
   end
 end
