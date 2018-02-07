@@ -119,10 +119,28 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
           secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
         ```
         
+        and `prod.exs`
+        
+        ```elixir
+        config :<my_app_web>, <MyAppWeb>.Auth.Guardian,
+          issuer: "<my_app_web>",
+          allowed_algos: ["HS512"],
+          ttl: { 1, :days },
+          verify_issuer: true,
+          secret_key: {<MyAppWeb>.Auth.Guardian, :fetch_secret_key, []}
+        ```
+        
+        (NOTE: the sameple prod.exs is one way to keep the `secret_key` out of source code. If you use an alternative technique the `fetch_secret_key` method can be removed from `<MyAppWeb>.Auth.Guardian`)
+        
     4. Add to your Auth Context (`<my_app>/lib/<my_app>/auth/auth.ex`)
         
         ```elixir
-          def get_user(id), do: Repo.get(User, id)
+        def get_user(id) do
+          case Repo.get(User, id) do
+            nil -> {:error, :no_resource_found}
+            record -> {:ok, record}
+          end
+        end
         ```
     
 4. Add a signout link to your layout
