@@ -74,21 +74,10 @@ defmodule Mix.Tasks.Curator.Api.Install do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     copy_from paths, "priv/templates/curator.api.install", binding, files
-    inject_schema_access(context, paths, binding)
     inject_curator_module(context, paths, binding)
     inject_guardian_module(context, paths, binding)
 
     context
-  end
-
-  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-    unless Context.pre_existing?(context) do
-      raise "No context to inject into"
-    end
-
-    paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.api.install/schema_access.ex", binding)
-    |> inject_eex_before_final_end(file, binding)
   end
 
   defp inject_curator_module(context, paths, binding) do

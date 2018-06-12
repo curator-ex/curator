@@ -16,10 +16,8 @@ defmodule <%= inspect context.web_module %>.Auth.ApiGuardian do
 
   @behaviour Curator.Guardian.Token.Opaque.Persistence
 
-  # TODO: Should this be a hashed token_id?
-  # Any issue with timing attacks?
-  def get_token(token_id) do
-    <%= inspect context.module %>.get_token_by_id(token_id)
+  def get_token(id) do
+    <%= inspect context.module %>.get_token(id)
   end
 
   # NOTE: We pull user_id & description our of claims

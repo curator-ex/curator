@@ -448,8 +448,8 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
 
       api_unauth_conn = Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept", "application/json")
 
-      {:ok, token, _claims} = <MyWebApp>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
-      api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token.token}")
+      {:ok, token_id, _claims} = <MyWebApp>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
+      api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token_id}")
 
       api_invalid_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: NOT_A_REAL_TOKEN")
 
