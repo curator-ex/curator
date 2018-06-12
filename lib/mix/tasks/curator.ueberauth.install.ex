@@ -65,7 +65,7 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
 
   defp inject_schema_access(%Context{file: file} = context, paths, binding) do
     unless Context.pre_existing?(context) do
-      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/curator.ueberauth.install/context.ex", binding))
+      raise "No context to inject into"
     end
 
     paths
@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
 
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
-      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/curator.ueberauth.install/context_test.exs", binding))
+      raise "No context tests to inject into"
     end
 
     paths

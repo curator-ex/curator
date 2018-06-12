@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Curator.Timeoutable.Install do
-  @shortdoc "Install Curator"
+  @shortdoc "Install Curator::Timeoutable"
 
   @moduledoc """
   Generates required Curator files.
