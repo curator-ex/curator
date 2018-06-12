@@ -28,10 +28,11 @@ defmodule Curator.Guardian.Token.OpaqueTest do
 
   # Not quite ecto...
   defmodule Repo do
-    @token_id "TEST"
+    alias Curator.Guardian.Token.OpaqueTest.Token
 
     @token %Token{
-      token: @token_id,
+      id: 1000,
+      token: "v5AaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e",
       user_id: 1,
       claims: %{
         "typ" => "access",
@@ -47,15 +48,22 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       if Map.get(token.claims, :error) do
         {:error, :invalid}
       else
+        token = token
+        |> Map.put(:id, 1000)
+
         {:ok, token}
       end
     end
 
-    def get_by(Token, %{token: @token_id}) do
+    def get(Token, 1000) do
       @token
     end
 
-    def get_by(_mod, _params) do
+    def get(Token, "1000") do
+      @token
+    end
+
+    def get(_, _) do
       nil
     end
   end
@@ -63,6 +71,13 @@ defmodule Curator.Guardian.Token.OpaqueTest do
   defmodule Auth do
     alias Curator.Guardian.Token.OpaqueTest.Token
     alias Curator.Guardian.Token.OpaqueTest.Repo
+
+    def get_token(id) do
+      case Repo.get(Token, id) do
+        nil -> {:error, :no_resource_found}
+        record -> {:ok, record}
+      end
+    end
 
     def create_token(attrs \\ %{}) do
       struct(Token, %{})
@@ -81,7 +96,6 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       token_module: Curator.Guardian.Token.Opaque
 
     alias Curator.Guardian.Token.OpaqueTest.Auth
-    alias Curator.Guardian.Token.OpaqueTest.Repo
 
     def subject_for_token(user, _claims) do
       sub = to_string(user.id)
@@ -95,12 +109,12 @@ defmodule Curator.Guardian.Token.OpaqueTest do
 
     @behaviour Curator.Guardian.Token.Opaque.Persistence
 
-    def get_token(token_id) do
-      case Repo.get_by(Token, %{token: token_id}) do
-        nil ->
-          {:error, :not_found}
-        token ->
+    def get_token(id) do
+      case Auth.get_token(id) do
+        {:ok, token} ->
           {:ok, token}
+        result ->
+          result
       end
     end
 
@@ -123,12 +137,12 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       Auth.create_token(attrs)
     end
 
-    def delete_token(token_id) do
-      case Repo.get_by(Token, %{token: token_id}) do
-        nil ->
-          {:error, :not_found}
-        token ->
+    def delete_token(id) do
+      case get_token(id) do
+        {:ok, token} ->
           Auth.delete_token(token)
+        result ->
+          result
       end
     end
 
@@ -141,8 +155,8 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     end
   end
 
-  @token_id "TEST"
-  @invalid_token_id "1234"
+  @token_id "v5AaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e1000"
+  @invalid_token_id "XXXaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e1000"
 
   @claims %{
     "typ" => "access",
@@ -160,9 +174,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     test "with a valid token"  do
       result = @token_module.peek(Impl, @token_id)
 
-      assert result == %{
-               claims: @claims
-             }
+      assert result == nil
     end
 
     test "with an invalid token"  do
@@ -174,7 +186,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
 
   describe "create_token" do
     test "(when valid) creates a token " do
-      {:ok, _token} = @token_module.create_token(Impl, @claims)
+      {:ok, _token_id} = @token_module.create_token(Impl, @claims)
     end
 
      test "(when invalid) returns an error" do
@@ -183,12 +195,16 @@ defmodule Curator.Guardian.Token.OpaqueTest do
   end
 
   describe "decode_token" do
-    test "returns the claims when it exists" do
+    test "with a valid token, returns the claims" do
       {:ok, @claims} = @token_module.decode_token(Impl, @token_id)
     end
 
-    test "returns an error when it doesn't exists" do
-      {:error, :not_found} = @token_module.decode_token(Impl, @invalid_token_id)
+    test "with an invalid token, returns an error" do
+      {:error, :invalid} = @token_module.decode_token(Impl, @invalid_token_id)
+    end
+
+    test "with a nil token, returns an error" do
+      {:error, :invalid} = @token_module.decode_token(Impl, nil)
     end
   end
 

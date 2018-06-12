@@ -18,28 +18,26 @@ defmodule Curator.Guardian.Token.Opaque do
 
   @default_token_type "access"
 
+  @token_length 64
+
   import Guardian, only: [stringify_keys: 1]
 
   @doc """
   Inspect the token.
 
-  Return a map with keys: `claims`
+  Not applicable (as it's an opaque token)
   """
   def peek(_mod, nil), do: nil
 
-  def peek(mod, token_id) do
-    case apply(mod, :get_token, [token_id]) do
-      {:ok, token} -> %{claims: token.claims}
-      _ -> nil
-    end
+  def peek(_mod, _token_id) do
+    nil
   end
 
   @doc """
   Generate unique token id
   """
   def token_id do
-    length = 64
-    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+    :crypto.strong_rand_bytes(@token_length) |> Base.encode64 |> binary_part(0, @token_length)
   end
 
   @doc """
@@ -75,25 +73,51 @@ defmodule Curator.Guardian.Token.Opaque do
 
   @doc """
   Create a token. Uses the claims, and persists the token.
-  Returns the token
+  Returns the token_id
 
   """
   def create_token(mod, claims, _options \\ []) do
-    case apply(mod, :create_token, [claims]) do
-      {:ok, token} ->
-        {:ok, token}
-      result ->
-        result
+    with {:ok, token} <- apply(mod, :create_token, [claims]) do
+      token_id = token.token <> Integer.to_string(token.id)
+      {:ok, token_id}
     end
   end
 
   @doc """
   Find the token and return its claims (or return an error)
   """
-  def decode_token(mod, token_id, _options \\ []) do
-    case apply(mod, :get_token, [token_id]) do
-      {:ok, token} -> {:ok, token.claims}
-      result -> result
+  def decode_token(mod, token_id, _options \\ [])
+  def decode_token(_mod, nil, _options), do: {:error, :invalid}
+  def decode_token(mod, token_id, _options) do
+    with {:ok, token} <- get_token_from_token_id(mod, token_id) do
+      {:ok, token.claims}
+    else
+      _ -> {:error, :invalid}
+    end
+  end
+
+  @doc """
+  Split a token_id into the token_string & id
+  Get the DB token (from the id)
+  Perform a constant-time comparison with the token string
+  """
+  def get_token_from_token_id(mod, token_id) do
+    <<token_string::bytes-size(64), id::binary>> = token_id
+
+    with {:ok, token} <- apply(mod, :get_token, [id]) do
+      # constant-time comparison
+      if SecureCompare.compare(token.token, token_string) do
+        {:ok, token}
+      else
+        {:error, :invalid}
+      end
+    else
+      _ ->
+        # Token not found in the database, slow the response slightly to mitigate token.id enumeration
+        "v5AaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e"
+        |> SecureCompare.compare(token_string)
+
+        {:error, :invalid}
     end
   end
 
@@ -108,10 +132,11 @@ defmodule Curator.Guardian.Token.Opaque do
   Delete the token
   """
   def revoke(mod, claims, token_id, _options) do
-    case apply(mod, :delete_token, [token_id]) do
-      {:ok, _} ->
-        {:ok, claims}
-      result -> result
+    with {:ok, token} <- get_token_from_token_id(mod, token_id),
+         {:ok, _token} <- apply(mod, :delete_token, [token.id]) do
+      {:ok, claims}
+    else
+      _ -> {:error, :invalid}
     end
   end
 
@@ -120,7 +145,7 @@ defmodule Curator.Guardian.Token.Opaque do
 
   It will return an error if called
   """
-  def refresh(_mod, _old_token, _options) do
+  def refresh(_mod, _old_token_id, _options) do
     {:error, :not_applicable}
   end
 
@@ -129,7 +154,7 @@ defmodule Curator.Guardian.Token.Opaque do
 
   It will return an error if called
   """
-  def exchange(_mod, _old_token, _from_type, _to_type, _options) do
+  def exchange(_mod, _old_token_id, _from_type, _to_type, _options) do
     {:error, :not_applicable}
   end
 end
