@@ -1,3 +1,8 @@
+# v 0.2.4 (6/12/2018)
+Update token authentication to use constant-time comparison
+
+see: http://blog.plataformatec.com.br/2013/08/devise-3-1-now-with-more-secure-defaults/
+
 # v 0.2.3 (6/12/2018)
 API Authentication
 

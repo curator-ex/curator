@@ -27,7 +27,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     def deps do
-      [{:curator, "~> 0.2.3"}]
+      [{:curator, "~> 0.2.4"}]
     end
     ```
 
