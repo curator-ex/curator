@@ -110,12 +110,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     @behaviour Curator.Guardian.Token.Opaque.Persistence
 
     def get_token(id) do
-      case Auth.get_token(id) do
-        {:ok, token} ->
-          {:ok, token}
-        result ->
-          result
-      end
+      Auth.get_token(id)
     end
 
     def create_token(claims) do
