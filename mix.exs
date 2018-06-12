@@ -42,6 +42,7 @@ defmodule Curator.Mixfile do
       {:guardian, "~> 1.0"},
       {:phoenix, "~> 1.3"},
       {:plug, "~> 1.2"},
+      {:secure_compare, "~> 0.1.0"},
       {:timex, "~> 3.0"},
       {:timex_ecto, "~> 3.0"},
     ]
