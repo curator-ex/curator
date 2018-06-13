@@ -26,7 +26,7 @@ defmodule Curator.Timeoutable do
   end
 
   # Extension overrides
-  def after_sign_in(conn, _user, opts \\ []) do
+  def after_sign_in(conn, _user, opts) do
     update_timeoutable_timestamp(conn, opts)
   end
 

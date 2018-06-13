@@ -17,16 +17,20 @@ defmodule Curator do
       use Curator.Config, unquote(opts)
       @behaviour Curator
 
-      # Extensions
-      def before_sign_in(resource, opts \\ []),
+      # Registered Extensions
+      def before_sign_in(resource, opts \\ [])
+      def before_sign_in(resource, opts),
         do: Curator.before_sign_in(__MODULE__, resource, opts)
 
-      def after_sign_in(conn, resource, opts \\ []),
+      def after_sign_in(conn, resource, opts \\ [])
+      def after_sign_in(conn, resource, opts),
         do: Curator.after_sign_in(__MODULE__, conn, resource, opts)
 
       # TODO
       # def after_failed_sign_in(conn, resource, opts \\ [])
-      # def after_extension(conn, type, resource, opts \\ [])
+
+      def extension(fun, args),
+        do: Curator.extension(__MODULE__, fun, args)
 
       # Delegate to Guardian
       def sign_in(conn, resource, opts \\ []),
@@ -45,6 +49,10 @@ defmodule Curator do
   end
 
   # Extensions
+
+  @doc """
+  apply before_sign_in to each module (until one fails)
+  """
   def before_sign_in(mod, resource, opts) do
     modules = modules(mod)
 
@@ -56,6 +64,9 @@ defmodule Curator do
     end)
   end
 
+  @doc """
+  apply after_sign_in to _all_ modules
+  """
   def after_sign_in(mod, conn, resource, opts) do
     modules = modules(mod)
 
@@ -69,6 +80,32 @@ defmodule Curator do
     #     {:error, error} -> {:halt, {:error, error}}
     #   end
     # end)
+  end
+
+  @doc """
+  Call an extension on all modules
+
+  This provides a way to coordinate actions between the modules, without them knowing about eachother directly.
+  Each module can have verious extensions it broadcasts. The other modules decide if they'll listen...
+  """
+  # def extension(mod, fun, args) do
+  #   modules = modules(mod)
+
+  #   Enum.each(modules, fn(module) ->
+  #     apply(module, :extension, [fun, args])
+  #   end)
+  # end
+
+  def extension(mod, fun, args) do
+    modules = modules(mod)
+
+    Enum.each(modules, fn(module) ->
+      arity = Enum.count(args)
+
+      if function_exported?(module, fun, arity) do
+        apply(module, fun, args)
+      end
+    end)
   end
 
   # Delegate to Guardian
