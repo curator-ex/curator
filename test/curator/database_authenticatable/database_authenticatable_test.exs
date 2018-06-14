@@ -6,11 +6,14 @@ defmodule Curator.DatabaseAuthenticatableTest do
   defmodule User do
     use Ecto.Schema
     import Ecto.Changeset
+    use Curator.UserSchema,
+      curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
     schema "users" do
       field :email, :string
-      field :password, :string, virtual: true
-      field :password_hash, :string
+      # field :password, :string, virtual: true
+      # field :password_hash, :string
+      curator_schema()
 
       timestamps()
     end
@@ -18,16 +21,16 @@ defmodule Curator.DatabaseAuthenticatableTest do
     @doc false
     def changeset(%User{} = user, attrs) do
       user
-      |> cast(attrs, [:email, :password])
-      |> validate_required([:email, :password])
-      |> put_password_hash()
+      |> cast(attrs, [:email] ++ curator_fields())
+      |> validate_required([:email])
+      |> curator_validation()
     end
 
-    defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-      change(changeset, Comeonin.Bcrypt.add_hash(password))
-    end
+    # defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+    #   change(changeset, Comeonin.Bcrypt.add_hash(password))
+    # end
 
-    defp put_password_hash(changeset), do: changeset
+    # defp put_password_hash(changeset), do: changeset
   end
 
   defmodule GuardianImpl do
