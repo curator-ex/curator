@@ -78,7 +78,7 @@ defmodule Curator.Guardian.Token.Opaque do
   """
   def create_token(mod, claims, _options \\ []) do
     with {:ok, token} <- apply(mod, :create_token, [claims]) do
-      token_id = token.token <> Integer.to_string(token.id)
+      token_id = token_to_token_id(token)
       {:ok, token_id}
     end
   end
@@ -94,6 +94,10 @@ defmodule Curator.Guardian.Token.Opaque do
     else
       _ -> {:error, :invalid}
     end
+  end
+
+  def token_to_token_id(token) do
+    token.token <> Integer.to_string(token.id)
   end
 
   @doc """
