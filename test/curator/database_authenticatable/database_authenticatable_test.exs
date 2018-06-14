@@ -3,36 +3,6 @@ defmodule Curator.DatabaseAuthenticatableTest do
 
   use ExUnit.Case, async: true
 
-  defmodule User do
-    use Ecto.Schema
-    import Ecto.Changeset
-    use Curator.UserSchema,
-      curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
-
-    schema "users" do
-      field :email, :string
-      # field :password, :string, virtual: true
-      # field :password_hash, :string
-      curator_schema()
-
-      timestamps()
-    end
-
-    @doc false
-    def changeset(%User{} = user, attrs) do
-      user
-      |> cast(attrs, [:email] ++ curator_fields())
-      |> validate_required([:email])
-      |> curator_validation()
-    end
-
-    # defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-    #   change(changeset, Comeonin.Bcrypt.add_hash(password))
-    # end
-
-    # defp put_password_hash(changeset), do: changeset
-  end
-
   defmodule GuardianImpl do
     use Guardian,
       otp_app: :curator
@@ -61,14 +31,14 @@ defmodule Curator.DatabaseAuthenticatableTest do
       curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
     def find_user_by_email("test@test.com") do
-      %User{
+      %{
         email: "test@test.com",
         password_hash: "$2b$12$kmIIozbAUtpTILVM9QuwU.0AAJCtqnYhBLwJ/6UBLfLkdllKAa7XO",
       }
     end
 
     def find_user_by_email("exception@test.com") do
-      %User{
+      %{
         email: "exception@test.com",
         password_hash: "$2b$12$kmIIozbAUtpTILVM9QuwU.0AAJCtqnYhBLwJ/6UBLfLkdllKAa7XO",
       }
@@ -93,6 +63,30 @@ defmodule Curator.DatabaseAuthenticatableTest do
       modules: [
         DatabaseAuthenticatableImpl,
       ]
+  end
+
+  defmodule User do
+    use Ecto.Schema
+    import Ecto.Changeset
+    use Curator.UserSchema#,
+      # curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
+
+    schema "users" do
+      field :email, :string
+      # field :password, :string, virtual: true
+      # field :password_hash, :string
+      curator_schema(Curator.DatabaseAuthenticatableTest.CuratorImpl)
+
+      timestamps()
+    end
+
+    @doc false
+    def changeset(%User{} = user, attrs) do
+      user
+      |> cast(attrs, [:email] ++ curator_fields())
+      |> validate_required([:email])
+      |> curator_validation()
+    end
   end
 
   test "changeset" do

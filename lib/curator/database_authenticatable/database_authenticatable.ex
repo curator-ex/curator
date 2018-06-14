@@ -21,7 +21,15 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.authenticate_user(__MODULE__, params)
       end
 
-      defoverridable authenticate_user: 1
+      def curator_schema() do
+        quote do
+          field :password, :string, virtual: true
+          field :password_hash, :string
+        end
+      end
+
+      defoverridable authenticate_user: 1,
+                     curator_schema: 0
     end
   end
 

@@ -42,6 +42,10 @@ defmodule Curator do
       def current_resource(conn, opts \\ []),
         do: Curator.current_resource(__MODULE__, conn, opts)
 
+      # def modules() do
+      #   @config_with_key_and_default :module, []
+      # end
+
       defoverridable before_sign_in: 2,
                      after_sign_in: 3
 
