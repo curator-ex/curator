@@ -40,6 +40,8 @@ defmodule Curator.DatabaseAuthenticatable do
     end
   end
 
+  # Extensions
+
   def curator_schema do
     quote do
       field :password, :string, virtual: true
@@ -55,12 +57,6 @@ defmodule Curator.DatabaseAuthenticatable do
     put_password_hash(changeset)
   end
 
-  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-    change(changeset, Comeonin.Bcrypt.add_hash(password))
-  end
-
-  defp put_password_hash(changeset), do: changeset
-
   # Private
 
   defp verify_password(nil, _password) do
@@ -71,6 +67,12 @@ defmodule Curator.DatabaseAuthenticatable do
   defp verify_password(user, password) do
     Bcrypt.checkpw(password, user.password_hash)
   end
+
+  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+    change(changeset, Bcrypt.add_hash(password))
+  end
+
+  defp put_password_hash(changeset), do: changeset
 
   # Config
   def curator(mod) do

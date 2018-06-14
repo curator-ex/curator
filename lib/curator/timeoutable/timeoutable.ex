@@ -25,7 +25,7 @@ defmodule Curator.Timeoutable do
     apply(mod, :config, [:timeout_in, 1800])
   end
 
-  # Extension overrides
+  # Extensions
   def after_sign_in(conn, _user, opts) do
     update_timeoutable_timestamp(conn, opts)
   end
