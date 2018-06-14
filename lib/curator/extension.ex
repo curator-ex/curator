@@ -52,6 +52,6 @@ defmodule Curator.Extension do
   def authenticated_routes(), do: nil
 
   def curator_schema(), do: nil
-  def curator_fields(), do: nil
+  def curator_fields(), do: []
   def curator_validation(changeset), do: changeset
 end

@@ -9,6 +9,7 @@ defmodule Curator.DatabaseAuthenticatable do
   """
 
   use Curator.Extension
+  import Ecto.Changeset
 
   alias Comeonin.Bcrypt
 
@@ -21,15 +22,7 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.authenticate_user(__MODULE__, params)
       end
 
-      def curator_schema() do
-        quote do
-          field :password, :string, virtual: true
-          field :password_hash, :string
-        end
-      end
-
-      defoverridable authenticate_user: 1,
-                     curator_schema: 0
+      defoverridable authenticate_user: 1
     end
   end
 
@@ -46,6 +39,27 @@ defmodule Curator.DatabaseAuthenticatable do
       {:error, :invalid_credentials}
     end
   end
+
+  def curator_schema do
+    quote do
+      field :password, :string, virtual: true
+      field :password_hash, :string
+    end
+  end
+
+  def curator_fields do
+    [:password]
+  end
+
+  def curator_validation(changeset) do
+    put_password_hash(changeset)
+  end
+
+  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+    change(changeset, Comeonin.Bcrypt.add_hash(password))
+  end
+
+  defp put_password_hash(changeset), do: changeset
 
   # Private
 

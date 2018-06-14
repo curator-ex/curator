@@ -68,13 +68,11 @@ defmodule Curator.DatabaseAuthenticatableTest do
   defmodule User do
     use Ecto.Schema
     import Ecto.Changeset
-    use Curator.UserSchema#,
-      # curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
+    use Curator.UserSchema,
+      curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
     schema "users" do
       field :email, :string
-      # field :password, :string, virtual: true
-      # field :password_hash, :string
       curator_schema(Curator.DatabaseAuthenticatableTest.CuratorImpl)
 
       timestamps()
