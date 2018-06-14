@@ -88,14 +88,6 @@ defmodule Curator do
   This provides a way to coordinate actions between the modules, without them knowing about eachother directly.
   Each module can have verious extensions it broadcasts. The other modules decide if they'll listen...
   """
-  # def extension(mod, fun, args) do
-  #   modules = modules(mod)
-
-  #   Enum.each(modules, fn(module) ->
-  #     apply(module, :extension, [fun, args])
-  #   end)
-  # end
-
   def extension(mod, fun, args) do
     modules = modules(mod)
 

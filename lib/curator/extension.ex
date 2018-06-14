@@ -14,8 +14,6 @@ defmodule Curator.Extension do
       def after_sign_in(conn, user, opts \\ [])
       def after_sign_in(conn, user, opts), do: apply(unquote(mod), :after_sign_in, [conn, user, opts])
 
-      # def extension(fun, args), do: apply(unquote(mod), :extension, [fun, args])
-
       defoverridable unauthenticated_routes: 0,
                      authenticated_routes: 0,
                      before_sign_in: 2,
@@ -39,13 +37,10 @@ defmodule Curator.Extension do
 
   @callback unauthenticated_routes() :: nil
   @callback authenticated_routes() :: nil
-  # @callback extension(atom, any) :: nil
 
   def before_sign_in(_user, _opts), do: :ok
   def after_sign_in(conn, _user, _opts), do: conn
 
   def unauthenticated_routes(), do: nil
   def authenticated_routes(), do: nil
-
-  # def extension(fun, args), do: nil
 end
