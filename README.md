@@ -395,7 +395,58 @@ Session Timeout (after configurable inactivity)
 
 ### Registerable (TODO)
 
-### Database Authenticatable (TODO)
+### Database Authenticatable
+1. Run the install command
+
+    ```
+    mix curator.database_authenticatable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator, otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.DatabaseAuthenticatable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    field :password, :string, virtual: true
+    field :password_hash, :string
+    ```
+
+4. Add your crypto_mod dependencies.
+
+  By default, Comeonin.Bcrypt is configured as the crypto_mod. This requires two dependencies:
+
+    ```
+    {:bcrypt_elixir, "~> 1.0"},
+    {:comeonin, "~> 4.0"},
+    ```
+
+  You can configure the crypto_mod by passing it as an arguement in the DatabaseAuthenticatable implementation.
+
+5. Update the new session page as needed (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+6. run the migration
+
+    ```
+    mix ecto.migrate
+    ```
+
+7. Add a way for users to manage their passwords, like: [Registerable](#registerable)
+
+  If you just want to test the module out, you can use the changeset directly:
+
+  ```elixir
+  Houston.Auth.find_user_by_email("eric.sullivan@annkissam.com")
+  |> HoustonWeb.Auth.DatabaseAuthenticatable.changeset(%{password: "TEST"})
+  |> Houston.Auth.update_user_changeset()
+  ```
+
 
 ### Confirmable (TODO)
 
