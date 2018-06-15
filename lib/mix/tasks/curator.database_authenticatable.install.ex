@@ -130,6 +130,11 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
         use Curator,
           otp_app: :#{Mix.Phoenix.otp_app()},
           modules: [#{inspect context.web_module}.Auth.DatabaseAuthenticatable]
+
+    The user schema requires new fields:
+
+        field :password, :string, virtual: true
+        field :password_hash, :string
     """
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

@@ -4,14 +4,16 @@ defmodule Curator.DatabaseAuthenticatable do
 
   Must implement find_user_by_email
 
+  Options
+  curator (required)
+  crypto_mod (optional) default: Comeonin.Bcrypt
+
   Extensions
   verify_password_failure
   """
 
   use Curator.Extension
   import Ecto.Changeset
-
-  alias Comeonin.Bcrypt
 
   defmacro __using__(opts \\ []) do
     quote do
@@ -22,7 +24,12 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.authenticate_user(__MODULE__, params)
       end
 
-      defoverridable authenticate_user: 1
+      def changeset(user, attrs) do
+        Curator.DatabaseAuthenticatable.changeset(__MODULE__, user, attrs)
+      end
+
+      defoverridable authenticate_user: 1,
+                     changeset: 2
     end
   end
 
@@ -33,7 +40,7 @@ defmodule Curator.DatabaseAuthenticatable do
   def authenticate_user(mod, %{email: email, password: password}) do
     user = apply(mod, :find_user_by_email, [email])
 
-    if verify_password(user, password) do
+    if verify_password(mod, user, password) do
       {:ok, user}
     else
       if user do
@@ -46,21 +53,6 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # Extensions
 
-  # def curator_schema do
-  #   quote do
-  #     field :password, :string, virtual: true
-  #     field :password_hash, :string
-  #   end
-  # end
-
-  # def curator_fields do
-  #   [:password]
-  # end
-
-  # def curator_validation(changeset) do
-  #   put_password_hash(changeset)
-  # end
-
   def unauthenticated_routes() do
     quote do
       # Prevent ueberauth from using 'session' as a provider
@@ -71,31 +63,41 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # Private
 
-  defp verify_password(nil, _password) do
-    Bcrypt.dummy_checkpw()
+  defp verify_password(mod, nil, _password) do
+    crypto_mod(mod).dummy_checkpw()
     false
   end
 
   # A password_hash should never be missing...
   # Unless curator was installed without this module at first...
-  defp verify_password(user, password) do
+  defp verify_password(mod, user, password) do
     if user.password_hash do
-      Bcrypt.checkpw(password, user.password_hash)
+      crypto_mod(mod).checkpw(password, user.password_hash)
     else
-      Bcrypt.dummy_checkpw()
+      crypto_mod(mod).dummy_checkpw()
       false
     end
   end
 
-  # TODO: These need to get on the user module...
-  # defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-  #   change(changeset, Bcrypt.add_hash(password))
-  # end
+  # User Schema
+  def changeset(mod, user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> put_password_hash(mod)
+  end
 
-  # defp put_password_hash(changeset), do: changeset
+  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
+    change(changeset, crypto_mod(mod).add_hash(password))
+  end
+
+  defp put_password_hash(changeset, _mod), do: changeset
 
   # Config
   def curator(mod) do
     apply(mod, :config, [:curator])
+  end
+
+  def crypto_mod(mod) do
+    apply(mod, :config, [:crypto_mod, Comeonin.Bcrypt])
   end
 end

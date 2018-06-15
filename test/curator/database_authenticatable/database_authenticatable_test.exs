@@ -6,14 +6,13 @@ defmodule Curator.DatabaseAuthenticatableTest do
   defmodule User do
     use Ecto.Schema
     import Ecto.Changeset
-    # use Curator.UserSchema,
-    #   curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
     schema "users" do
       field :email, :string
+
+      # DatabaseAuthenticatable
       field :password, :string, virtual: true
       field :password_hash, :string
-      # curator_schema(Curator.DatabaseAuthenticatableTest.CuratorImpl)
 
       timestamps()
     end
@@ -23,17 +22,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
       user
       |> cast(attrs, [:email, :password])
       |> validate_required([:email])
-      |> put_password_hash()
-      # |> curator_validation()
     end
-
-    # Rethinking this... Maybe we can move the different changesets to the Auth context?
-    # Then we'd only need to add fields
-    defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-      change(changeset, Comeonin.Bcrypt.add_hash(password))
-    end
-
-    defp put_password_hash(changeset), do: changeset
   end
 
   defmodule GuardianImpl do
@@ -104,7 +93,11 @@ defmodule Curator.DatabaseAuthenticatableTest do
       password: "not_hashed",
     }
 
+    # Not sure if you'll need to combine changesets...
+    # As a next step, you'll likely want to pipe it into a repo (if valid)...
     changeset = User.changeset(%User{}, attrs)
+    |> DatabaseAuthenticatableImpl.changeset(attrs)
+
     assert changeset.valid?
 
     user = Ecto.Changeset.apply_changes(changeset)
