@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Curator.Ueberauth.Install do
-  @shortdoc "Install Curator::Ueberauth"
+defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
+  @shortdoc "Install` Curator"
 
   @moduledoc """
-  Generates required Curator Ueberauth files.
+  Generates required Curator DatabaseAuthenticatable files.
 
-      mix curator.ueberauth.install
+      mix curator.database_authenticatable.install
 
   NOTE: This was copied and adapted from: mix phx.gen.context
   """
@@ -24,8 +24,10 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
     if Mix.Project.umbrella? do
-      Mix.raise "mix curator.ueberauth.install can only be run inside an application directory"
+      Mix.raise "mix curator.database_authenticatable.install can only be run inside an application directory"
     end
+
+    # Gen.Context.run(args)
 
     {context, schema} = Gen.Context.build(args)
 
@@ -43,20 +45,23 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
 
   @doc false
   def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
+    db_prefix = Mix.Phoenix.context_app_path(context_app, "")
     web_prefix = Mix.Phoenix.web_path(context_app)
     # test_prefix = Mix.Phoenix.web_test_path(context_app)
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "ueberauth_controller.ex",   Path.join([web_prefix, "controllers", web_path, "auth", "ueberauth_controller.ex"])},
-      {:eex,     "ueberauth.ex",               Path.join([web_prefix, web_path, "auth", "ueberauth.ex"])},
+      {:eex,     "database_authenticatable.ex", Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])},
+      {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
+      {:eex,     "session_controller.ex",       Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
+      {:eex,     "migration.exs",               Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_database_authenticatable_to_users.exs"])},
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/curator.ueberauth.install", binding, files
+    Mix.Phoenix.copy_from paths, "priv/templates/curator.database_authenticatable.install", binding, files
     inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
 
@@ -69,7 +74,7 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
     end
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.ueberauth.install/schema_access.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/curator.database_authenticatable.install/schema_access.ex", binding)
     |> inject_eex_before_final_end(file, binding)
   end
 
@@ -83,7 +88,7 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
     end
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.ueberauth.install/test_cases.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/curator.database_authenticatable.install/test_cases.exs", binding)
     |> inject_eex_before_final_end(test_file, binding)
   end
 
@@ -112,26 +117,28 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
 
     Mix.shell.info """
 
-    Setup Ueberauth:
+    The DatabaseAuthenticatable module was created at: #{Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])}
 
-        config :ueberauth, Ueberauth,
-          providers: [
-            google: {Ueberauth.Strategy.Google, []}
-          ]
+    You can configure it like so:
 
-        config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-          client_id: System.get_env("GOOGLE_CLIENT_ID"),
-          client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
-
-    More info: https://github.com/ueberauth/ueberauth#setup
-
-    The Ueberauth module was created at: #{Path.join([web_prefix, web_path, "auth", "ueberauth.ex"])}
+        use Curator.DatabaseAuthenticatable,
+          otp_app: :#{Mix.Phoenix.otp_app()},
+          curator: #{inspect context.web_module}.Auth.Curator
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
-        use Curator, otp_app: :#{Mix.Phoenix.otp_app()},
-          modules: [#{inspect context.web_module}.Auth.Ueberauth]
-
+        use Curator,
+          otp_app: :#{Mix.Phoenix.otp_app()},
+          modules: [#{inspect context.web_module}.Auth.DatabaseAuthenticatable]
     """
+
+    if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
+
+  defp timestamp do
+    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
+    "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
+  end
+  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+  defp pad(i), do: to_string(i)
 end

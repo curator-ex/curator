@@ -15,13 +15,8 @@ defmodule Curator.Router do
     apply(curator_module, :config, [:modules, []])
   end
 
-  # def web_module(curator_module) do
-  #   apply(curator_module, :config, [:web_module])
-  # end
-
   defmacro mount_unauthenticated_routes(curator) do
     curator = Macro.expand(curator, __CALLER__)
-    # web_module = web_module(curator)
     module_quotes = get_module_quotes(curator, :unauthenticated_routes)
 
     quote do
@@ -37,7 +32,6 @@ defmodule Curator.Router do
 
   defmacro mount_authenticated_routes(curator) do
     curator = Macro.expand(curator, __CALLER__)
-    # web_module = web_module(curator)
     module_quotes = get_module_quotes(curator, :authenticated_routes)
 
     quote do

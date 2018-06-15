@@ -26,6 +26,10 @@ defmodule Curator.DatabaseAuthenticatable do
     end
   end
 
+  def authenticate_user(mod, %{"email" => email, "password" => password}) do
+    authenticate_user(mod, %{email: email, password: password})
+  end
+
   def authenticate_user(mod, %{email: email, password: password}) do
     user = apply(mod, :find_user_by_email, [email])
 
@@ -42,19 +46,27 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # Extensions
 
-  def curator_schema do
+  # def curator_schema do
+  #   quote do
+  #     field :password, :string, virtual: true
+  #     field :password_hash, :string
+  #   end
+  # end
+
+  # def curator_fields do
+  #   [:password]
+  # end
+
+  # def curator_validation(changeset) do
+  #   put_password_hash(changeset)
+  # end
+
+  def unauthenticated_routes() do
     quote do
-      field :password, :string, virtual: true
-      field :password_hash, :string
+      # Prevent ueberauth from using 'session' as a provider
+      get "/session", Auth.SessionController, :new
+      post "/session", Auth.SessionController, :create
     end
-  end
-
-  def curator_fields do
-    [:password]
-  end
-
-  def curator_validation(changeset) do
-    put_password_hash(changeset)
   end
 
   # Private
@@ -64,15 +76,23 @@ defmodule Curator.DatabaseAuthenticatable do
     false
   end
 
+  # A password_hash should never be missing...
+  # Unless curator was installed without this module at first...
   defp verify_password(user, password) do
-    Bcrypt.checkpw(password, user.password_hash)
+    if user.password_hash do
+      Bcrypt.checkpw(password, user.password_hash)
+    else
+      Bcrypt.dummy_checkpw()
+      false
+    end
   end
 
-  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-    change(changeset, Bcrypt.add_hash(password))
-  end
+  # TODO: These need to get on the user module...
+  # defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+  #   change(changeset, Bcrypt.add_hash(password))
+  # end
 
-  defp put_password_hash(changeset), do: changeset
+  # defp put_password_hash(changeset), do: changeset
 
   # Config
   def curator(mod) do
