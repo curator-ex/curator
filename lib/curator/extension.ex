@@ -8,8 +8,11 @@ defmodule Curator.Extension do
       def unauthenticated_routes(), do: apply(unquote(mod), :unauthenticated_routes, [])
       def authenticated_routes(), do: apply(unquote(mod), :authenticated_routes, [])
 
-      def before_sign_in(user, opts \\ []), do: apply(unquote(mod), :before_sign_in, [user, opts])
-      def after_sign_in(conn, user, opts \\ []), do: apply(unquote(mod), :after_sign_in, [conn, user, opts])
+      def before_sign_in(user, opts \\ [])
+      def before_sign_in(user, opts), do: apply(unquote(mod), :before_sign_in, [user, opts])
+
+      def after_sign_in(conn, user, opts \\ [])
+      def after_sign_in(conn, user, opts), do: apply(unquote(mod), :after_sign_in, [conn, user, opts])
 
       defoverridable unauthenticated_routes: 0,
                      authenticated_routes: 0,
@@ -20,9 +23,6 @@ defmodule Curator.Extension do
 
   @type options :: Keyword.t()
   # @type conditional_tuple :: {:ok, any} | {:error, any}
-
-  @callback unauthenticated_routes() :: nil
-  @callback authenticated_routes() :: nil
 
   @callback before_sign_in(
               resource :: any,
@@ -35,8 +35,11 @@ defmodule Curator.Extension do
               options :: options
             ) :: Plug.Conn.t()
 
-  def before_sign_in(user, opts \\ []), do: :ok
-  def after_sign_in(conn, user, opts \\ []), do: conn
+  @callback unauthenticated_routes() :: nil
+  @callback authenticated_routes() :: nil
+
+  def before_sign_in(_user, _opts), do: :ok
+  def after_sign_in(conn, _user, _opts), do: conn
 
   def unauthenticated_routes(), do: nil
   def authenticated_routes(), do: nil

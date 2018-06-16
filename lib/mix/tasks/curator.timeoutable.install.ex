@@ -2,9 +2,9 @@ defmodule Mix.Tasks.Curator.Timeoutable.Install do
   @shortdoc "Install Curator::Timeoutable"
 
   @moduledoc """
-  Generates required Curator files.
+  Generates required Curator Timeoutable files.
 
-      mix curator.install
+      mix curator.timeoutable.install
 
   NOTE: This was copied and adapted from: mix phx.gen.context
   """
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Curator.Timeoutable.Install do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
     if Mix.Project.umbrella? do
-      Mix.raise "mix curator.install can only be run inside an application directory"
+      Mix.raise "mix curator.timeoutable.install can only be run inside an application directory"
     end
 
     {context, schema} = Gen.Context.build(args)

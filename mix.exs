@@ -35,6 +35,8 @@ defmodule Curator.Mixfile do
 
   defp deps do
     [
+      {:bcrypt_elixir, "~> 1.0", optional: true},
+      {:comeonin, "~> 4.0", optional: true},
       {:credo, "~> 0.5", only: [:dev, :test]},
       {:dialyxir, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ecto, "~> 2.0"},

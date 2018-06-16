@@ -90,7 +90,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     end
   end
 
-  defmodule Impl do
+  defmodule GuardianImpl do
     use Guardian,
       otp_app: :curator,
       token_module: Curator.Guardian.Token.Opaque
@@ -161,19 +161,19 @@ defmodule Curator.Guardian.Token.OpaqueTest do
 
   describe "peek" do
     test "with a nil token"  do
-      result = @token_module.peek(Impl, nil)
+      result = @token_module.peek(GuardianImpl, nil)
 
       assert result == nil
     end
 
     test "with a valid token"  do
-      result = @token_module.peek(Impl, @token_id)
+      result = @token_module.peek(GuardianImpl, @token_id)
 
       assert result == nil
     end
 
     test "with an invalid token"  do
-      result = @token_module.peek(Impl, @invalid_token_id)
+      result = @token_module.peek(GuardianImpl, @invalid_token_id)
 
       assert result == nil
     end
@@ -181,29 +181,29 @@ defmodule Curator.Guardian.Token.OpaqueTest do
 
   describe "create_token" do
     test "(when valid) creates a token " do
-      {:ok, _token_id} = @token_module.create_token(Impl, @claims)
+      {:ok, _token_id} = @token_module.create_token(GuardianImpl, @claims)
     end
 
      test "(when invalid) returns an error" do
-      {:error, :invalid} = @token_module.create_token(Impl, %{error: "invalid"})
+      {:error, :invalid} = @token_module.create_token(GuardianImpl, %{error: "invalid"})
     end
   end
 
   describe "decode_token" do
     test "with a valid token, returns the claims" do
-      {:ok, @claims} = @token_module.decode_token(Impl, @token_id)
+      {:ok, @claims} = @token_module.decode_token(GuardianImpl, @token_id)
     end
 
     test "with an invalid token, returns an error" do
-      {:error, :invalid} = @token_module.decode_token(Impl, @invalid_token_id)
+      {:error, :invalid} = @token_module.decode_token(GuardianImpl, @invalid_token_id)
     end
 
     test "with an mal-formed token, returns an error" do
-      {:error, :invalid} = @token_module.decode_token(Impl, "NOT_A_REAL_TOKEN")
+      {:error, :invalid} = @token_module.decode_token(GuardianImpl, "NOT_A_REAL_TOKEN")
     end
 
     test "with a nil token, returns an error" do
-      {:error, :invalid} = @token_module.decode_token(Impl, nil)
+      {:error, :invalid} = @token_module.decode_token(GuardianImpl, nil)
     end
   end
 
@@ -211,41 +211,41 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     @user %{id: "1"}
 
     test "it adds some fields" do
-      {:ok, result} = @token_module.build_claims(Impl, @user, "1")
+      {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1")
 
       assert result["typ"] == "access"
       assert result["sub"] == "1"
     end
 
     test "it keeps other fields that have been added" do
-      assert {:ok, result} = @token_module.build_claims(Impl, @user, "1", %{my: "claim"})
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{my: "claim"})
       assert result["my"] == "claim"
     end
 
     test "sets to the default for the token type" do
-      assert {:ok, result} = @token_module.build_claims(Impl, @user, "1", %{})
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{})
       assert result["typ"] == "access"
 
-      assert {:ok, result} = @token_module.build_claims(Impl, @user, "1", %{}, token_type: "refresh")
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, token_type: "refresh")
       assert result["typ"] == "refresh"
     end
   end
 
   describe "verify_claims" do
     test "it returns the claims" do
-      assert {:ok, @claims} = @token_module.verify_claims(Impl, @claims, [])
+      assert {:ok, @claims} = @token_module.verify_claims(GuardianImpl, @claims, [])
     end
   end
 
   describe "refresh" do
     test "returns an error" do
-      assert {:error, :not_applicable} = @token_module.refresh(Impl, @token_id, [])
+      assert {:error, :not_applicable} = @token_module.refresh(GuardianImpl, @token_id, [])
     end
   end
 
   describe "exchange" do
     test "returns an error" do
-      assert {:error, :not_applicable} = @token_module.exchange(Impl, @token_id, "access", "refresh", [])
+      assert {:error, :not_applicable} = @token_module.exchange(GuardianImpl, @token_id, "access", "refresh", [])
     end
   end
 end

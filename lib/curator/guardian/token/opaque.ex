@@ -2,7 +2,7 @@ defmodule Curator.Guardian.Token.Opaque do
   @moduledoc """
     Opaque token implementation for Guardian.
 
-    Rather than the default JWT implementation, this module expect that a token
+    Rather than the default JWT implementation, this module expects that a token
     will be an opaque string, that can be looked up (in a persistance module) to
     get the claims. It uses a subset of the standard JWT claims so it will function
     as a drop-in replacement for the default Guardian implementation.
@@ -34,7 +34,10 @@ defmodule Curator.Guardian.Token.Opaque do
   end
 
   @doc """
-  Generate unique token id
+  Generate a unique token
+
+  NOTE: This is NOT the token_id, but a component used to build it
+  (it will be combined with the DB id to create the token_id)
   """
   def token_id do
     :crypto.strong_rand_bytes(@token_length) |> Base.encode64 |> binary_part(0, @token_length)
@@ -96,6 +99,14 @@ defmodule Curator.Guardian.Token.Opaque do
     end
   end
 
+  @doc """
+  Turn a token into a token_id
+
+  A token_id is just the token.token + the token.id (concatenated)
+  The id is used for a quick DB lookup, the token is then compared in constant time.
+  This approach contrasts looking up the token in the DB by using token. That could
+  leak info in a timing attack
+  """
   def token_to_token_id(token) do
     token.token <> Integer.to_string(token.id)
   end

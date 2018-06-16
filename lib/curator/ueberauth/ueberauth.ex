@@ -8,6 +8,8 @@ defmodule Curator.Ueberauth do
     end
   end
 
+  # Extensions
+
   def unauthenticated_routes() do
     quote do
       get "/:provider", Auth.UeberauthController, :request

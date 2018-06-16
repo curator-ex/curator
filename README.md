@@ -69,32 +69,32 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
         pipeline :browser do
           ...
-          plug <MyWebApp>.Auth.Curator.UnauthenticatedPipeline
+          plug <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline
         end
 
         pipeline :authenticated_browser do
           ... (copy the code from browser)
-          plug <MyWebApp>.Auth.Curator.AuthenticatedPipeline
+          plug <MyAppWeb>.Auth.Curator.AuthenticatedPipeline
         end
 
-        scope "/", <MyWebApp> do
+        scope "/", <MyAppWeb> do
           pipe_through :browser
 
           ...
           Insert your unprotected routes here
           ...
 
-          Curator.Router.mount_unauthenticated_routes(<MyWebApp>.Auth.Curator)
+          Curator.Router.mount_unauthenticated_routes(<MyAppWeb>.Auth.Curator)
         end
 
-        scope "/", <MyWebApp> do
+        scope "/", <MyAppWeb> do
           pipe_through :authenticated_browser
 
           ...
           Insert your unprotected routes here
           ...
 
-          Curator.Router.mount_authenticated_routes(<MyWebApp>.Auth.Curator)
+          Curator.Router.mount_authenticated_routes(<MyAppWeb>.Auth.Curator)
         end
         ```
 
@@ -395,7 +395,58 @@ Session Timeout (after configurable inactivity)
 
 ### Registerable (TODO)
 
-### Database Authenticatable (TODO)
+### Database Authenticatable
+1. Run the install command
+
+    ```
+    mix curator.database_authenticatable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator, otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.DatabaseAuthenticatable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    field :password, :string, virtual: true
+    field :password_hash, :string
+    ```
+
+4. Add your crypto_mod dependencies.
+
+  By default, Comeonin.Bcrypt is configured as the crypto_mod. This requires two dependencies:
+
+    ```
+    {:bcrypt_elixir, "~> 1.0"},
+    {:comeonin, "~> 4.0"},
+    ```
+
+  You can configure the crypto_mod by passing it as an arguement in the DatabaseAuthenticatable implementation.
+
+5. Update the new session page as needed (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+6. run the migration
+
+    ```
+    mix ecto.migrate
+    ```
+
+7. Add a way for users to manage their passwords, like: [Registerable](#registerable)
+
+  If you have other use cases, you can use the changeset directly:
+
+  ```elixir
+  <MyApp>.Auth.find_user_by_email("test@test.com")
+  |> <MyAppWeb>.Auth.DatabaseAuthenticatable.changeset(%{password: "test"})
+  |> <MyApp>.Repo.update()
+  ```
+
 
 ### Confirmable (TODO)
 
@@ -428,17 +479,23 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
     pipeline :api do
       plug :accepts, ["json"]
 
-      plug <MyWebApp>.Auth.Curator.ApiPipeline
+      plug <MyAppWeb>.Auth.Curator.ApiPipeline
     end
 
-    scope "/api", <MyWebApp> do
+    scope "/api", <MyAppWeb> do
       pipe_through :api
 
       ...
     end
     ```
 
-3. Testing
+3. (optional) Update the user schema with the new association (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    has_many :tokens, <MyApp>.Auth.Token
+    ```
+
+4. Testing
 
     Update `conn_case.ex`:
 
@@ -448,7 +505,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
 
       api_unauth_conn = Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept", "application/json")
 
-      {:ok, token_id, _claims} = <MyWebApp>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
+      {:ok, token_id, _claims} = <MyAppWeb>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
       api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token_id}")
 
       api_invalid_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: NOT_A_REAL_TOKEN")

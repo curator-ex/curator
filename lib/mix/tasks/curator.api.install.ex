@@ -178,6 +178,10 @@ defmodule Mix.Tasks.Curator.Api.Install do
           ...
         end
 
+    Add the new association to the user schema:
+
+        has_many :tokens, #{inspect context.module}.Auth.Token
+
     """
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
