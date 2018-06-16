@@ -444,7 +444,7 @@ Session Timeout (after configurable inactivity)
   ```elixir
   <MyApp>.Auth.find_user_by_email("test@test.com")
   |> <MyAppWeb>.Auth.DatabaseAuthenticatable.changeset(%{password: "test"})
-  |> <MyApp>.Auth.update_user_changeset()
+  |> <MyApp>.Repo.update()
   ```
 
 
