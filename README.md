@@ -69,32 +69,32 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
         pipeline :browser do
           ...
-          plug <MyWebApp>.Auth.Curator.UnauthenticatedPipeline
+          plug <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline
         end
 
         pipeline :authenticated_browser do
           ... (copy the code from browser)
-          plug <MyWebApp>.Auth.Curator.AuthenticatedPipeline
+          plug <MyAppWeb>.Auth.Curator.AuthenticatedPipeline
         end
 
-        scope "/", <MyWebApp> do
+        scope "/", <MyAppWeb> do
           pipe_through :browser
 
           ...
           Insert your unprotected routes here
           ...
 
-          Curator.Router.mount_unauthenticated_routes(<MyWebApp>.Auth.Curator)
+          Curator.Router.mount_unauthenticated_routes(<MyAppWeb>.Auth.Curator)
         end
 
-        scope "/", <MyWebApp> do
+        scope "/", <MyAppWeb> do
           pipe_through :authenticated_browser
 
           ...
           Insert your unprotected routes here
           ...
 
-          Curator.Router.mount_authenticated_routes(<MyWebApp>.Auth.Curator)
+          Curator.Router.mount_authenticated_routes(<MyAppWeb>.Auth.Curator)
         end
         ```
 
@@ -439,12 +439,12 @@ Session Timeout (after configurable inactivity)
 
 7. Add a way for users to manage their passwords, like: [Registerable](#registerable)
 
-  If you just want to test the module out, you can use the changeset directly:
+  If you have other use cases, you can use the changeset directly:
 
   ```elixir
-  Houston.Auth.find_user_by_email("eric.sullivan@annkissam.com")
-  |> HoustonWeb.Auth.DatabaseAuthenticatable.changeset(%{password: "TEST"})
-  |> Houston.Auth.update_user_changeset()
+  <MyApp>.Auth.find_user_by_email("test@test.com")
+  |> <MyAppWeb>.Auth.DatabaseAuthenticatable.changeset(%{password: "test"})
+  |> <MyApp>.Auth.update_user_changeset()
   ```
 
 
@@ -479,17 +479,23 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
     pipeline :api do
       plug :accepts, ["json"]
 
-      plug <MyWebApp>.Auth.Curator.ApiPipeline
+      plug <MyAppWeb>.Auth.Curator.ApiPipeline
     end
 
-    scope "/api", <MyWebApp> do
+    scope "/api", <MyAppWeb> do
       pipe_through :api
 
       ...
     end
     ```
 
-3. Testing
+3. (optional) Update the user schema with the new association (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    has_many :tokens, <MyApp>.Auth.Token
+    ```
+
+4. Testing
 
     Update `conn_case.ex`:
 
@@ -499,7 +505,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
 
       api_unauth_conn = Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept", "application/json")
 
-      {:ok, token_id, _claims} = <MyWebApp>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
+      {:ok, token_id, _claims} = <MyAppWeb>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
       api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token_id}")
 
       api_invalid_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: NOT_A_REAL_TOKEN")

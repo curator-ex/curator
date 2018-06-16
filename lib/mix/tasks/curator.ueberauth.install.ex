@@ -73,10 +73,6 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
     |> inject_eex_before_final_end(file, binding)
   end
 
-  defp write_file(content, file) do
-    File.write!(file, content)
-  end
-
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
       raise "No context tests to inject into"
@@ -103,6 +99,10 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
       |> Kernel.<>("end\n")
       |> write_file(file_path)
     end
+  end
+
+  defp write_file(content, file) do
+    File.write!(file, content)
   end
 
   @doc false
