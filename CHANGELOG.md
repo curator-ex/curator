@@ -1,3 +1,10 @@
+# v 0.2.6 (6/15/2018)
+Database Authenticatable
+
+# v 0.2.5 (6/12/2018)
+* Update documentation
+* Rescue an invalid token_id
+
 # v 0.2.4 (6/12/2018)
 Update token authentication to use constant-time comparison
 

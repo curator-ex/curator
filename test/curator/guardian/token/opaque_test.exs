@@ -198,7 +198,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       {:error, :invalid} = @token_module.decode_token(GuardianImpl, @invalid_token_id)
     end
 
-    test "with an mal-formed token, returns an error" do
+    test "with a mal-formed token, returns an error" do
       {:error, :invalid} = @token_module.decode_token(GuardianImpl, "NOT_A_REAL_TOKEN")
     end
 
