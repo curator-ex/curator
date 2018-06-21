@@ -37,8 +37,11 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.update_changeset(__MODULE__, user, attrs)
       end
 
+      def put_password_hash(changeset) do
+        Curator.DatabaseAuthenticatable.put_password_hash(changeset, __MODULE__)
+      end
+
       defoverridable find_user_by_email: 1,
-                     authenticate_user: 1,
                      create_changeset: 2,
                      update_changeset: 2
     end
@@ -121,11 +124,11 @@ defmodule Curator.DatabaseAuthenticatable do
     |> put_password_hash(mod)
   end
 
-  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
+  def put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
     change(changeset, crypto_mod(mod).add_hash(password))
   end
 
-  defp put_password_hash(changeset, _mod), do: changeset
+  def put_password_hash(changeset, _mod), do: changeset
 
   # Config
   def curator(mod) do

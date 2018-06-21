@@ -509,6 +509,27 @@ Session Timeout (after configurable inactivity)
 
 
 ### Confirmable (TODO)
+1. Run the install command
+
+    ```
+    mix curator.confirmable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Confirmable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    field :email_confirmed_at, Timex.Ecto.DateTime
+    ```
 
 ### Recoverable (TODO)
 
