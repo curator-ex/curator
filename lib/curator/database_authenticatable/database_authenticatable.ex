@@ -98,11 +98,13 @@ defmodule Curator.DatabaseAuthenticatable do
     |> repo(mod).one()
   end
 
+  # A more complex password scheme
   # def create_changeset(mod, user, attrs) do
-  #   user
-  #   |> cast(attrs, [:password, :password_confirmation])
-  #   |> validate_confirmation(:password_confirmation, required: true)
-  #   |> validate_length(:password, )
+  #   cs = user
+  #   |> cast(attrs, [:password])
+  #   |> validate_confirmation(:password, required: true)
+  #   |> validate_required(:password)
+  #   |> validate_length(:password, min: 8)
   #   |> put_password_hash(mod)
   # end
 
