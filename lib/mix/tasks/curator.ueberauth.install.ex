@@ -129,7 +129,7 @@ defmodule Mix.Tasks.Curator.Ueberauth.Install do
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
-        use Curator, otp_app: :#{Mix.Phoenix.otp_app()},
+        use Curator,
           modules: [#{inspect context.web_module}.Auth.Ueberauth]
 
     """

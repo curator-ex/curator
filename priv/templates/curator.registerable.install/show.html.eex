@@ -1,0 +1,10 @@
+<h2>Show <%= schema.human_singular %></h2>
+
+<ul>
+  <li>
+    <strong>Email:</strong>
+    <%%= @<%= schema.singular %>.email %>
+  </li>
+</ul>
+
+<span><%%= link "Edit", to: registration_path(@conn, :edit) %></span>

@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Curator.Registerable.Install do
   @shortdoc "Install Curator::Registerable"
 
   @moduledoc """
-  Generates required Curator files.
+  Generates required Curator Registerable files.
 
       mix curator.registerable.install
 
@@ -48,8 +48,13 @@ defmodule Mix.Tasks.Curator.Registerable.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "registration_controller.ex",   Path.join([web_prefix, "controllers", web_path, "auth", "registration_controller.ex"])},
-      {:eex,     "registerable.ex",               Path.join([web_prefix, web_path, "auth", "registerable.ex"])},
+      {:eex,     "registration_controller.ex",  Path.join([web_prefix, "controllers", web_path, "auth", "registration_controller.ex"])},
+      {:eex,     "registerable.ex",             Path.join([web_prefix, web_path, "auth", "registerable.ex"])},
+      {:eex,     "edit.html.eex",               Path.join([web_prefix, "templates", web_path, "auth", "registration", "edit.html.eex"])},
+      {:eex,     "form.html.eex",               Path.join([web_prefix, "templates", web_path, "auth", "registration", "form.html.eex"])},
+      {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "registration", "new.html.eex"])},
+      {:eex,     "show.html.eex",               Path.join([web_prefix, "templates", web_path, "auth", "registration", "show.html.eex"])},
+      {:eex,     "view.ex",                     Path.join([web_prefix, "views", web_path, "auth", "registration_view.ex"])},
     ]
   end
 
@@ -57,53 +62,53 @@ defmodule Mix.Tasks.Curator.Registerable.Install do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from paths, "priv/templates/curator.registerable.install", binding, files
-    inject_schema_access(context, paths, binding)
-    inject_tests(context, paths, binding)
+    # inject_schema_access(context, paths, binding)
+    # inject_tests(context, paths, binding)
 
     context
   end
 
-  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-    unless Context.pre_existing?(context) do
-      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/curator.registerable.install/context.ex", binding))
-    end
+  # defp inject_schema_access(%Context{file: file} = context, paths, binding) do
+  #   unless Context.pre_existing?(context) do
+  #     Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/curator.registerable.install/context.ex", binding))
+  #   end
 
-    paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.registerable.install/schema_access.ex", binding)
-    |> inject_eex_before_final_end(file, binding)
-  end
+  #   paths
+  #   |> Mix.Phoenix.eval_from("priv/templates/curator.registerable.install/schema_access.ex", binding)
+  #   |> inject_eex_before_final_end(file, binding)
+  # end
 
-  defp write_file(content, file) do
-    File.write!(file, content)
-  end
+  # defp write_file(content, file) do
+  #   File.write!(file, content)
+  # end
 
-  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless Context.pre_existing_tests?(context) do
-      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/curator.registerable.install/context_test.exs", binding))
-    end
+  # defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+  #   unless Context.pre_existing_tests?(context) do
+  #     Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/curator.registerable.install/context_test.exs", binding))
+  #   end
 
-    paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.registerable.install/test_cases.exs", binding)
-    |> inject_eex_before_final_end(test_file, binding)
-  end
+  #   paths
+  #   |> Mix.Phoenix.eval_from("priv/templates/curator.registerable.install/test_cases.exs", binding)
+  #   |> inject_eex_before_final_end(test_file, binding)
+  # end
 
-  defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
-    file = File.read!(file_path)
+  # defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
+  #   file = File.read!(file_path)
 
-    if String.contains?(file, content_to_inject) do
-      :ok
-    else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+  #   if String.contains?(file, content_to_inject) do
+  #     :ok
+  #   else
+  #     Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
-      file
-      |> String.trim_trailing()
-      |> String.trim_trailing("end")
-      |> EEx.eval_string(binding)
-      |> Kernel.<>(content_to_inject)
-      |> Kernel.<>("end\n")
-      |> write_file(file_path)
-    end
-  end
+  #     file
+  #     |> String.trim_trailing()
+  #     |> String.trim_trailing("end")
+  #     |> EEx.eval_string(binding)
+  #     |> Kernel.<>(content_to_inject)
+  #     |> Kernel.<>("end\n")
+  #     |> write_file(file_path)
+  #   end
+  # end
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
@@ -112,24 +117,17 @@ defmodule Mix.Tasks.Curator.Registerable.Install do
 
     Mix.shell.info """
 
-    Setup Registerable:
-
-        config :registerable, Registerable,
-          providers: [
-            google: {Registerable.Strategy.Google, []}
-          ]
-
-        config :registerable, Registerable.Strategy.Google.OAuth,
-          client_id: System.get_env("GOOGLE_CLIENT_ID"),
-          client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
-
-    More info: https://github.com/registerable/registerable#setup
-
     The Registerable module was created at: #{Path.join([web_prefix, web_path, "auth", "registerable.ex"])}
+
+    You can configure it like so:
+
+        use Curator.Registerable,
+          otp_app: :#{Mix.Phoenix.otp_app()},
+          curator: #{inspect context.web_module}.Auth.Curator
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
-        use Curator, otp_app: :#{Mix.Phoenix.otp_app()},
+        use Curator,
           modules: [#{inspect context.web_module}.Auth.Registerable]
 
     """

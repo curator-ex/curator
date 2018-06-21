@@ -1,0 +1,5 @@
+<h2>Edit <%= schema.human_singular %></h2>
+
+<%%= render "form.html", Map.put(assigns, :action, registration_path(@conn, :update)) %>
+
+<span><%%= link "Back", to: registration_path(@conn, :show) %></span>
