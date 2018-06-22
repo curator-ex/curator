@@ -5,7 +5,7 @@ defmodule Curator.Confirmable do
   Options:
 
   * `curator` (required)
-  * `opaque_curator` (required)
+  * `opaque_guardian` (required)
 
   Extensions:
 
@@ -14,7 +14,7 @@ defmodule Curator.Confirmable do
   """
 
   use Curator.Extension
-  import Ecto.Changeset
+  # import Ecto.Changeset
 
   defmacro __using__(opts \\ []) do
     quote do
@@ -25,6 +25,15 @@ defmodule Curator.Confirmable do
         Curator.Confirmable.verify_confirmed(user)
       end
 
+      def after_create_registration(user) do
+        Curator.Confirmable.after_create_registration(__MODULE__, user)
+      end
+
+      def update_registerable_changeset(changeset, attrs) do
+        Curator.Confirmable.update_registerable_changeset(__MODULE__, changeset, attrs)
+      end
+
+      # NOTE: NO!
       # defoverridable verify_confirmed: 1
 
     end
@@ -40,7 +49,7 @@ defmodule Curator.Confirmable do
 
   # Extensions
   # NOTE: this doesn't take a module, so can't access overrides...
-  def before_sign_in(user, opts) do
+  def before_sign_in(user, _opts) do
     verify_confirmed(user)
   end
 
@@ -48,6 +57,14 @@ defmodule Curator.Confirmable do
     quote do
       # get "/confirmations/:token_id", Auth.ConfirmationController, :update
     end
+  end
+
+  def after_create_registration(_mod, _user) do
+    raise "TODO - Send an email..."
+  end
+
+  def update_registerable_changeset(_mod, changeset, attrs) do
+    raise "TODO - Mark email_confirmed_at to nil if email changed"
   end
 
   # Private

@@ -32,6 +32,9 @@ defmodule Curator do
       def extension(fun, args),
         do: Curator.extension(__MODULE__, fun, args)
 
+      def changeset(fun, changeset, attrs),
+        do: Curator.changeset(__MODULE__, fun, changeset, attrs)
+
       # Delegate to Guardian
       def sign_in(conn, resource, opts \\ []),
         do: Curator.sign_in(__MODULE__, conn, resource, opts)
@@ -100,6 +103,23 @@ defmodule Curator do
 
       if function_exported?(module, fun, arity) do
         apply(module, fun, args)
+      end
+    end)
+  end
+
+  @doc """
+  Call a changeset on all modules
+
+  Similar to an extension, this accumulates a changeset across various implementations
+  """
+  def changeset(mod, fun, changeset, attrs) do
+    modules = modules(mod)
+
+    Enum.reduce(modules, changeset, fn (module, changeset) ->
+      if function_exported?(module, fun, 2) do
+        apply(module, fun, [changeset, attrs])
+      else
+        changeset
       end
     end)
   end

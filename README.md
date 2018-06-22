@@ -470,7 +470,7 @@ Session Timeout (after configurable inactivity)
     mix ecto.migrate
     ```
 
-7. If using [Registerable](#registerable), Update the registration form & the registration changeset
+7. If using [Registerable](#registerable), Update the registration form
 
     ```elixir
     <div class="form-group">
@@ -478,25 +478,6 @@ Session Timeout (after configurable inactivity)
       <%= password_input f, :password, class: "form-control" %>
       <%= error_tag f, :password %>
     </div>
-    ```
-
-    ```elixir
-    defmodule <MyAppWeb>.Auth.Registerable do
-      use Curator.Registerable,
-        ...
-
-      import Ecto.Changeset
-
-      def create_changeset(user, attrs) do
-        super(user, attrs)
-        |> <MyAppWeb>.Auth.DatabaseAuthenticatable.create_changeset(attrs)
-      end
-
-      def update_changeset(user, attrs) do
-        super(user, attrs)
-        |> <MyAppWeb>.Auth.DatabaseAuthenticatable.update_changeset(attrs)
-      end
-    end
     ```
 
 8. If you have other use cases, you can use the changeset directly:

@@ -9,7 +9,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   Extensions:
 
-  N/A
+  * verify_password_failure (called after each incorrect password attempt)
 
   """
 
@@ -41,6 +41,14 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.put_password_hash(changeset, __MODULE__)
       end
 
+      def create_registerable_changeset(changeset, attrs) do
+        create_changeset(changeset, attrs)
+      end
+
+      def update_registerable_changeset(changeset, attrs) do
+        update_changeset(changeset, attrs)
+      end
+
       defoverridable find_user_by_email: 1,
                      create_changeset: 2,
                      update_changeset: 2
@@ -59,6 +67,9 @@ defmodule Curator.DatabaseAuthenticatable do
     else
       if user do
         curator(mod).extension(:verify_password_failure, [user])
+
+        # TODO: Do I like this syntax better?
+        # curator(mod).extension(:after_verify_password, [user, result])
       end
 
       {:error, :invalid_credentials}
