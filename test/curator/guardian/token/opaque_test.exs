@@ -14,6 +14,8 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       field :description, :string
       field :token, :string
       field :user_id, :integer
+      field :typ, :string
+      field :exp, :integer
 
       timestamps()
     end
@@ -21,8 +23,8 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     @doc false
     def changeset(token, attrs) do
       token
-      |> cast(attrs, [:token, :description, :claims, :user_id])
-      |> validate_required([:token, :claims, :user_id])
+      |> cast(attrs, [:token, :description, :claims, :user_id, :typ, :exp])
+      |> validate_required([:token, :claims, :user_id, :typ])
     end
   end
 
@@ -39,6 +41,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
         "sub" => "1",
         "something_else" => "foo"
       },
+      typ: "access",
     }
 
     def insert(changeset) do
@@ -93,7 +96,11 @@ defmodule Curator.Guardian.Token.OpaqueTest do
   defmodule GuardianImpl do
     use Guardian,
       otp_app: :curator,
-      token_module: Curator.Guardian.Token.Opaque
+      token_module: Curator.Guardian.Token.Opaque,
+      token_ttl: %{
+        "api" => {0, :never},
+        "confirmation" => {7, :day},
+      }
 
     alias Curator.Guardian.Token.OpaqueTest.Auth
 
@@ -116,6 +123,8 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     def create_token(claims) do
       user_id = Map.get(claims, "user_id") || Map.get(claims, "sub")
       description = Map.get(claims, "description")
+      typ = Map.get(claims, "typ")
+      exp = Map.get(claims, "exp")
 
       claims = claims
       |> Map.drop(["user_id", "description"])
@@ -127,6 +136,8 @@ defmodule Curator.Guardian.Token.OpaqueTest do
         "user_id" => user_id,
         "description" => description,
         "token" => token,
+        "typ" => typ,
+        "exp" => exp,
       }
 
       Auth.create_token(attrs)
@@ -169,7 +180,13 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     test "with a valid token"  do
       result = @token_module.peek(GuardianImpl, @token_id)
 
-      assert result == nil
+      assert result == %{
+              claims: %{
+                "something_else" => "foo",
+                "sub" => "1",
+                "typ" => "access"
+              }
+            }
     end
 
     test "with an invalid token"  do
@@ -222,18 +239,54 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       assert result["my"] == "claim"
     end
 
-    test "sets to the default for the token type" do
+    test "sets the token 'typ'" do
       assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{})
       assert result["typ"] == "access"
 
       assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, token_type: "refresh")
       assert result["typ"] == "refresh"
     end
+
+    test "sets the token 'exp'" do
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{})
+      assert result["exp"] == nil
+
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, token_type: "confirmation")
+      diff = Guardian.timestamp() + 7 * 24 * 60 * 60 - result["exp"]
+      assert diff <= 1
+
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{exp: 1000})
+      assert result["exp"] == 1000
+
+      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, ttl: {1, :day})
+      diff = Guardian.timestamp() + 1 * 24 * 60 * 60 - result["exp"]
+      assert diff <= 1
+    end
   end
 
   describe "verify_claims" do
     test "it returns the claims" do
       assert {:ok, @claims} = @token_module.verify_claims(GuardianImpl, @claims, [])
+    end
+
+    test "verifies 'exp'" do
+      claims = %{
+        "exp" => nil
+      }
+
+      assert {:ok, _claims} = @token_module.verify_claims(GuardianImpl, claims, [])
+
+      claims = %{
+        "exp" => Guardian.timestamp() + 5
+      }
+
+      assert {:ok, _claims} = @token_module.verify_claims(GuardianImpl, claims, [])
+
+      claims = %{
+        "exp" => Guardian.timestamp() - 1
+      }
+
+      assert {:error, :token_expired} = @token_module.verify_claims(GuardianImpl, claims, [])
     end
   end
 

@@ -10,6 +10,8 @@ defmodule <%= inspect context.web_module %>.Auth.ApiErrorHandler do
   # From Guardian.Plug.VerifyHeader
   defp translate_auth_error({:invalid_token, :invalid}), do: "Invalid API Token"
 
+  defp translate_auth_error({:invalid_token, "typ"}), do: "Token is not an API Token"
+
   # From Curator.Plug.LoadResource
   defp translate_auth_error({:load_resource, :no_resource_found}), do: "Invalid API Token"
 

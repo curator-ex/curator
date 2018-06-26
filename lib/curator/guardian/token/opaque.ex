@@ -17,20 +17,24 @@ defmodule Curator.Guardian.Token.Opaque do
   @behaviour Guardian.Token
 
   @default_token_type "access"
+  @default_ttl {0, :never}
 
   @token_length 64
 
   import Guardian, only: [stringify_keys: 1]
 
   @doc """
-  Inspect the token.
+  Inspect the token without any validation.
 
-  Not applicable (as it's an opaque token)
+  Return a map with keys: `claims`
   """
   def peek(_mod, nil), do: nil
 
-  def peek(_mod, _token_id) do
-    nil
+  def peek(mod, token_id) do
+    case decode_token(mod, token_id) do
+      {:ok, claims} -> %{claims: claims}
+      _ -> nil
+    end
   end
 
   @doc """
@@ -40,7 +44,10 @@ defmodule Curator.Guardian.Token.Opaque do
   (it will be combined with the DB id to create the token_id)
   """
   def token_id do
-    :crypto.strong_rand_bytes(@token_length) |> Base.encode64 |> binary_part(0, @token_length)
+    @token_length
+    |> :crypto.strong_rand_bytes()
+    |> Base.url_encode64
+    |> binary_part(0, @token_length)
   end
 
   @doc """
@@ -60,6 +67,7 @@ defmodule Curator.Guardian.Token.Opaque do
       |> stringify_keys()
       |> set_type(mod, options)
       |> set_sub(mod, sub, options)
+      |> set_ttl(mod, options)
 
     {:ok, claims}
   end
@@ -73,6 +81,55 @@ defmodule Curator.Guardian.Token.Opaque do
   end
 
   defp set_sub(claims, _mod, subject, _opts), do: Map.put(claims, "sub", subject)
+
+  defp set_ttl(%{"exp" => exp} = claims, _mod, _opts) when not is_nil(exp), do: claims
+
+  defp set_ttl(%{"typ" => token_typ} = claims, mod, opts) do
+    ttl = Keyword.get(opts, :ttl)
+
+    if ttl do
+      set_ttl(claims, ttl)
+    else
+      token_typ = to_string(token_typ)
+      token_ttl = apply(mod, :config, [:token_ttl, %{}])
+      fallback_ttl = apply(mod, :config, [:ttl, @default_ttl])
+
+      ttl = Map.get(token_ttl, token_typ, fallback_ttl)
+      set_ttl(claims, ttl)
+    end
+  end
+
+  defp set_ttl(the_claims, {num, period}) when is_binary(num),
+    do: set_ttl(the_claims, {String.to_integer(num), period})
+
+  defp set_ttl(the_claims, {num, period}) when is_binary(period),
+    do: set_ttl(the_claims, {num, String.to_existing_atom(period)})
+
+  defp set_ttl(the_claims, requested_ttl),
+    do: assign_exp_from_ttl(the_claims, {Guardian.timestamp(), requested_ttl})
+
+  defp assign_exp_from_ttl(the_claims, {_iat_v, {_, unit}}) when unit in [:never],
+    do: the_claims
+
+  defp assign_exp_from_ttl(the_claims, {iat_v, {seconds, unit}}) when unit in [:second, :seconds],
+    do: Map.put(the_claims, "exp", iat_v + seconds)
+
+  defp assign_exp_from_ttl(the_claims, {iat_v, {seconds, unit}}) when unit in [:second, :seconds],
+    do: Map.put(the_claims, "exp", iat_v + seconds)
+
+  defp assign_exp_from_ttl(the_claims, {iat_v, {minutes, unit}}) when unit in [:minute, :minutes],
+    do: Map.put(the_claims, "exp", iat_v + minutes * 60)
+
+  defp assign_exp_from_ttl(the_claims, {iat_v, {hours, unit}}) when unit in [:hour, :hours],
+    do: Map.put(the_claims, "exp", iat_v + hours * 60 * 60)
+
+  defp assign_exp_from_ttl(the_claims, {iat_v, {days, unit}}) when unit in [:day, :days],
+    do: Map.put(the_claims, "exp", iat_v + days * 24 * 60 * 60)
+
+  defp assign_exp_from_ttl(the_claims, {iat_v, {weeks, unit}}) when unit in [:week, :weeks],
+    do: Map.put(the_claims, "exp", iat_v + weeks * 7 * 24 * 60 * 60)
+
+  defp assign_exp_from_ttl(_, {_iat_v, {_, units}}), do: raise("Unknown Units: #{units}")
 
   @doc """
   Create a token. Uses the claims, and persists the token.
@@ -146,11 +203,26 @@ defmodule Curator.Guardian.Token.Opaque do
   end
 
   @doc """
-  Verifies the claims (not applicable but a required behaviour).
+  Verifies the claims (only checks exp).
   """
-  def verify_claims(_mod, claims, _options) do
-    {:ok, claims}
+  def verify_claims(mod, claims, opts) do
+    Enum.reduce(claims, {:ok, claims}, fn
+      {k, _v}, {:ok, claims} -> verify_claim(mod, k, claims, opts)
+      _, {:error, _reason} = err -> err
+    end)
   end
+
+  def verify_claim(_mod, "exp", %{"exp" => nil} = claims, _opts), do: {:ok, claims}
+
+  def verify_claim(_mod, "exp", %{"exp" => exp} = claims, _opts) do
+    if exp >= Guardian.timestamp() do
+      {:ok, claims}
+    else
+      {:error, :token_expired}
+    end
+  end
+
+  def verify_claim(_mod, _claim_key, claims, _opts), do: {:ok, claims}
 
   @doc """
   Delete the token

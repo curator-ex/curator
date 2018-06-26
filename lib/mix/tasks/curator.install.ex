@@ -51,6 +51,8 @@ defmodule Mix.Tasks.Curator.Install do
 
     [
       {:eex,     "curator.ex",                Path.join([web_prefix, web_path, "auth", "curator.ex"])},
+      {:eex,     "email.ex",                  Path.join([web_prefix, web_path, "auth", "email.ex"])},
+      {:eex,     "layout_email.ex",           Path.join([web_prefix, "templates", web_path, "auth", "layout", "email.ex"])},
       {:eex,     "curator_helper.ex",         Path.join([web_prefix, "views", web_path, "auth", "curator_helper.ex"])},
       {:eex,     "error_handler.ex",          Path.join([web_prefix, "controllers", web_path, "auth", "error_handler.ex"])},
       {:eex,     "view.ex",                   Path.join([web_prefix, "views", web_path, "auth", "session_view.ex"])},

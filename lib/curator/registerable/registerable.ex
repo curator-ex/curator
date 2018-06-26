@@ -115,10 +115,6 @@ defmodule Curator.Registerable do
     result = mod.update_changeset(user, attrs)
     |> repo(mod).update()
 
-    # TODO: Only care if the email changes...
-    # Maybe the changeset clears the email_confirmed_at when email changes, and this only send if
-    # email_confirmed_at is nil? That'd require this working with the confirmable module...
-    # Maybe pass a curator changeset(:action)?
     case result do
       {:ok, user} ->
         curator(mod).extension(:after_update_registration, [user])

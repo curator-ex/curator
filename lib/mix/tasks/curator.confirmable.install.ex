@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
     [
       {:eex,     "confirmable.ex",              Path.join([web_prefix, web_path, "auth", "confirmable.ex"])},
       # {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
-      # {:eex,     "session_controller.ex",       Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
+      {:eex,     "confirmation_controller.ex",  Path.join([web_prefix, "controllers", web_path, "auth", "confirmation_controller.ex"])},
       {:eex,     "migration.exs",               Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_confirmable_to_users.exs"])},
     ]
   end

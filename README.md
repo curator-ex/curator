@@ -13,10 +13,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [API](#api): API login (with an opaque token).
 * [Registerable](#registerable): A Generator to support user registration.
 * [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
+* [Confirmable](#confirmable): Account email verification.
 
 (TODO)
 
-* [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
 * [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
@@ -512,6 +512,8 @@ Session Timeout (after configurable inactivity)
     field :email_confirmed_at, Timex.Ecto.DateTime
     ```
 
+4. Testing ... add confirmed_at
+
 ### Recoverable (TODO)
 
 ### Lockable (TODO)
@@ -567,7 +569,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
 
       api_unauth_conn = Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept", "application/json")
 
-      {:ok, token_id, _claims} = <MyAppWeb>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
+      {:ok, token_id, _claims} = <MyAppWeb>.Auth.OpaqueGuardian.encode_and_sign(auth_user, %{description: "TEST"}, token_type: "api")
       api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token_id}")
 
       api_invalid_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: NOT_A_REAL_TOKEN")

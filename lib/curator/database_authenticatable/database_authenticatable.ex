@@ -114,17 +114,18 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # A more complex password scheme
   # def create_changeset(mod, user, attrs) do
-  #   cs = user
+  #   user
   #   |> cast(attrs, [:password])
   #   |> validate_confirmation(:password, required: true)
   #   |> validate_required(:password)
   #   |> validate_length(:password, min: 8)
-  #   |> put_password_hash(mod)
+  #   |> put_password_hash(__MODULE__)
   # end
 
   def create_changeset(mod, user, attrs) do
     user
     |> cast(attrs, [:password])
+    |> validate_confirmation(:password)
     |> validate_required(:password)
     |> put_password_hash(mod)
   end
