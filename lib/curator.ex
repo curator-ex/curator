@@ -32,6 +32,12 @@ defmodule Curator do
       def extension(fun, args),
         do: Curator.extension(__MODULE__, fun, args)
 
+      def changeset(fun, changeset, attrs),
+        do: Curator.changeset(__MODULE__, fun, changeset, attrs)
+
+      def deliver_email(fun, args),
+        do: Curator.deliver_email(__MODULE__, fun, args)
+
       # Delegate to Guardian
       def sign_in(conn, resource, opts \\ []),
         do: Curator.sign_in(__MODULE__, conn, resource, opts)
@@ -42,12 +48,20 @@ defmodule Curator do
       def current_resource(conn, opts \\ []),
         do: Curator.current_resource(__MODULE__, conn, opts)
 
+      # Routing
+      def store_return_to_url(conn),
+        do: Curator.store_return_to_url(__MODULE__, conn)
+
+      def redirect_after_sign_in(conn),
+        do: Curator.redirect_after_sign_in(__MODULE__, conn)
+
       # def modules() do
       #   @config_with_key_and_default :module, []
       # end
 
       defoverridable before_sign_in: 2,
-                     after_sign_in: 3
+                     after_sign_in: 3,
+                     redirect_after_sign_in: 1
 
     end
   end
@@ -86,6 +100,26 @@ defmodule Curator do
     # end)
   end
 
+  def store_return_to_url(_mod, conn) do
+    url = case conn.query_string do
+            "" -> conn.request_path
+            _ -> conn.request_path <> "?" <> conn.query_string
+          end
+
+    Plug.Conn.put_session(conn, "user_return_to",  url)
+  end
+
+  def redirect_after_sign_in(_mod, conn) do
+    url = case Plug.Conn.get_session(conn, "user_return_to") do
+      nil -> "/"
+      value -> value
+    end
+
+    conn
+    |> Plug.Conn.put_session("user_return_to", nil)
+    |> Phoenix.Controller.redirect(to: url)
+  end
+
   @doc """
   Call an extension on all modules
 
@@ -104,6 +138,28 @@ defmodule Curator do
     end)
   end
 
+  @doc """
+  Call a changeset on all modules
+
+  Similar to an extension, this accumulates a changeset across various implementations
+  """
+  def changeset(mod, fun, changeset, attrs) do
+    modules = modules(mod)
+
+    Enum.reduce(modules, changeset, fn (module, changeset) ->
+      if function_exported?(module, fun, 2) do
+        apply(module, fun, [changeset, attrs])
+      else
+        changeset
+      end
+    end)
+  end
+
+  def deliver_email(mod, fun, args) do
+    apply(email(mod), fun, args)
+    |> mailer(mod).deliver()
+  end
+
   # Delegate to Guardian
   def sign_in(mod, conn, resource, opts) do
     Module.concat(guardian_module(mod), Plug).sign_in(conn, resource, opts)
@@ -117,11 +173,32 @@ defmodule Curator do
     Module.concat(guardian_module(mod), Plug).current_resource(conn, opts)
   end
 
+  # Config
   def guardian_module(mod) do
-    apply(mod, :config, [:guardian, []])
+    mod.config(:guardian)
+  end
+
+  def opaque_guardian(mod) do
+    mod.config(:opaque_guardian)
   end
 
   def modules(mod) do
-    apply(mod, :config, [:modules, []])
+    mod.config(:modules)
+  end
+
+  def repo(mod) do
+    mod.config(:repo)
+  end
+
+  def user(mod) do
+    mod.config(:user)
+  end
+
+  def mailer(mod) do
+    mod.config(:mailer)
+  end
+
+  def email(mod) do
+    mod.config(:email)
   end
 end

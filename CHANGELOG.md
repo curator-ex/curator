@@ -1,3 +1,9 @@
+# v 0.2.7 (6/26/2018)
+* store_return_to_url
+* redirect_after_sign_in
+
+Generators have been updated to store the location (in the error_handler) and redirect on login (in session_controller and ueberauth_controller)
+
 # v 0.2.6 (6/15/2018)
 Database Authenticatable
 

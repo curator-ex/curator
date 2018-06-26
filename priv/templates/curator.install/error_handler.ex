@@ -4,6 +4,7 @@ defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   def auth_error(conn, error, _opts) do
     conn
     |> <%= inspect context.web_module %>.Auth.Guardian.Plug.sign_out()
+    |> <%= inspect context.web_module %>.Auth.Curator.store_return_to_url()
     |> put_flash(:error, translate_error(error))
     |> redirect(to: "/auth/session/new")
   end
