@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.Auth.UeberauthController do
             |> put_flash(:info, "Successfully authenticated.")
             |> <%= inspect context.web_module %>.Auth.Curator.sign_in(user)
             |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(user)
-            |> redirect(to: "/")
+            |> <%= inspect context.web_module %>.Auth.Curator.redirect_after_sign_in()
           {:error, error} ->
             <%= inspect context.web_module %>.Auth.ErrorHandler.auth_error(conn, error, [])
         end
