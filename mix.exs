@@ -1,7 +1,7 @@
 defmodule Curator.Mixfile do
   use Mix.Project
 
-  @version "0.2.7"
+  @version "0.2.8"
   @url "https://github.com/curator-ex/curator"
   @maintainers [
     "Eric Sullivan",

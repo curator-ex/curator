@@ -1,3 +1,8 @@
+# v 0.2.8 (6/26/2018)
+* fix infinite redirect issue
+
+The plugs were calling sign_out and the error handler was calling signout, and then signout was erroring, calling error handler, then sign out...
+
 # v 0.2.7 (6/26/2018)
 * store_return_to_url
 * redirect_after_sign_in
