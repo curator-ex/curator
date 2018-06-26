@@ -12,7 +12,7 @@ defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
     conn
     |> <%= inspect context.web_module %>.Auth.Guardian.Plug.sign_out()
     |> put_flash(:error, translate_error(error))
-    |> redirect(to: "/session/new")
+    |> redirect(to: session_path(conn, :new))
   end
 
   # From Curator.Plug.EnsureNoResource
