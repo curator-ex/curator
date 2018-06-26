@@ -49,11 +49,7 @@ if Code.ensure_loaded?(Plug) do
     defp respond({:error, :no_claims, conn, opts}, false), do: return_error(conn, :no_claims, opts)
 
     defp respond({:error, reason, conn, opts}, _) do
-      guardian_plug_module = Module.concat(Pipeline.fetch_module!(conn, opts), Plug)
-
-      conn
-      |> guardian_plug_module.sign_out(opts)
-      |> return_error(reason, opts)
+      return_error(conn, reason, opts)
     end
 
     defp respond({:ok, resource, conn, opts}, _),

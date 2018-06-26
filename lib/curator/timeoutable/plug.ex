@@ -39,12 +39,7 @@ defmodule Curator.Timeoutable.Plug do
   end
 
   defp respond({:error, reason, conn, opts}) do
-    guardian_plug_module = Module.concat(Pipeline.fetch_module!(conn, opts), Plug)
-
-    conn
-    |> guardian_plug_module.put_current_resource(nil, opts)
-    |> guardian_plug_module.sign_out(opts)
-    |> return_error(reason, opts)
+    return_error(conn, reason, opts)
   end
 
   defp return_error(conn, reason, opts) do
