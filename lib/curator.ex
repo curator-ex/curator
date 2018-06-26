@@ -48,12 +48,20 @@ defmodule Curator do
       def current_resource(conn, opts \\ []),
         do: Curator.current_resource(__MODULE__, conn, opts)
 
+      # Routing
+      def store_return_to_url(conn),
+        do: Curator.store_return_to_url(__MODULE__, conn)
+
+      def redirect_after_sign_in(conn),
+        do: Curator.redirect_after_sign_in(__MODULE__, conn)
+
       # def modules() do
       #   @config_with_key_and_default :module, []
       # end
 
       defoverridable before_sign_in: 2,
-                     after_sign_in: 3
+                     after_sign_in: 3,
+                     redirect_after_sign_in: 1
 
     end
   end
@@ -90,6 +98,26 @@ defmodule Curator do
     #     {:error, error} -> {:halt, {:error, error}}
     #   end
     # end)
+  end
+
+  def store_return_to_url(_mod, conn) do
+    url = case conn.query_string do
+            "" -> conn.request_path
+            _ -> conn.request_path <> "?" <> conn.query_string
+          end
+
+    Plug.Conn.put_session(conn, "user_return_to",  url)
+  end
+
+  def redirect_after_sign_in(_mod, conn) do
+    url = case Plug.Conn.get_session(conn, "user_return_to") do
+      nil -> "/"
+      value -> value
+    end
+
+    conn
+    |> Plug.Conn.put_session("user_return_to", nil)
+    |> Phoenix.Controller.redirect(to: url)
   end
 
   @doc """
