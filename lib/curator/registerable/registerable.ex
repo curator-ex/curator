@@ -76,31 +76,53 @@ defmodule Curator.Registerable do
     mod.create_changeset(user, %{})
   end
 
-  def create_changeset(_mod, user, attrs) do
-    user
+  def create_changeset(mod, user, attrs) do
+    changeset = user
     |> cast(attrs, [:email])
     |> validate_required([:email])
     |> unique_constraint(:email)
+
+    curator(mod).changeset(:create_registerable_changeset, changeset, attrs)
   end
 
   def create_user(mod, attrs \\ %{}) do
     user = user(mod)
     |> struct()
 
-    mod.create_changeset(user, attrs)
+    result = mod.create_changeset(user, attrs)
     |> repo(mod).insert()
+
+    case result do
+      {:ok, user} ->
+        curator(mod).extension(:after_create_registration, [user])
+      {:error, _} ->
+        nil
+    end
+
+    result
   end
 
-  def update_changeset(_mod, user, attrs) do
-    user
+  def update_changeset(mod, user, attrs) do
+    changeset = user
     |> cast(attrs, [:email])
     |> validate_required([:email])
     |> unique_constraint(:email)
+
+    curator(mod).changeset(:update_registerable_changeset, changeset, attrs)
   end
 
   def update_user(mod, user, attrs \\ %{}) do
-    mod.update_changeset(user, attrs)
+    result = mod.update_changeset(user, attrs)
     |> repo(mod).update()
+
+    case result do
+      {:ok, user} ->
+        curator(mod).extension(:after_update_registration, [user])
+      {:error, _} ->
+        nil
+    end
+
+    result
   end
 
   def delete_user(mod, user) do

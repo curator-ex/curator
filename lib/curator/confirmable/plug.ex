@@ -1,4 +1,4 @@
-defmodule Curator.Timeoutable.Plug do
+defmodule Curator.Confirmable.Plug do
   import Plug.Conn
 
   alias Guardian.Plug.Pipeline
@@ -19,12 +19,10 @@ defmodule Curator.Timeoutable.Plug do
     |> respond()
   end
 
-  defp verify?(nil, conn, opts), do: {:ok, nil, conn, opts}
-
   defp verify?(resource, conn, opts) do
-    timeoutable_module = Keyword.fetch!(opts, :timeoutable_module)
+    confirmable_module = Keyword.fetch!(opts, :confirmable_module)
 
-    case timeoutable_module.verify_timeoutable_timestamp(conn, opts) do
+    case confirmable_module.verify_confirmed(resource) do
       :ok ->
         {:ok, resource, conn, opts}
       {:error, error} ->
@@ -34,10 +32,7 @@ defmodule Curator.Timeoutable.Plug do
 
   defp respond({:ok, nil, conn, _opts}), do: conn
 
-  defp respond({:ok, _resource, conn, opts}) do
-    timeoutable_module = Keyword.fetch!(opts, :timeoutable_module)
-    timeoutable_module.update_timeoutable_timestamp(conn, opts)
-  end
+  defp respond({:ok, _resource, conn, _opts}), do: conn
 
   defp respond({:error, reason, conn, opts}) do
     return_error(conn, reason, opts)

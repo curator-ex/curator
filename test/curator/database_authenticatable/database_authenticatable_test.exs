@@ -87,23 +87,36 @@ defmodule Curator.DatabaseAuthenticatableTest do
       ]
   end
 
-  test "changeset" do
-    attrs = %{
-      email: "test@test.com",
-      password: "not_hashed",
-    }
+  describe "create_changeset" do
+    test "password is hashed" do
+      attrs = %{
+        password: "not_hashed",
+      }
 
-    # Not sure if you'll need to combine changesets...
-    # As a next step, you'll likely want to pipe it into a repo (if valid)...
-    changeset = User.changeset(%User{}, attrs)
-    |> DatabaseAuthenticatableImpl.changeset(attrs)
+      changeset = DatabaseAuthenticatableImpl.create_changeset(%User{}, attrs)
 
-    assert changeset.valid?
+      assert changeset.valid?
 
-    user = Ecto.Changeset.apply_changes(changeset)
-    assert user.email == "test@test.com"
-    refute user.password
-    assert user.password_hash
+      user = Ecto.Changeset.apply_changes(changeset)
+      refute user.password
+      assert user.password_hash
+    end
+  end
+
+  describe "update_changeset" do
+    test "password is hashed" do
+      attrs = %{
+        password: "not_hashed",
+      }
+
+      changeset = DatabaseAuthenticatableImpl.update_changeset(%User{}, attrs)
+
+      assert changeset.valid?
+
+      user = Ecto.Changeset.apply_changes(changeset)
+      refute user.password
+      assert user.password_hash
+    end
   end
 
   test "authenticate_user" do

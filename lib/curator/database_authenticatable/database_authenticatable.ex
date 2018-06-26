@@ -9,7 +9,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   Extensions:
 
-  N/A
+  * verify_password_failure (called after each incorrect password attempt)
 
   """
 
@@ -37,8 +37,19 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.update_changeset(__MODULE__, user, attrs)
       end
 
+      def put_password_hash(changeset) do
+        Curator.DatabaseAuthenticatable.put_password_hash(changeset, __MODULE__)
+      end
+
+      def create_registerable_changeset(changeset, attrs) do
+        create_changeset(changeset, attrs)
+      end
+
+      def update_registerable_changeset(changeset, attrs) do
+        update_changeset(changeset, attrs)
+      end
+
       defoverridable find_user_by_email: 1,
-                     authenticate_user: 1,
                      create_changeset: 2,
                      update_changeset: 2
     end
@@ -56,6 +67,9 @@ defmodule Curator.DatabaseAuthenticatable do
     else
       if user do
         curator(mod).extension(:verify_password_failure, [user])
+
+        # TODO: Do I like this syntax better?
+        # curator(mod).extension(:after_verify_password, [user, result])
       end
 
       {:error, :invalid_credentials}
@@ -100,17 +114,18 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # A more complex password scheme
   # def create_changeset(mod, user, attrs) do
-  #   cs = user
+  #   user
   #   |> cast(attrs, [:password])
   #   |> validate_confirmation(:password, required: true)
   #   |> validate_required(:password)
   #   |> validate_length(:password, min: 8)
-  #   |> put_password_hash(mod)
+  #   |> put_password_hash(__MODULE__)
   # end
 
   def create_changeset(mod, user, attrs) do
     user
     |> cast(attrs, [:password])
+    |> validate_confirmation(:password)
     |> validate_required(:password)
     |> put_password_hash(mod)
   end
@@ -121,11 +136,11 @@ defmodule Curator.DatabaseAuthenticatable do
     |> put_password_hash(mod)
   end
 
-  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
+  def put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
     change(changeset, crypto_mod(mod).add_hash(password))
   end
 
-  defp put_password_hash(changeset, _mod), do: changeset
+  def put_password_hash(changeset, _mod), do: changeset
 
   # Config
   def curator(mod) do

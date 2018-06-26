@@ -47,7 +47,11 @@ defmodule Curator.Timeoutable do
     last_request_at = get_timeoutable_timestamp(conn, opts)
     timeout_in = timeout_in(mod)
 
-    verify_exp(timeout_in, last_request_at)
+    if verify_exp(timeout_in, last_request_at) do
+      :ok
+    else
+      {:error, {:timeoutable, :timeout}}
+    end
   end
 
   # Private

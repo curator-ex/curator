@@ -1,7 +1,6 @@
 defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
   use <%= inspect context.web_module %>, :controller
 
-  alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
   alias <%= inspect context.web_module %>.Auth.Registerable
 
@@ -15,7 +14,7 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
 
   def create(conn, %{<%= inspect schema.singular %> => <%= schema.singular %>_params}) do
     case Registerable.create_<%= schema.singular %>(<%= schema.singular %>_params) do
-      {:ok, <%= schema.singular %>} ->
+      {:ok, _<%= schema.singular %>} ->
         conn
         |> put_flash(:info, "Account created successfully.")
         |> redirect(to: registration_path(conn, :show))
@@ -39,7 +38,7 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
     <%= schema.singular %> = current_resource(conn)
 
     case Registerable.update_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params) do
-      {:ok, <%= schema.singular %>} ->
+      {:ok, _<%= schema.singular %>} ->
         conn
         |> put_flash(:info, "Account updated successfully.")
         |> redirect(to: registration_path(conn, :show))

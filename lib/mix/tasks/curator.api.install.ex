@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
   @doc false
   def run(args) do
-    args = ["Auth", "Token", "auth_tokens", "token:string:unique", "description:string", "claims:map", "user_id:references:users"] ++ args
+    args = ["Auth", "Token", "auth_tokens", "token:string:unique", "description:string", "claims:map", "user_id:references:users", "typ:string", "exp:bigint:index"] ++ args
 
     if Mix.Project.umbrella? do
       Mix.raise "mix curator.api.install can only be run inside an application directory"
@@ -88,7 +88,7 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
   defp inject_guardian_module(context, paths, binding) do
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.api.install/api_guardian.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/curator.api.install/opaque_guardian.ex", binding)
     |> inject_eex_after_final_end(guardian_file_path(context), binding)
   end
 

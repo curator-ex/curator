@@ -7,7 +7,7 @@ defmodule Curator.Plug.LoadResourceTest do
   alias Guardian.Plug, as: GPlug
   alias Curator.Plug.LoadResource
 
-  @resource %{id: "bobby"}
+  @resource %{id: 1}
 
   defmodule Handler do
     @moduledoc false

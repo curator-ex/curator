@@ -13,10 +13,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [API](#api): API login (with an opaque token).
 * [Registerable](#registerable): A Generator to support user registration.
 * [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
+* [Confirmable](#confirmable): Account email verification.
 
 (TODO)
 
-* [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
 * [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
@@ -470,7 +470,7 @@ Session Timeout (after configurable inactivity)
     mix ecto.migrate
     ```
 
-7. If using [Registerable](#registerable), Update the registration form & the registration changeset
+7. If using [Registerable](#registerable), Update the registration form
 
     ```elixir
     <div class="form-group">
@@ -478,25 +478,6 @@ Session Timeout (after configurable inactivity)
       <%= password_input f, :password, class: "form-control" %>
       <%= error_tag f, :password %>
     </div>
-    ```
-
-    ```elixir
-    defmodule <MyAppWeb>.Auth.Registerable do
-      use Curator.Registerable,
-        ...
-
-      import Ecto.Changeset
-
-      def create_changeset(user, attrs) do
-        super(user, attrs)
-        |> <MyAppWeb>.Auth.DatabaseAuthenticatable.create_changeset(attrs)
-      end
-
-      def update_changeset(user, attrs) do
-        super(user, attrs)
-        |> <MyAppWeb>.Auth.DatabaseAuthenticatable.update_changeset(attrs)
-      end
-    end
     ```
 
 8. If you have other use cases, you can use the changeset directly:
@@ -509,6 +490,29 @@ Session Timeout (after configurable inactivity)
 
 
 ### Confirmable (TODO)
+1. Run the install command
+
+    ```
+    mix curator.confirmable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Confirmable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    field :email_confirmed_at, Timex.Ecto.DateTime
+    ```
+
+4. Testing ... add confirmed_at
 
 ### Recoverable (TODO)
 
@@ -565,7 +569,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
 
       api_unauth_conn = Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept", "application/json")
 
-      {:ok, token_id, _claims} = <MyAppWeb>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
+      {:ok, token_id, _claims} = <MyAppWeb>.Auth.OpaqueGuardian.encode_and_sign(auth_user, %{description: "TEST"}, token_type: "api")
       api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token_id}")
 
       api_invalid_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: NOT_A_REAL_TOKEN")
