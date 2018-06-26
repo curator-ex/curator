@@ -1,4 +1,17 @@
 defmodule Curator.Ueberauth do
+  @moduledoc """
+  TODO
+
+  Options:
+
+  N/A
+
+  Extensions:
+
+  N/A
+
+  """
+
   use Curator.Extension
 
   defmacro __using__(opts \\ []) do
@@ -12,9 +25,11 @@ defmodule Curator.Ueberauth do
 
   def unauthenticated_routes() do
     quote do
-      get "/:provider", Auth.UeberauthController, :request
-      get "/:provider/callback", Auth.UeberauthController, :callback
-      post "/:provider/callback", Auth.UeberauthController, :callback
+      scope "/auth" do
+        get "/:provider", Auth.UeberauthController, :request
+        get "/:provider/callback", Auth.UeberauthController, :callback
+        post "/:provider/callback", Auth.UeberauthController, :callback
+      end
     end
   end
 end

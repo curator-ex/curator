@@ -1,12 +1,22 @@
 defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   use <%= inspect context.web_module %>, :controller
 
+  # NOTE: We don't sign out when already authenticated...
+  def auth_error(conn, {:ensure_no_resource, :already_authenticated} = error, _opts) do
+    conn
+    |> put_flash(:error, translate_auth_error(error))
+    |> redirect(to: "/")
+  end
+
   def auth_error(conn, error, _opts) do
     conn
     |> <%= inspect context.web_module %>.Auth.Guardian.Plug.sign_out()
     |> put_flash(:error, translate_error(error))
-    |> redirect(to: "/auth/session/new")
+    |> redirect(to: "/session/new")
   end
+
+  # From Curator.Plug.EnsureNoResource
+  defp translate_auth_error({:ensure_no_resource, :already_authenticated}), do: "Already Authenticated"
 
   # From Guardian.Plug.VerifySession
   defp translate_auth_error({:invalid_token, :token_expired}), do: "You have been signed out due to inactivity"

@@ -1,6 +1,8 @@
 defmodule <%= inspect context.web_module %>.Auth.Curator do
   use Curator, otp_app: :<%= Mix.Phoenix.otp_app() %>,
     guardian: <%= inspect context.web_module %>.Auth.Guardian,
+    repo: <%= inspect schema.repo %>,
+    user: <%= inspect schema.module %>,
     modules: []
 end
 

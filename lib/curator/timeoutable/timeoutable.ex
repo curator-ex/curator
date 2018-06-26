@@ -1,4 +1,17 @@
 defmodule Curator.Timeoutable do
+  @moduledoc """
+  TODO
+
+  Options:
+
+  * `timeout_in` (optional) default: 1800 (30 min)
+
+  Extensions:
+
+  N/A
+
+  """
+
   use Curator.Extension
 
   alias Guardian.Plug.Pipeline
@@ -18,11 +31,6 @@ defmodule Curator.Timeoutable do
         Curator.Timeoutable.verify_timeoutable_timestamp(__MODULE__, conn, opts)
       end
     end
-  end
-
-  # Config
-  def timeout_in(mod) do
-    apply(mod, :config, [:timeout_in, 1800])
   end
 
   # Extensions
@@ -75,4 +83,9 @@ defmodule Curator.Timeoutable do
   @doc false
   @spec timeoutable_key(String.t() | atom) :: atom
   defp timeoutable_key(key), do: String.to_atom("#{Guardian.Plug.Keys.base_key(key)}_timeoutable")
+
+  # Config
+  def timeout_in(mod) do
+    apply(mod, :config, [:timeout_in, 1800])
+  end
 end

@@ -20,13 +20,11 @@ defmodule Curator.Router do
     module_quotes = get_module_quotes(curator, :unauthenticated_routes)
 
     quote do
-      scope "/auth" do
-        get "/session/new", Auth.SessionController, :new
-        # post "/session", Auth.SessionController, :create
-        # delete "/session", Auth.SessionController, :delete
+      get "/session/new", Auth.SessionController, :new
+      # post "/session", Auth.SessionController, :create
+      # delete "/session", Auth.SessionController, :delete
 
-        unquote(module_quotes)
-      end
+      unquote(module_quotes)
     end
   end
 
@@ -35,13 +33,11 @@ defmodule Curator.Router do
     module_quotes = get_module_quotes(curator, :authenticated_routes)
 
     quote do
-      scope "/auth" do
-        # get "/session/new", Auth.SessionController, :new
-        # post "/session", Auth.SessionController, :create
-        delete "/session", Auth.SessionController, :delete
+      # get "/session/new", Auth.SessionController, :new
+      # post "/session", Auth.SessionController, :create
+      delete "/session", Auth.SessionController, :delete
 
-        unquote(module_quotes)
-      end
+      unquote(module_quotes)
     end
   end
 end

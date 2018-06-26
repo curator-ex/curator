@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from paths, "priv/templates/curator.database_authenticatable.install", binding, files
-    inject_schema_access(context, paths, binding)
+    # inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
 
     context
@@ -128,11 +128,11 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
         use Curator,
-          otp_app: :#{Mix.Phoenix.otp_app()},
           modules: [#{inspect context.web_module}.Auth.DatabaseAuthenticatable]
 
     The user schema requires new fields:
 
+        # DatabaseAuthenticatable
         field :password, :string, virtual: true
         field :password_hash, :string
     """

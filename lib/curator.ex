@@ -118,10 +118,18 @@ defmodule Curator do
   end
 
   def guardian_module(mod) do
-    apply(mod, :config, [:guardian, []])
+    mod.config(:guardian)
   end
 
   def modules(mod) do
-    apply(mod, :config, [:modules, []])
+    mod.config(:modules)
+  end
+
+  def repo(mod) do
+    mod.config(:repo)
+  end
+
+  def user(mod) do
+    mod.config(:user)
   end
 end

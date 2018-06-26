@@ -71,12 +71,13 @@ defmodule Mix.Tasks.Curator.Timeoutable.Install do
 
     You can configure it like so:
 
-        use Curator.Timeoutable, otp_app: :#{Mix.Phoenix.otp_app()},
+        use Curator.Timeoutable,
+          otp_app: :#{Mix.Phoenix.otp_app()},
           timeout_in: 1800
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
-        use Curator, otp_app: :#{Mix.Phoenix.otp_app()},
+        use Curator,
           modules: [#{inspect context.web_module}.Auth.Timeoutable]
 
         defmodule #{inspect context.web_module}.Auth.Curator.UnauthenticatedPipeline do

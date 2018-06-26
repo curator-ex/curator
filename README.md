@@ -2,7 +2,7 @@
 
 An Authentication Framework for Phoenix.
 
-Curator is meant to mimic [Devise](https://github.com/plataformatec/devise), as such it provides [several modules](#curator-modules) to accomplish authentication and various aspects of user lifecycle mangement. It's build with a modular architecture that differs from existing Elixir Authentication solutions. Each curator module can be combined to handle various authentication scenarios, passing coordination through a curator module](#curator-module). Under the hood, this uses [Guardian](https://github.com/ueberauth/guardian) for session management.
+Curator is meant to mimic [Devise](https://github.com/plataformatec/devise), as such it provides [several modules](#curator-modules) to accomplish authentication and various aspects of user lifecycle mangement. It's build with a modular architecture that differs from existing Elixir Authentication solutions. Each curator module can be combined to handle various authentication scenarios, passing coordination through a [curator module](#curator-module). Under the hood, this uses [Guardian](https://github.com/ueberauth/guardian) for session management.
 
 For an example, see the [PhoenixCurator Application](https://github.com/curator-ex/phoenix_curator)
 
@@ -11,11 +11,11 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [Ueberauth](#ueberauth): Ueberauth Integration.
 * [Timeoutable](#timeoutable): Session Timeout (after configurable inactivity).
 * [API](#api): API login (with an opaque token).
+* [Registerable](#registerable): A Generator to support user registration.
+* [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 
 (TODO)
 
-* [Registerable](#registerable): A Generator to support user registration.
-* [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
 * [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
@@ -326,7 +326,7 @@ Ueberauth Integration
           client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
         ```
 
-    3. Put some links to the providers (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+    3. Put some links to the providers on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
 
         ```elixir
         <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
@@ -348,7 +348,8 @@ Session Timeout (after configurable inactivity)
 2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
-    use Curator, otp_app: :<my_app_web>,
+    use Curator,
+      otp_app: :<my_app_web>,
       modules: [
        <MyAppWeb>.Auth.Timeoutable,
       ]
@@ -371,7 +372,8 @@ Session Timeout (after configurable inactivity)
 4. (optional) Configure Timeoutable (`<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex`)
 
     ```elixir
-    use Curator.Timeoutable, otp_app: :<my_app_web>,
+    use Curator.Timeoutable,
+      otp_app: :<my_app_web>,
       timeout_in: 1800
     ```
 
@@ -393,7 +395,37 @@ Session Timeout (after configurable inactivity)
     defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
     ```
 
-### Registerable (TODO)
+### Registerable
+
+1. Run the install command
+
+    ```
+    mix curator.registerable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Registerable,
+      ]
+    ```
+
+3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+    ```elixir
+    <%= link to: registration_path(@conn, :new), class: "btn btn-outline-primary" do %>
+      Register
+    <% end %>
+    ```
+
+4. Add a registration link to your layout
+
+    ```elixir
+    <%= link "My Account", to: registration_path(@conn, :edit) %>
+    ```
 
 ### Database Authenticatable
 1. Run the install command
@@ -405,7 +437,8 @@ Session Timeout (after configurable inactivity)
 2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
-    use Curator, otp_app: :<my_app_web>,
+    use Curator,
+      otp_app: :<my_app_web>,
       modules: [
        <MyAppWeb>.Auth.DatabaseAuthenticatable,
       ]
@@ -437,13 +470,40 @@ Session Timeout (after configurable inactivity)
     mix ecto.migrate
     ```
 
-7. Add a way for users to manage their passwords, like: [Registerable](#registerable)
+7. If using [Registerable](#registerable), Update the registration form & the registration changeset
 
-  If you have other use cases, you can use the changeset directly:
+    ```elixir
+    <div class="form-group">
+      <%= label f, :password, class: "control-label" %>
+      <%= password_input f, :password, class: "form-control" %>
+      <%= error_tag f, :password %>
+    </div>
+    ```
+
+    ```elixir
+    defmodule <MyAppWeb>.Auth.Registerable do
+      use Curator.Registerable,
+        ...
+
+      import Ecto.Changeset
+
+      def create_changeset(user, attrs) do
+        super(user, attrs)
+        |> <MyAppWeb>.Auth.DatabaseAuthenticatable.create_changeset(attrs)
+      end
+
+      def update_changeset(user, attrs) do
+        super(user, attrs)
+        |> <MyAppWeb>.Auth.DatabaseAuthenticatable.update_changeset(attrs)
+      end
+    end
+    ```
+
+8. If you have other use cases, you can use the changeset directly:
 
   ```elixir
   <MyApp>.Auth.find_user_by_email("test@test.com")
-  |> <MyAppWeb>.Auth.DatabaseAuthenticatable.changeset(%{password: "test"})
+  |> <MyAppWeb>.Auth.DatabaseAuthenticatable.update_changeset(%{password: "test"})
   |> <MyApp>.Repo.update()
   ```
 
