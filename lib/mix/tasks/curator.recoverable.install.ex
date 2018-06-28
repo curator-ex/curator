@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
+defmodule Mix.Tasks.Curator.Recoverable.Install do
   @shortdoc "Install` Curator"
 
   @moduledoc """
-  Generates required Curator DatabaseAuthenticatable files.
+  Generates required Curator Recoverable files.
 
-      mix curator.database_authenticatable.install
+      mix curator.recoverable.install
 
   NOTE: This was copied and adapted from: mix phx.gen.context
   """
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
     if Mix.Project.umbrella? do
-      Mix.raise "mix curator.database_authenticatable.install can only be run inside an application directory"
+      Mix.raise "mix curator.recoverable.install can only be run inside an application directory"
     end
 
     # Gen.Context.run(args)
@@ -51,30 +51,34 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "database_authenticatable.ex", Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])},
-      {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
-      {:eex,     "session_controller.ex",       Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
-      {:eex,     "migration.exs",               Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_database_authenticatable_to_users.exs"])},
+      {:eex,     "recoverable.ex",              Path.join([web_prefix, web_path, "auth", "recoverable.ex"])},
+      {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "recoverable", "new.html.eex"])},
+      {:eex,     "edit.html.eex",               Path.join([web_prefix, "templates", web_path, "auth", "recoverable", "edit.html.eex"])},
+      {:eex,     "recoverable_controller.ex",   Path.join([web_prefix, "controllers", web_path, "auth", "recoverable_controller.ex"])},
+      {:eex,     "view.ex",                     Path.join([web_prefix, "views", web_path, "auth", "recoverable_view.ex"])},
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/curator.database_authenticatable.install", binding, files
-    inject_tests(context, paths, binding)
+    Mix.Phoenix.copy_from paths, "priv/templates/curator.recoverable.install", binding, files
+    inject_email_module(context, paths, binding)
 
     context
   end
 
-  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless Context.pre_existing_tests?(context) do
-      raise "No context tests to inject into"
-    end
+  defp email_file_path(%Context{schema: schema, context_app: context_app}) do
+    web_prefix = Mix.Phoenix.web_path(context_app)
+    web_path = to_string(schema.web_path)
 
+    Path.join([web_prefix, web_path, "auth", "email.ex"])
+  end
+
+  defp inject_email_module(context, paths, binding) do
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.database_authenticatable.install/test_cases.exs", binding)
-    |> inject_eex_before_final_end(test_file, binding)
+    |> Mix.Phoenix.eval_from("priv/templates/curator.recoverable.install/email.ex", binding)
+    |> inject_eex_before_final_end(email_file_path(context), binding)
   end
 
   defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
@@ -106,33 +110,19 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
 
     Mix.shell.info """
 
-    The DatabaseAuthenticatable module was created at: #{Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])}
+    The Recoverable module was created at: #{Path.join([web_prefix, web_path, "auth", "recoverable.ex"])}
 
     You can configure it like so:
 
-        use Curator.DatabaseAuthenticatable,
+        use Curator.Recoverable,
           otp_app: :#{Mix.Phoenix.otp_app()},
           curator: #{inspect context.web_module}.Auth.Curator
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
         use Curator,
-          modules: [#{inspect context.web_module}.Auth.DatabaseAuthenticatable]
+          modules: [#{inspect context.web_module}.Auth.Recoverable]
 
-    The user schema requires new fields:
-
-        # DatabaseAuthenticatable
-        field :password, :string, virtual: true
-        field :password_hash, :string
     """
-
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
-
-  defp timestamp do
-    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
-    "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
-  end
-  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
-  defp pad(i), do: to_string(i)
 end

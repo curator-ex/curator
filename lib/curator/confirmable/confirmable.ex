@@ -40,6 +40,10 @@ defmodule Curator.Confirmable do
         Curator.Confirmable.update_registerable_changeset(__MODULE__, changeset, attrs)
       end
 
+      def after_password_recovery(user) do
+        Curator.Confirmable.after_password_recovery(__MODULE__, user)
+      end
+
       # NOTE: NO!
       # defoverridable verify_confirmed: 1
     end
@@ -54,7 +58,7 @@ defmodule Curator.Confirmable do
   end
 
   def process_token(mod, token_id) do
-    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => "confirmation"}),
+    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => "confirmation"}),
          true <- confirmation_email && user_email && confirmation_email == user_email,
          {:ok, _user} <- confirm_user(mod, user),
          {:ok, _claims} <- opaque_guardian(mod).revoke(token_id) do
@@ -67,6 +71,7 @@ defmodule Curator.Confirmable do
 
   # Extensions
   # NOTE: this doesn't take a module, so can't access overrides...
+  # TODO: Revisit this to add module support
   def before_sign_in(user, _opts) do
     verify_confirmed(user)
   end
@@ -81,19 +86,17 @@ defmodule Curator.Confirmable do
 
   def after_create_registration(mod, user) do
     unless user.email_confirmed_at do
-      {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "confirmation")
-      curator(mod).deliver_email(:confirmation, [user, token_id])
+      send_confirmation_email(mod, user)
     end
   end
 
   def after_update_registration(mod, user) do
     unless user.email_confirmed_at do
-      {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "confirmation")
-      curator(mod).deliver_email(:confirmation, [user, token_id])
+      send_confirmation_email(mod, user)
     end
   end
 
-  def update_registerable_changeset(_mod, changeset, attrs) do
+  def update_registerable_changeset(_mod, changeset, _attrs) do
     if get_change(changeset, :email) do
       change(changeset, email_confirmed_at: nil)
     else
@@ -101,26 +104,37 @@ defmodule Curator.Confirmable do
     end
   end
 
+  def after_password_recovery(mod, user) do
+    unless user.email_confirmed_at do
+      confirm_user(mod, user)
+    end
+  end
+
   # Private
+
+  defp send_confirmation_email(mod, user) do
+    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "confirmation")
+    curator(mod).deliver_email(:confirmation, [user, token_id])
+  end
 
   # User Schema / Context
 
   defp confirm_user(mod, user) do
     user
     |> change(email_confirmed_at: Timex.now())
-    |> repo(mod).update
+    |> repo(mod).update()
   end
 
   # Config
-  def curator(mod) do
+  defp curator(mod) do
     mod.config(:curator)
   end
 
-  def opaque_guardian(mod) do
+  defp opaque_guardian(mod) do
     curator(mod).config(:opaque_guardian)
   end
 
-  def repo(mod) do
+  defp repo(mod) do
     curator(mod).config(:repo)
   end
 end

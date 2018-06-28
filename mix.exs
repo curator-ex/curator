@@ -30,7 +30,7 @@ defmodule Curator.Mixfile do
   defp elixirc_paths(_), do: ["lib"]
 
   def application do
-    [applications: [:logger, :timex, :timex_ecto, :tzdata, :guardian]]
+    [applications: [:logger, :timex, :timex_ecto, :tzdata, :guardian, :secure_compare]]
   end
 
   defp deps do

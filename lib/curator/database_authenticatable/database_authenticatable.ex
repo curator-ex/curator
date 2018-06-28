@@ -41,11 +41,18 @@ defmodule Curator.DatabaseAuthenticatable do
         Curator.DatabaseAuthenticatable.put_password_hash(changeset, __MODULE__)
       end
 
+      # Curator.Registerable changeset
       def create_registerable_changeset(changeset, attrs) do
         create_changeset(changeset, attrs)
       end
 
+      # Curator.Registerable changeset
       def update_registerable_changeset(changeset, attrs) do
+        update_changeset(changeset, attrs)
+      end
+
+      # Curator.Recoverable changeset
+      def update_recoverable_changeset(changeset, attrs) do
         update_changeset(changeset, attrs)
       end
 
@@ -93,6 +100,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # A password_hash should never be missing...
   # Unless curator was installed without this module at first...
+  # Or they went through the ueberauth workflow
   defp verify_password(mod, user, password) do
     if user.password_hash do
       crypto_mod(mod).checkpw(password, user.password_hash)
@@ -104,6 +112,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # User Schema / Context
 
+  # This is duplicated and should be moved somewhere shared. Curator? Curator.Schema?
   def find_user_by_email(mod, email) do
     import Ecto.Query, warn: false
 
@@ -133,6 +142,7 @@ defmodule Curator.DatabaseAuthenticatable do
   def update_changeset(mod, user, attrs) do
     user
     |> cast(attrs, [:password])
+    |> validate_confirmation(:password)
     |> put_password_hash(mod)
   end
 
@@ -143,19 +153,19 @@ defmodule Curator.DatabaseAuthenticatable do
   def put_password_hash(changeset, _mod), do: changeset
 
   # Config
-  def curator(mod) do
+  defp curator(mod) do
     mod.config(:curator)
   end
 
-  def crypto_mod(mod) do
+  defp crypto_mod(mod) do
     mod.config(:crypto_mod, Comeonin.Bcrypt)
   end
 
-  def user(mod) do
+  defp user(mod) do
     curator(mod).config(:user)
   end
 
-  def repo(mod) do
+  defp repo(mod) do
     curator(mod).config(:repo)
   end
 end

@@ -62,30 +62,22 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from paths, "priv/templates/curator.confirmable.install", binding, files
-    # inject_schema_access(context, paths, binding)
-    # inject_tests(context, paths, binding)
+    inject_email_module(context, paths, binding)
 
     context
   end
 
-  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-    unless Context.pre_existing?(context) do
-      raise "No context to inject into"
-    end
+  defp email_file_path(%Context{schema: schema, context_app: context_app}) do
+    web_prefix = Mix.Phoenix.web_path(context_app)
+    web_path = to_string(schema.web_path)
 
-    paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.confirmable.install/schema_access.ex", binding)
-    |> inject_eex_before_final_end(file, binding)
+    Path.join([web_prefix, web_path, "auth", "email.ex"])
   end
 
-  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless Context.pre_existing_tests?(context) do
-      raise "No context tests to inject into"
-    end
-
+  defp inject_email_module(context, paths, binding) do
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.confirmable.install/test_cases.exs", binding)
-    |> inject_eex_before_final_end(test_file, binding)
+    |> Mix.Phoenix.eval_from("priv/templates/curator.confirmable.install/email.ex", binding)
+    |> inject_eex_before_final_end(email_file_path(context), binding)
   end
 
   defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
