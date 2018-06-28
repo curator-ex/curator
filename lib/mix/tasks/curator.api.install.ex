@@ -49,10 +49,8 @@ defmodule Mix.Tasks.Curator.Api.Install do
     web_path = to_string(schema.web_path)
 
     [
-      # {:eex,     "curator.ex",                Path.join([web_prefix, web_path, "auth", "curator.ex"])},
-      {:eex,     "api_error_handler.ex",      Path.join([web_prefix, "controllers", web_path, "auth", "api_error_handler.ex"])},
-      # {:eex,     "guardian.ex",               Path.join([web_prefix, web_path, "auth", "guardian.ex"])},
-      {:force_eex,      "schema.ex",          schema.file}
+      {:eex,        "api_error_handler.ex", Path.join([web_prefix, "controllers", web_path, "auth", "api_error_handler.ex"])},
+      {:force_eex,  "schema.ex",            schema.file}
     ]
   end
 
@@ -94,24 +92,6 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
   defp write_file(content, file) do
     File.write!(file, content)
-  end
-
-  defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
-    file = File.read!(file_path)
-
-    if String.contains?(file, content_to_inject) do
-      :ok
-    else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
-
-      file
-      |> String.trim_trailing()
-      |> String.trim_trailing("end")
-      |> EEx.eval_string(binding)
-      |> Kernel.<>(content_to_inject)
-      |> Kernel.<>("end\n")
-      |> write_file(file_path)
-    end
   end
 
   defp inject_eex_after_final_end(content_to_inject, file_path, binding) do

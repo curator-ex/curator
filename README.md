@@ -14,10 +14,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [Registerable](#registerable): A Generator to support user registration.
 * [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Confirmable](#confirmable): Account email verification.
+* [Recoverable](#recoverable): Reset the User Password.
 
 (TODO)
 
-* [Recoverable](#recoverable): Reset the User Password.
 * [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
 
@@ -512,9 +512,60 @@ Session Timeout (after configurable inactivity)
     field :email_confirmed_at, Timex.Ecto.DateTime
     ```
 
-4. Testing ... add confirmed_at
+4. Update the email module (`<my_app>/lib/<my_app>/auth/email.ex`)
 
-### Recoverable (TODO)
+   ```elixir
+   def confirmation(user, token_id) do
+     url = <MyAppWeb>.Router.Helpers.confirmation_url(<MyAppWeb>.Endpoint, :edit, token_id)
+
+     %Email{}
+     |> from(email_from())
+     |> to(email_to(user))
+     |> subject("#{site_name()}: Confirm Your Account")
+     |> render_body("confirmation.html", %{url: url})
+   end
+   ```
+
+5. Testing ... add confirmed_at
+
+### Recoverable
+1. Run the install command
+
+    ```
+    mix curator.recoverable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Recoverable,
+      ]
+    ```
+
+3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+    ```elixir
+    <%= link to: recoverable_path(@conn, :new), class: "btn btn-outline-primary" do %>
+      Forgotten Password
+    <% end %>
+    ```
+
+4. Update the email module (`<my_app>/lib/<my_app>/auth/email.ex`)
+
+   ```elixir
+   def recoverable(user, token_id) do
+     url = <MyAppWeb>.Router.Helpers.recoverable_url(<MyAppWeb>.Endpoint, :edit, token_id)
+
+     %Email{}
+     |> from(email_from())
+     |> to(email_to(user))
+     |> subject("#{site_name()}: Forgotten Password")
+     |> render_body("recoverable.html", %{url: url})
+   end
+   ```
 
 ### Lockable (TODO)
 

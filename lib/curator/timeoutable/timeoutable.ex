@@ -89,7 +89,7 @@ defmodule Curator.Timeoutable do
   defp timeoutable_key(key), do: String.to_atom("#{Guardian.Plug.Keys.base_key(key)}_timeoutable")
 
   # Config
-  def timeout_in(mod) do
+  defp timeout_in(mod) do
     apply(mod, :config, [:timeout_in, 1800])
   end
 end

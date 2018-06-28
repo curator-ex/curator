@@ -130,15 +130,15 @@ defmodule Curator.Registerable do
   end
 
   # Config
-  def curator(mod) do
+  defp curator(mod) do
     mod.config(:curator)
   end
 
-  def user(mod) do
+  defp user(mod) do
     curator(mod).config(:user)
   end
 
-  def repo(mod) do
+  defp repo(mod) do
     curator(mod).config(:repo)
   end
 end
