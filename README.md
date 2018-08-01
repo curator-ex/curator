@@ -15,10 +15,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
+* [Lockable](#lockable): Lock Account after configurable count of invalid sign-ins.
 
 (TODO)
 
-* [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
 
 ## Installation
@@ -27,7 +27,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     def deps do
-      [{:curator, "~> 0.2.5"}]
+      [{:curator, "~> 0.3.0"}]
     end
     ```
 

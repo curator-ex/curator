@@ -40,8 +40,14 @@ defmodule Curator.Confirmable do
         Curator.Confirmable.update_registerable_changeset(__MODULE__, changeset, attrs)
       end
 
+      # Extenstion: Curator.Recoverable.process_token\3
       def after_password_recovery(user) do
         Curator.Confirmable.after_password_recovery(__MODULE__, user)
+      end
+
+      # Extension: Curator.Lockable.process_token\3
+      def after_lockable(user) do
+        Curator.Confirmable.after_lockable(__MODULE__, user)
       end
 
       # NOTE: NO!
@@ -70,13 +76,11 @@ defmodule Curator.Confirmable do
   end
 
   # Extensions
-  # NOTE: this doesn't take a module, so can't access overrides...
-  # TODO: Revisit this to add module support
-  def before_sign_in(user, _opts) do
+  def before_sign_in(_mod, user, _opts) do
     verify_confirmed(user)
   end
 
-  def unauthenticated_routes() do
+  def unauthenticated_routes(_mod) do
     quote do
       # get "/confirmations/new", Auth.ConfirmationController, :new
       # post "/confirmations/:token_id", Auth.ConfirmationController, :create
@@ -105,9 +109,11 @@ defmodule Curator.Confirmable do
   end
 
   def after_password_recovery(mod, user) do
-    unless user.email_confirmed_at do
-      confirm_user(mod, user)
-    end
+    confirm_user_unless_confirmed(mod, user)
+  end
+
+  def after_lockable(mod, user) do
+    confirm_user_unless_confirmed(mod, user)
   end
 
   # Private
@@ -115,6 +121,12 @@ defmodule Curator.Confirmable do
   defp send_confirmation_email(mod, user) do
     {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "confirmation")
     curator(mod).deliver_email(:confirmation, [user, token_id])
+  end
+
+  defp confirm_user_unless_confirmed(mod, user) do
+    unless user.email_confirmed_at do
+      confirm_user(mod, user)
+    end
   end
 
   # User Schema / Context

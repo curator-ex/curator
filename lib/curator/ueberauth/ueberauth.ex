@@ -44,7 +44,7 @@ defmodule Curator.Ueberauth do
 
   # Extensions
 
-  def unauthenticated_routes() do
+  def unauthenticated_routes(_mod) do
     quote do
       scope "/auth" do
         get "/:provider", Auth.UeberauthController, :request

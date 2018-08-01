@@ -55,13 +55,13 @@ defmodule Curator.Registerable do
 
   # Extensions
 
-  def unauthenticated_routes() do
+  def unauthenticated_routes(_mod) do
     quote do
       resources "/registrations", Auth.RegistrationController, only: [:new, :create]
     end
   end
 
-  def authenticated_routes() do
+  def authenticated_routes(_mod) do
     quote do
       get "/registrations/edit", Auth.RegistrationController, :edit
       get "/registrations", Auth.RegistrationController, :show

@@ -20,9 +20,6 @@ defmodule Curator.Recoverable do
       use Curator.Config, unquote(opts)
       use Curator.Extension, mod: Curator.Recoverable
 
-      def find_user_by_email(email),
-        do: Curator.Recoverable.find_user_by_email(__MODULE__, email)
-
       def process_email_request(email),
         do: Curator.Recoverable.process_email_request(__MODULE__, email)
 
@@ -41,12 +38,11 @@ defmodule Curator.Recoverable do
       def update_user(user, attrs \\ %{}),
         do: Curator.Recoverable.update_user(__MODULE__, user, attrs)
 
-      defoverridable find_user_by_email: 1
     end
   end
 
   def process_email_request(mod, email) do
-    case mod.find_user_by_email(email) do
+    case curator(mod).find_user_by_email(email) do
       nil ->
         nil
       user ->
@@ -77,7 +73,7 @@ defmodule Curator.Recoverable do
   end
 
   # Extensions
-  def unauthenticated_routes() do
+  def unauthenticated_routes(_mod) do
     quote do
       get "/recoverable/new", Auth.RecoverableController, :new
       post "/recoverable/", Auth.RecoverableController, :create
@@ -94,15 +90,6 @@ defmodule Curator.Recoverable do
   end
 
   # User Schema / Context
-
-  # This is duplicated and should be moved somewhere shared. Curator? Curator.Schema?
-  def find_user_by_email(mod, email) do
-    import Ecto.Query, warn: false
-
-    user(mod)
-    |> where([u], u.email == ^email)
-    |> repo(mod).one()
-  end
 
   def change_user(mod, user) do
     mod.update_changeset(user, %{})
@@ -130,9 +117,9 @@ defmodule Curator.Recoverable do
     curator(mod).config(:opaque_guardian)
   end
 
-  defp user(mod) do
-    curator(mod).config(:user)
-  end
+  # defp user(mod) do
+  #   curator(mod).config(:user)
+  # end
 
   defp repo(mod) do
     curator(mod).config(:repo)

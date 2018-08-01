@@ -52,6 +52,22 @@ defmodule Curator.DatabaseAuthenticatableTest do
     use Curator.DatabaseAuthenticatable, otp_app: :curator,
       curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
+    def after_verify_password_failure(%{email: "exception@test.com"}) do
+      raise "Password Failure"
+    end
+
+    def after_verify_password_failure(_user) do
+      nil
+    end
+  end
+
+  defmodule CuratorImpl do
+    use Curator, otp_app: :curator,
+      guardian: GuardianImpl,
+      modules: [
+        DatabaseAuthenticatableImpl,
+      ]
+
     def find_user_by_email("test@test.com") do
       %{
         email: "test@test.com",
@@ -69,22 +85,6 @@ defmodule Curator.DatabaseAuthenticatableTest do
     def find_user_by_email(_) do
       nil
     end
-
-    def verify_password_failure(%{email: "exception@test.com"}) do
-      raise "Password Failure"
-    end
-
-    def verify_password_failure(_user) do
-      nil
-    end
-  end
-
-  defmodule CuratorImpl do
-    use Curator, otp_app: :curator,
-      guardian: GuardianImpl,
-      modules: [
-        DatabaseAuthenticatableImpl,
-      ]
   end
 
   describe "create_changeset" do
@@ -123,7 +123,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
     assert {:ok, _user} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "not_hashed"})
     assert {:error, :invalid_credentials} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "Xnot_hashed"})
 
-    # Test extension :verify_password_failure
+    # Test extension :after_verify_password_failure
     assert_raise RuntimeError, fn ->
       DatabaseAuthenticatableImpl.authenticate_user(%{email: "exception@test.com", password: "Xnot_hashed"})
     end

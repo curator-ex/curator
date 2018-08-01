@@ -59,9 +59,14 @@ defmodule Curator do
       #   @config_with_key_and_default :module, []
       # end
 
+      def find_user_by_email(email) do
+        Curator.find_user_by_email(__MODULE__, email)
+      end
+
       defoverridable before_sign_in: 2,
                      after_sign_in: 3,
-                     redirect_after_sign_in: 1
+                     redirect_after_sign_in: 1,
+                     find_user_by_email: 1
 
     end
   end
@@ -171,6 +176,17 @@ defmodule Curator do
 
   def current_resource(mod, conn, opts) do
     Module.concat(guardian_module(mod), Plug).current_resource(conn, opts)
+  end
+
+  # User Schema / Context
+
+  # This is duplicated and should be moved somewhere shared. Curator? Curator.Schema?
+  def find_user_by_email(mod, email) do
+    import Ecto.Query, warn: false
+
+    user(mod)
+    |> where([u], u.email == ^email)
+    |> repo(mod).one()
   end
 
   # Config

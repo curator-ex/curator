@@ -34,7 +34,7 @@ defmodule Curator.Timeoutable do
   end
 
   # Extensions
-  def after_sign_in(conn, _user, opts) do
+  def after_sign_in(_mod, conn, _user, opts) do
     update_timeoutable_timestamp(conn, opts)
   end
 
