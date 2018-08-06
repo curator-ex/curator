@@ -121,7 +121,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
 
   test "authenticate_user" do
     assert {:ok, _user} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "not_hashed"})
-    assert {:error, :invalid_credentials} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "Xnot_hashed"})
+    assert {:error, {:database_authenticatable, :invalid_credentials}} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "Xnot_hashed"})
 
     # Test extension :after_verify_password_failure
     assert_raise RuntimeError, fn ->

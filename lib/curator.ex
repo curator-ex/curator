@@ -32,6 +32,9 @@ defmodule Curator do
       def extension(fun, args),
         do: Curator.extension(__MODULE__, fun, args)
 
+      def extension_reduce_while(fun, args),
+        do: Curator.extension_reduce_while(__MODULE__, fun, args)
+
       def changeset(fun, changeset, attrs),
         do: Curator.changeset(__MODULE__, fun, changeset, attrs)
 
@@ -76,15 +79,19 @@ defmodule Curator do
   @doc """
   apply before_sign_in to each module (until one fails)
   """
-  def before_sign_in(mod, resource, opts) do
-    modules = modules(mod)
+  # def before_sign_in(mod, resource, opts) do
+  #   modules = modules(mod)
+  #
+  #   Enum.reduce_while(modules, :ok, fn (module, :ok) ->
+  #     case apply(module, :before_sign_in, [resource, opts]) do
+  #       :ok -> {:cont, :ok}
+  #       {:error, error} -> {:halt, {:error, error}}
+  #     end
+  #   end)
+  # end
 
-    Enum.reduce_while(modules, :ok, fn (module, :ok) ->
-      case apply(module, :before_sign_in, [resource, opts]) do
-        :ok -> {:cont, :ok}
-        {:error, error} -> {:halt, {:error, error}}
-      end
-    end)
+  def before_sign_in(mod, resource, opts) do
+    extension_reduce_while(mod, :before_sign_in, [resource, opts])
   end
 
   @doc """
@@ -133,12 +140,33 @@ defmodule Curator do
   """
   def extension(mod, fun, args) do
     modules = modules(mod)
+    arity = Enum.count(args)
 
     Enum.each(modules, fn(module) ->
-      arity = Enum.count(args)
-
       if function_exported?(module, fun, arity) do
         apply(module, fun, args)
+      end
+    end)
+  end
+
+  @doc """
+  Apply `fun` to each module (until one fails).
+  The `fun` should return :ok, or {:error, error}
+
+  TODO: Change this function name...
+  """
+  def extension_reduce_while(mod, fun, args) do
+    modules = modules(mod)
+    arity = Enum.count(args)
+
+    Enum.reduce_while(modules, :ok, fn (module, :ok) ->
+      if function_exported?(module, fun, arity) do
+        case apply(module, fun, args) do
+          :ok -> {:cont, :ok}
+          {:error, error} -> {:halt, {:error, error}}
+        end
+      else
+        {:cont, :ok}
       end
     end)
   end

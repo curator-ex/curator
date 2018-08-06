@@ -18,7 +18,7 @@ defmodule Curator.Recoverable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Recoverable
+      use Curator.Impl, mod: Curator.Recoverable
 
       def process_email_request(email),
         do: Curator.Recoverable.process_email_request(__MODULE__, email)
@@ -29,14 +29,8 @@ defmodule Curator.Recoverable do
       def change_user(user),
         do: Curator.Recoverable.change_user(__MODULE__, user)
 
-      def update_changeset(user, attrs),
-        do: Curator.Recoverable.update_changeset(__MODULE__, user, attrs)
-
       def process_token(token_id, attrs),
         do: Curator.Recoverable.process_token(__MODULE__, token_id, attrs)
-
-      def update_user(user, attrs \\ %{}),
-        do: Curator.Recoverable.update_user(__MODULE__, user, attrs)
 
     end
   end
@@ -62,7 +56,7 @@ defmodule Curator.Recoverable do
 
   def process_token(mod, token_id, attrs) do
     with {:ok, user} <- mod.verify_token(token_id),
-         {:ok, user} <- mod.update_user(user, attrs),
+         {:ok, user} <- update_user(mod, user, attrs),
          {:ok, _claims} <- opaque_guardian(mod).revoke(token_id) do
 
       # NOTE: We verified the token email matches the user email, so this will be used by the confirmation module (if enabled)
@@ -92,10 +86,10 @@ defmodule Curator.Recoverable do
   # User Schema / Context
 
   def change_user(mod, user) do
-    mod.update_changeset(user, %{})
+    update_changeset(mod, user, %{})
   end
 
-  def update_changeset(mod, user, attrs) do
+  defp update_changeset(mod, user, attrs) do
     changeset = user
     |> cast(attrs, [:password])
     |> validate_required(:password)
@@ -103,25 +97,10 @@ defmodule Curator.Recoverable do
     curator(mod).changeset(:update_recoverable_changeset, changeset, attrs)
   end
 
-  def update_user(mod, user, attrs \\ %{}) do
-    mod.update_changeset(user, attrs)
+  defp update_user(mod, user, attrs) do
+    update_changeset(mod, user, attrs)
     |> repo(mod).update()
   end
 
   # Config
-  defp curator(mod) do
-    mod.config(:curator)
-  end
-
-  defp opaque_guardian(mod) do
-    curator(mod).config(:opaque_guardian)
-  end
-
-  # defp user(mod) do
-  #   curator(mod).config(:user)
-  # end
-
-  defp repo(mod) do
-    curator(mod).config(:repo)
-  end
 end

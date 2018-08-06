@@ -18,40 +18,34 @@ defmodule Curator.Confirmable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Confirmable
+      use Curator.Impl, mod: Curator.Confirmable
 
-      def verify_confirmed(user) do
-        Curator.Confirmable.verify_confirmed(user)
-      end
+      def verify_confirmed(user),
+        do: Curator.Confirmable.verify_confirmed(user)
 
-      def process_token(token_id) do
-        Curator.Confirmable.process_token(__MODULE__, token_id)
-      end
+      def process_token(token_id),
+        do: Curator.Confirmable.process_token(__MODULE__, token_id)
 
-      def after_create_registration(user) do
-        Curator.Confirmable.after_create_registration(__MODULE__, user)
-      end
+      # Extension: Curator.Registerable.create_user\2
+      def after_create_registration(user),
+        do: Curator.Confirmable.after_create_registration(__MODULE__, user)
 
-      def after_update_registration(user) do
-        Curator.Confirmable.after_update_registration(__MODULE__, user)
-      end
+      # Extension: Curator.Registerable.update_user\3
+      def after_update_registration(user),
+        do: Curator.Confirmable.after_update_registration(__MODULE__, user)
 
-      def update_registerable_changeset(changeset, attrs) do
-        Curator.Confirmable.update_registerable_changeset(__MODULE__, changeset, attrs)
-      end
+      # Extension: Curator.Registerable.update_changeset\3
+      def update_registerable_changeset(changeset, attrs),
+        do: Curator.Confirmable.update_registerable_changeset(__MODULE__, changeset, attrs)
 
-      # Extenstion: Curator.Recoverable.process_token\3
-      def after_password_recovery(user) do
-        Curator.Confirmable.after_password_recovery(__MODULE__, user)
-      end
+      # Extension: Curator.Recoverable.process_token\3
+      def after_password_recovery(user),
+        do: Curator.Confirmable.after_password_recovery(__MODULE__, user)
 
       # Extension: Curator.Lockable.process_token\3
-      def after_lockable(user) do
-        Curator.Confirmable.after_lockable(__MODULE__, user)
-      end
+      def after_lockable(user),
+        do: Curator.Confirmable.after_lockable(__MODULE__, user)
 
-      # NOTE: NO!
-      # defoverridable verify_confirmed: 1
     end
   end
 
@@ -138,15 +132,4 @@ defmodule Curator.Confirmable do
   end
 
   # Config
-  defp curator(mod) do
-    mod.config(:curator)
-  end
-
-  defp opaque_guardian(mod) do
-    curator(mod).config(:opaque_guardian)
-  end
-
-  defp repo(mod) do
-    curator(mod).config(:repo)
-  end
 end

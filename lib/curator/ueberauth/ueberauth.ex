@@ -22,7 +22,7 @@ defmodule Curator.Ueberauth do
       #   do: Curator.Ueberauth.find_or_create_from_auth(__MODULE__, auth)
 
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Ueberauth
+      use Curator.Impl, mod: Curator.Ueberauth
     end
   end
 

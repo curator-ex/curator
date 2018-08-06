@@ -114,43 +114,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       |> get_user()
     end
 
-    @behaviour Curator.Guardian.Token.Opaque.Persistence
-
-    def get_token(id) do
-      Auth.get_token(id)
-    end
-
-    def create_token(claims) do
-      user_id = Map.get(claims, "user_id") || Map.get(claims, "sub")
-      description = Map.get(claims, "description")
-      typ = Map.get(claims, "typ")
-      exp = Map.get(claims, "exp")
-
-      claims = claims
-      |> Map.drop(["user_id", "description"])
-
-      token = Curator.Guardian.Token.Opaque.token_id()
-
-      attrs = %{
-        "claims" => claims,
-        "user_id" => user_id,
-        "description" => description,
-        "token" => token,
-        "typ" => typ,
-        "exp" => exp,
-      }
-
-      Auth.create_token(attrs)
-    end
-
-    def delete_token(id) do
-      case get_token(id) do
-        {:ok, token} ->
-          Auth.delete_token(token)
-        result ->
-          result
-      end
-    end
+    use Curator.Guardian.Token.Opaque.ContextAdapter, context: Auth
 
     def get_user(1) do
       {:ok, %{id: 1}}

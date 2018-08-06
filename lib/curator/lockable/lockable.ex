@@ -4,7 +4,9 @@ defmodule Curator.Lockable do
 
   Options:
 
-  * `curator` (required)
+  * `maximum_attemps` (optional) default: 5
+  * `unlock_strategy` (optional) default: []
+  * `unlock_in` (optional) default: 6 hours
 
   Extensions:
 
@@ -18,33 +20,33 @@ defmodule Curator.Lockable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Lockable
+      use Curator.Impl, mod: Curator.Lockable
 
-      def verify_unlocked(user) do
-        Curator.Lockable.verify_unlocked(__MODULE__, user)
-      end
+      def verify_unlocked(user),
+        do: Curator.Lockable.verify_unlocked(__MODULE__, user)
 
-      # Extenstion: Curator.DatabaseAuthenticatable.authenticate_user\2
-      def after_verify_password_failure(user) do
-        Curator.Lockable.after_verify_password_failure(__MODULE__, user)
-      end
+      # def process_email_request(email),
+      #   do: Curator.Lockable.process_email_request(__MODULE__, email)
 
-      # Extenstion: Curator.Recoverable.process_token\3
-      def after_password_recovery(user) do
-        Curator.Lockable.after_password_recovery(__MODULE__, user)
-      end
+      def process_token(token_id),
+        do: Curator.Lockable.process_token(__MODULE__, token_id)
 
-      def process_email_request(email),
-        do: Curator.Lockable.process_email_request(__MODULE__, email)
+      # Extension: Curator.DatabaseAuthenticatable.authenticate_user\2
+      def before_authenticate_user(user),
+        do: Curator.Lockable.before_authenticate_user(__MODULE__, user)
 
-      def verify_token(token_id),
-        do: Curator.Lockable.verify_token(__MODULE__, token_id)
+      # Extension: Curator.DatabaseAuthenticatable.authenticate_user\2
+      def after_verify_password_success(user),
+        do: Curator.Lockable.after_verify_password_success(__MODULE__, user)
 
-      def process_token(token_id, attrs),
-        do: Curator.Lockable.process_token(__MODULE__, token_id, attrs)
+      # Extension: Curator.DatabaseAuthenticatable.authenticate_user\2
+      def after_verify_password_failure(user),
+        do: Curator.Lockable.after_verify_password_failure(__MODULE__, user)
 
-      def unlock_user(user, attrs \\ %{}),
-        do: Curator.Lockable.unlock_user(__MODULE__, user, attrs)
+      # Extension: Curator.Recoverable.process_token\3
+      def after_password_recovery(user),
+        do: Curator.Lockable.after_password_recovery(__MODULE__, user)
+
     end
   end
 
@@ -56,28 +58,19 @@ defmodule Curator.Lockable do
     end
   end
 
-  def process_email_request(mod, email) do
-    case curator(mod).find_user_by_email(email) do
-      nil ->
-        nil
-      user ->
-        send_lockable_email(mod, user)
-    end
-  end
+  # We could add a UI for creating unlock emails, but I think recoverable works better combined with automatically sending an email on lock
+  # def process_email_request(mod, email) do
+  #   case curator(mod).find_user_by_email(email) do
+  #     nil ->
+  #       nil
+  #     user ->
+  #       send_lockable_email(mod, user)
+  #   end
+  # end
 
-  def verify_token(mod, token_id) do
-    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => "lockable"}),
-         true <- confirmation_email && user_email && confirmation_email == user_email do
-      {:ok, user}
-    else
-      _ ->
-        {:error, :invalid}
-    end
-  end
-
-  def process_token(mod, token_id, attrs) do
-    with {:ok, user} <- mod.verify_token(token_id),
-         {:ok, user} <- mod.unlock_user(user, attrs),
+  def process_token(mod, token_id) do
+    with {:ok, user} <- verify_token(mod, token_id),
+         {:ok, user} <- unlock_user(mod, user),
          {:ok, _claims} <- opaque_guardian(mod).revoke(token_id) do
 
       # NOTE: We verified the token email matches the user email, so this will be used by the confirmation module (if enabled)
@@ -92,37 +85,57 @@ defmodule Curator.Lockable do
     verify_unlocked(mod, user)
   end
 
-  # def after_sign_in(_conn, user, _opts) do
-  #   unlock_user(mod, user)
-  # end
+  def before_authenticate_user(mod, user) do
+    verify_unlocked(mod, user)
+  end
+
+  def after_verify_password_success(mod, user) do
+    unlock_user(mod, user)
+  end
 
   def after_verify_password_failure(mod, %{failed_attempts: failed_attempts, locked_at: locked_at} = user) do
-    user = change(user, failed_attempts: failed_attempts + 1)
+    failed_attempts = failed_attempts + 1
 
-    user = if failed_attempts >= maximum_attempts(mod) && !locked_at do
-      change(user, locked_at: Timex.now())
+    if failed_attempts >= maximum_attempts(mod) && !locked_at do
+      user = user
+      |> change(failed_attempts: failed_attempts, locked_at: Timex.now())
+      |> repo(mod).update!()
+
+      if Enum.member?(unlock_strategy(mod), :email) do
+        send_lockable_email(mod, user)
+      end
+
+      user
     else
       user
+      |> change(failed_attempts: failed_attempts)
+      |> repo(mod).update!()
     end
-
-    repo(mod).update!(user)
   end
 
   def after_password_recovery(mod, user) do
-    if locked?(mod, user) do
-      unlock_user(mod, user)
-    end
+    unlock_user(mod, user)
   end
 
   def unauthenticated_routes(_mod) do
     quote do
-      get "/lockable/new", Auth.LockableController, :new
-      post "/lockable/", Auth.LockableController, :create
+      # get "/lockable/new", Auth.LockableController, :new
+      # post "/lockable/", Auth.LockableController, :create
       get "/lockable/:token_id", Auth.LockableController, :edit
     end
   end
 
   # Private
+
+  defp verify_token(mod, token_id) do
+    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => "lockable"}),
+         true <- confirmation_email && user_email && confirmation_email == user_email do
+      {:ok, user}
+    else
+      _ ->
+        {:error, :invalid}
+    end
+  end
 
   defp send_lockable_email(mod, user) do
     {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "lockable")
@@ -143,29 +156,13 @@ defmodule Curator.Lockable do
 
   # User Schema / Context
 
-  def unlock_user(mod, user) do
+  defp unlock_user(mod, user) do
     user
     |> change(failed_attempts: 0, locked_at: nil)
-    |> repo(mod).update()
+    |> repo(mod).update!()
   end
 
   # Config
-  defp curator(mod) do
-    mod.config(:curator)
-  end
-
-  defp opaque_guardian(mod) do
-    curator(mod).config(:opaque_guardian)
-  end
-
-  # defp user(mod) do
-  #   curator(mod).config(:user)
-  # end
-
-  defp repo(mod) do
-    curator(mod).config(:repo)
-  end
-
   defp maximum_attempts(mod) do
     mod.config(:maximum_attempts, 5)
   end

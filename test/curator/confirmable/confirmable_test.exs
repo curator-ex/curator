@@ -55,7 +55,6 @@ defmodule Curator.ConfirmableTest do
   defmodule CuratorImpl do
     use Curator, otp_app: :curator,
       guardian: GuardianImpl,
-
       modules: [
         ConfirmableImpl,
       ]
