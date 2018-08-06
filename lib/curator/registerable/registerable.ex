@@ -18,31 +18,25 @@ defmodule Curator.Registerable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Registerable
+      use Curator.Impl, mod: Curator.Registerable
 
-      def change_user(user) do
-        Curator.Registerable.change_user(__MODULE__, user)
-      end
+      def change_user(user),
+        do: Curator.Registerable.change_user(__MODULE__, user)
 
-      def create_changeset(user, attrs) do
-        Curator.Registerable.create_changeset(__MODULE__, user, attrs)
-      end
+      def create_changeset(user, attrs),
+        do: Curator.Registerable.create_changeset(__MODULE__, user, attrs)
 
-      def create_user(attrs \\ %{}) do
-        Curator.Registerable.create_user(__MODULE__, attrs)
-      end
+      def create_user(attrs \\ %{}),
+        do: Curator.Registerable.create_user(__MODULE__, attrs)
 
-      def update_changeset(user, attrs) do
-        Curator.Registerable.update_changeset(__MODULE__, user, attrs)
-      end
+      def update_changeset(user, attrs),
+        do: Curator.Registerable.update_changeset(__MODULE__, user, attrs)
 
-      def update_user(user, attrs \\ %{}) do
-        Curator.Registerable.update_user(__MODULE__, user, attrs)
-      end
+      def update_user(user, attrs \\ %{}),
+        do: Curator.Registerable.update_user(__MODULE__, user, attrs)
 
-      def delete_user(user) do
-        Curator.Registerable.delete_user(__MODULE__, user)
-      end
+      def delete_user(user),
+        do: Curator.Registerable.delete_user(__MODULE__, user)
 
       defoverridable change_user: 1,
                      create_changeset: 2,
@@ -55,13 +49,13 @@ defmodule Curator.Registerable do
 
   # Extensions
 
-  def unauthenticated_routes() do
+  def unauthenticated_routes(_mod) do
     quote do
       resources "/registrations", Auth.RegistrationController, only: [:new, :create]
     end
   end
 
-  def authenticated_routes() do
+  def authenticated_routes(_mod) do
     quote do
       get "/registrations/edit", Auth.RegistrationController, :edit
       get "/registrations", Auth.RegistrationController, :show
@@ -130,15 +124,4 @@ defmodule Curator.Registerable do
   end
 
   # Config
-  defp curator(mod) do
-    mod.config(:curator)
-  end
-
-  defp user(mod) do
-    curator(mod).config(:user)
-  end
-
-  defp repo(mod) do
-    curator(mod).config(:repo)
-  end
 end

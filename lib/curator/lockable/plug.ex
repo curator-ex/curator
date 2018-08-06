@@ -1,4 +1,4 @@
-defmodule Curator.Confirmable.Plug do
+defmodule Curator.Lockable.Plug do
   import Plug.Conn
 
   alias Guardian.Plug.Pipeline
@@ -18,9 +18,9 @@ defmodule Curator.Confirmable.Plug do
   end
 
   defp verify?(resource, conn, opts) do
-    confirmable_module = Keyword.fetch!(opts, :confirmable_module)
+    lockable_module = Keyword.fetch!(opts, :lockable_module)
 
-    case confirmable_module.verify_confirmed(resource) do
+    case lockable_module.verify_unlocked(resource) do
       :ok ->
         {:ok, resource, conn, opts}
       {:error, error} ->

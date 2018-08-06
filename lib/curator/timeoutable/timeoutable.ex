@@ -21,20 +21,19 @@ defmodule Curator.Timeoutable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Timeoutable
+      use Curator.Impl, mod: Curator.Timeoutable
 
-      def update_timeoutable_timestamp(conn, opts \\ []) do
-        Curator.Timeoutable.update_timeoutable_timestamp(conn, opts)
-      end
+      def update_timeoutable_timestamp(conn, opts \\ []),
+        do: Curator.Timeoutable.update_timeoutable_timestamp(conn, opts)
 
-      def verify_timeoutable_timestamp(conn, opts \\ []) do
-        Curator.Timeoutable.verify_timeoutable_timestamp(__MODULE__, conn, opts)
-      end
+      def verify_timeoutable_timestamp(conn, opts \\ []),
+        do: Curator.Timeoutable.verify_timeoutable_timestamp(__MODULE__, conn, opts)
+
     end
   end
 
   # Extensions
-  def after_sign_in(conn, _user, opts) do
+  def after_sign_in(_mod, conn, _user, opts) do
     update_timeoutable_timestamp(conn, opts)
   end
 

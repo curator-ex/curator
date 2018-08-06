@@ -59,4 +59,18 @@ defmodule Curator.Config do
         do: config() |> Keyword.get(key, default) |> Config.resolve_value()
     end
   end
+
+  def config_error(key) do
+    raise Curator.Config.Error, key
+  end
+
+  defmodule Error do
+    defexception [:key]
+
+    def exception(key),
+      do: %__MODULE__{key: key}
+
+    def message(%__MODULE__{key: key}),
+      do: "#{key} not configured"
+  end
 end

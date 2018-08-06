@@ -15,10 +15,10 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
+* [Lockable](#lockable): Lock Account after configurable count of invalid sign-ins.
 
 (TODO)
 
-* [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
 
 ## Installation
@@ -27,7 +27,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     def deps do
-      [{:curator, "~> 0.2.5"}]
+      [{:curator, "~> 0.3.0"}]
     end
     ```
 
@@ -397,6 +397,8 @@ Session Timeout (after configurable inactivity)
 
 ### Registerable
 
+#### Installation
+
 1. Run the install command
 
     ```
@@ -428,6 +430,9 @@ Session Timeout (after configurable inactivity)
     ```
 
 ### Database Authenticatable
+
+#### installation
+
 1. Run the install command
 
     ```
@@ -447,6 +452,7 @@ Session Timeout (after configurable inactivity)
 3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
 
     ```elixir
+    # DatabaseAuthenticatable
     field :password, :string, virtual: true
     field :password_hash, :string
     ```
@@ -489,7 +495,10 @@ Session Timeout (after configurable inactivity)
   ```
 
 
-### Confirmable (TODO)
+### Confirmable
+
+#### installation
+
 1. Run the install command
 
     ```
@@ -509,26 +518,16 @@ Session Timeout (after configurable inactivity)
 3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
 
     ```elixir
+    # Confirmable
     field :email_confirmed_at, Timex.Ecto.DateTime
     ```
 
-4. Update the email module (`<my_app>/lib/<my_app>/auth/email.ex`)
-
-   ```elixir
-   def confirmation(user, token_id) do
-     url = <MyAppWeb>.Router.Helpers.confirmation_url(<MyAppWeb>.Endpoint, :edit, token_id)
-
-     %Email{}
-     |> from(email_from())
-     |> to(email_to(user))
-     |> subject("#{site_name()}: Confirm Your Account")
-     |> render_body("confirmation.html", %{url: url})
-   end
-   ```
-
-5. Testing ... add confirmed_at
+4. Testing ... add confirmed_at
 
 ### Recoverable
+
+#### installation
+
 1. Run the install command
 
     ```
@@ -553,21 +552,33 @@ Session Timeout (after configurable inactivity)
     <% end %>
     ```
 
-4. Update the email module (`<my_app>/lib/<my_app>/auth/email.ex`)
+### Lockable
 
-   ```elixir
-   def recoverable(user, token_id) do
-     url = <MyAppWeb>.Router.Helpers.recoverable_url(<MyAppWeb>.Endpoint, :edit, token_id)
+#### Installation
 
-     %Email{}
-     |> from(email_from())
-     |> to(email_to(user))
-     |> subject("#{site_name()}: Forgotten Password")
-     |> render_body("recoverable.html", %{url: url})
-   end
-   ```
+1. Run the install command
 
-### Lockable (TODO)
+    ```
+    mix curator.lockable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.LockableImpl,
+      ]
+    ```
+    
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    # Lockable
+    field :failed_attempts, :integer
+    field :locked_at, Timex.Ecto.DateTime
+    ```
 
 ### Approvable (TODO)
 

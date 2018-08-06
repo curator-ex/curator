@@ -55,7 +55,6 @@ defmodule Curator.ConfirmableTest do
   defmodule CuratorImpl do
     use Curator, otp_app: :curator,
       guardian: GuardianImpl,
-
       modules: [
         ConfirmableImpl,
       ]
@@ -67,7 +66,7 @@ defmodule Curator.ConfirmableTest do
       assert :ok == ConfirmableImpl.verify_confirmed(user)
     end
 
-    test "returns and error when email_confirmed_at is NOT set" do
+    test "returns an error when email_confirmed_at is NOT set" do
       user = %User{email_confirmed_at: nil}
       assert {:error, {:confirmable, :email_not_confirmed}} == ConfirmableImpl.verify_confirmed(user)
     end

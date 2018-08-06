@@ -28,11 +28,17 @@ defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   defp translate_error({:load_resource, :no_claims}), do: "Please Sign In"
 
   # Add Additional Translations as needed:
-  # From Curator.Timeoutable.Plug
+  # From Curator.Timeoutable
   # defp translate_auth_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
 
   # From Curator.Ueberauth
   # defp translate_auth_error({:ueberauth, :invalid_user}), do: "Sorry, your email is not currently authorized to access this system"
+
+  # From Curator.Confirmable
+  # defp translate_auth_error({:confirmable, :email_not_confirmed}), do: "Sorry, your email has not been confirmed yet"
+
+  # From Curator.Lockable
+  # defp translate_auth_error({:lockable, :account_locked}), do: "This accout has been locked"
 
   defp translate_error({_type, reason}), do: reason
 end

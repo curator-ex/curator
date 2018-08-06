@@ -9,7 +9,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   Extensions:
 
-  * verify_password_failure (called after each incorrect password attempt)
+  * after_verify_password_failure (called after each incorrect password attempt)
 
   """
 
@@ -19,45 +19,33 @@ defmodule Curator.DatabaseAuthenticatable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.DatabaseAuthenticatable
+      use Curator.Impl, mod: Curator.DatabaseAuthenticatable
 
-      def find_user_by_email(email) do
-        Curator.DatabaseAuthenticatable.find_user_by_email(__MODULE__, email)
-      end
+      def authenticate_user(params),
+        do: Curator.DatabaseAuthenticatable.authenticate_user(__MODULE__, params)
 
-      def authenticate_user(params) do
-        Curator.DatabaseAuthenticatable.authenticate_user(__MODULE__, params)
-      end
+      def create_changeset(user, attrs),
+        do: Curator.DatabaseAuthenticatable.create_changeset(__MODULE__, user, attrs)
 
-      def create_changeset(user, attrs) do
-        Curator.DatabaseAuthenticatable.create_changeset(__MODULE__, user, attrs)
-      end
+      def update_changeset(user, attrs),
+        do: Curator.DatabaseAuthenticatable.update_changeset(__MODULE__, user, attrs)
 
-      def update_changeset(user, attrs) do
-        Curator.DatabaseAuthenticatable.update_changeset(__MODULE__, user, attrs)
-      end
-
-      def put_password_hash(changeset) do
-        Curator.DatabaseAuthenticatable.put_password_hash(changeset, __MODULE__)
-      end
+      def put_password_hash(changeset),
+        do: Curator.DatabaseAuthenticatable.put_password_hash(changeset, __MODULE__)
 
       # Curator.Registerable changeset
-      def create_registerable_changeset(changeset, attrs) do
-        create_changeset(changeset, attrs)
-      end
+      def create_registerable_changeset(changeset, attrs),
+        do: create_changeset(changeset, attrs)
 
       # Curator.Registerable changeset
-      def update_registerable_changeset(changeset, attrs) do
-        update_changeset(changeset, attrs)
-      end
+      def update_registerable_changeset(changeset, attrs),
+        do: update_changeset(changeset, attrs)
 
       # Curator.Recoverable changeset
-      def update_recoverable_changeset(changeset, attrs) do
-        update_changeset(changeset, attrs)
-      end
+      def update_recoverable_changeset(changeset, attrs),
+        do: update_changeset(changeset, attrs)
 
-      defoverridable find_user_by_email: 1,
-                     create_changeset: 2,
+      defoverridable create_changeset: 2,
                      update_changeset: 2
     end
   end
@@ -67,25 +55,33 @@ defmodule Curator.DatabaseAuthenticatable do
   end
 
   def authenticate_user(mod, %{email: email, password: password}) do
-    user = mod.find_user_by_email(email)
+    user = curator(mod).find_user_by_email(email)
 
-    if verify_password(mod, user, password) do
-      {:ok, user}
-    else
-      if user do
-        curator(mod).extension(:verify_password_failure, [user])
+    if user do
+      case curator(mod).extension_reduce_while(:before_authenticate_user, [user]) do
+        :ok ->
+          if verify_password(mod, user, password) do
+            curator(mod).extension(:after_verify_password_success, [user])
 
-        # TODO: Do I like this syntax better?
-        # curator(mod).extension(:after_verify_password, [user, result])
+            {:ok, user}
+          else
+            curator(mod).extension(:after_verify_password_failure, [user])
+
+            {:error, {:database_authenticatable, :invalid_credentials}}
+          end
+        {:error, error} ->
+          {:error, error}
       end
-
-      {:error, :invalid_credentials}
+    else
+      verify_password(mod, nil, password)
+      
+      {:error, {:database_authenticatable, :invalid_credentials}}
     end
   end
 
   # Extensions
 
-  def unauthenticated_routes() do
+  def unauthenticated_routes(_mod) do
     quote do
       post "/session", Auth.SessionController, :create
     end
@@ -112,15 +108,6 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # User Schema / Context
 
-  # This is duplicated and should be moved somewhere shared. Curator? Curator.Schema?
-  def find_user_by_email(mod, email) do
-    import Ecto.Query, warn: false
-
-    user(mod)
-    |> where([u], u.email == ^email)
-    |> repo(mod).one()
-  end
-
   # A more complex password scheme
   # def create_changeset(mod, user, attrs) do
   #   user
@@ -128,7 +115,7 @@ defmodule Curator.DatabaseAuthenticatable do
   #   |> validate_confirmation(:password, required: true)
   #   |> validate_required(:password)
   #   |> validate_length(:password, min: 8)
-  #   |> put_password_hash(__MODULE__)
+  #   |> put_password_hash()
   # end
 
   def create_changeset(mod, user, attrs) do
@@ -136,14 +123,14 @@ defmodule Curator.DatabaseAuthenticatable do
     |> cast(attrs, [:password])
     |> validate_confirmation(:password)
     |> validate_required(:password)
-    |> put_password_hash(mod)
+    |> mod.put_password_hash()
   end
 
   def update_changeset(mod, user, attrs) do
     user
     |> cast(attrs, [:password])
     |> validate_confirmation(:password)
-    |> put_password_hash(mod)
+    |> mod.put_password_hash()
   end
 
   def put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
@@ -153,19 +140,7 @@ defmodule Curator.DatabaseAuthenticatable do
   def put_password_hash(changeset, _mod), do: changeset
 
   # Config
-  defp curator(mod) do
-    mod.config(:curator)
-  end
-
   defp crypto_mod(mod) do
     mod.config(:crypto_mod, Comeonin.Bcrypt)
-  end
-
-  defp user(mod) do
-    curator(mod).config(:user)
-  end
-
-  defp repo(mod) do
-    curator(mod).config(:repo)
   end
 end

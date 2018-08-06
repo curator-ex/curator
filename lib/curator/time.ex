@@ -1,7 +1,7 @@
 defmodule Curator.Time do
   @moduledoc """
   A Curator Helper Module to determine if Ecto.DateTime's have expired.
-  This is usually used to see if a database stored token with a created_at
+  This is usually used to see if a database stored token with a *_at
   timestamp has expired.
 
   # NOTE: Code taken from https://github.com/smpallen99/coherence/blob/master/web/controllers/controller_helpers.ex

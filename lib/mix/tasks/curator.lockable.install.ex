@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Curator.Recoverable.Install do
+defmodule Mix.Tasks.Curator.Lockable.Install do
   @shortdoc "Install` Curator"
 
   @moduledoc """
-  Generates required Curator Recoverable files.
+  Generates required Curator Lockable files.
 
-      mix curator.recoverable.install
+      mix curator.lockable.install
 
   NOTE: This was copied and adapted from: mix phx.gen.context
   """
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Curator.Recoverable.Install do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
     if Mix.Project.umbrella? do
-      Mix.raise "mix curator.recoverable.install can only be run inside an application directory"
+      Mix.raise "mix curator.lockable.install can only be run inside an application directory"
     end
 
     # Gen.Context.run(args)
@@ -51,19 +51,17 @@ defmodule Mix.Tasks.Curator.Recoverable.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "recoverable.ex",              Path.join([web_prefix, web_path, "auth", "recoverable.ex"])},
-      {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "recoverable", "new.html.eex"])},
-      {:eex,     "edit.html.eex",               Path.join([web_prefix, "templates", web_path, "auth", "recoverable", "edit.html.eex"])},
-      {:eex,     "recoverable_controller.ex",   Path.join([web_prefix, "controllers", web_path, "auth", "recoverable_controller.ex"])},
-      {:eex,     "view.ex",                     Path.join([web_prefix, "views", web_path, "auth", "recoverable_view.ex"])},
-      {:eex,     "email/recoverable.html.eex",  Path.join([web_prefix, "templates", web_path, "auth", "email", "recoverable.html.eex"])},
+      {:eex,     "lockable.ex",             Path.join([web_prefix, web_path, "auth", "lockable.ex"])},
+      {:eex,     "lockable_controller.ex",  Path.join([web_prefix, "controllers", web_path, "auth", "lockable_controller.ex"])},
+      {:eex,     "migration.exs",           Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_lockable_to_users.exs"])},
+      {:eex,     "email/lockable.html.eex", Path.join([web_prefix, "templates", web_path, "auth", "email", "lockable.html.eex"])},
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/curator.recoverable.install", binding, files
+    Mix.Phoenix.copy_from paths, "priv/templates/curator.lockable.install", binding, files
     inject_email_module(context, paths, binding)
 
     context
@@ -78,7 +76,7 @@ defmodule Mix.Tasks.Curator.Recoverable.Install do
 
   defp inject_email_module(context, paths, binding) do
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.recoverable.install/email.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/curator.lockable.install/email.ex", binding)
     |> inject_eex_before_final_end(email_file_path(context), binding)
   end
 
@@ -111,19 +109,33 @@ defmodule Mix.Tasks.Curator.Recoverable.Install do
 
     Mix.shell.info """
 
-    The Recoverable module was created at: #{Path.join([web_prefix, web_path, "auth", "recoverable.ex"])}
+    The Lockable module was created at: #{Path.join([web_prefix, web_path, "auth", "lockable.ex"])}
 
     You can configure it like so:
 
-        use Curator.Recoverable,
+        use Curator.Lockable,
           otp_app: :#{Mix.Phoenix.otp_app()},
           curator: #{inspect context.web_module}.Auth.Curator
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
         use Curator,
-          modules: [#{inspect context.web_module}.Auth.Recoverable]
+          modules: [#{inspect context.web_module}.Auth.Lockable]
 
+    The user schema requires new fields:
+
+        # Lockable
+        field :failed_attempts, :integer
+        field :locked_at, Timex.Ecto.DateTime
     """
+
+    if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
+
+  defp timestamp do
+    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
+    "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
+  end
+  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+  defp pad(i), do: to_string(i)
 end

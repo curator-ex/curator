@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.Auth.ConfirmationController do
+defmodule <%= inspect context.web_module %>.Auth.ConfirmableController do
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.web_module %>.Auth.Confirmable
