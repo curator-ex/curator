@@ -1,3 +1,3 @@
-Please confirm your accout.
+Please confirm your account.
 
 <a href="<%%= @url %>">Click Here</a>

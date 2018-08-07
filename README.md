@@ -16,9 +16,6 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
 * [Lockable](#lockable): Lock Account after configurable count of invalid sign-ins.
-
-(TODO)
-
 * [Approvable](#approvable): Require an approval step before user sign-in.
 
 ## Installation
@@ -144,7 +141,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
         end
         ```
 
-4. Add a signout link to your layout
+4. Add a sign-out link to your layout
 
     ```elixir
     <%= if current_user(@conn) do %>
@@ -272,7 +269,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     Your authentication library is looking a bit spartan... Time to add to you collection.
 
-    Currently only an oauth workflow is supported, so start with [Ueberauth](#ueberauth)
+    To allow sign in add [Ueberauth](#ueberauth) and/or [DatabaseAuthenticatable](#database_authenticatable)
 
 ## Module Documentation
 
@@ -494,7 +491,6 @@ Session Timeout (after configurable inactivity)
   |> <MyApp>.Repo.update()
   ```
 
-
 ### Confirmable
 
 #### installation
@@ -571,7 +567,7 @@ Session Timeout (after configurable inactivity)
        <MyAppWeb>.Auth.LockableImpl,
       ]
     ```
-    
+
 3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
 
     ```elixir
@@ -580,7 +576,56 @@ Session Timeout (after configurable inactivity)
     field :locked_at, Timex.Ecto.DateTime
     ```
 
-### Approvable (TODO)
+### Approvable
+
+#### installation
+
+1. Run the install command
+
+    ```
+    mix curator.approvable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Approvable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    # Approvable
+    field :approval_status, :string, default: "pending"
+    field :approval_at, Timex.Ecto.DateTime
+    belongs_to :approver, <MyApp>.Auth.User
+    ```
+
+4. Enable Approvable emails (`<my_app_web>/lib/<my_app_web>/auth/approvable.ex`)
+
+  Emails can be sent after a users registers or confirms their account (or both) by setting the `email_after` configuration to a list of `:registration` and/or `:confirmation`
+
+    ```elixir
+    defmodule <MyAppWeb>.Auth.Approvable do
+      use Curator.Approvable,
+        otp_app: :<my_app_web>,
+        curator: <MyAppWeb>.Auth.Curator,
+        email_after: [:confirmation] # Add this
+    end
+    ```
+  5. Set the email recipients (`<my_app_web>/lib/<my_app_web>/auth/email.ex`)
+
+    ```elixir
+    defp approvable_emails do
+      # Add your list here
+    end
+    ```
+
+  6. (Todo) The approvers will need a UI.
 
 ### API
 
