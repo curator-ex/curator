@@ -5,8 +5,9 @@ defmodule <%= inspect context.web_module %>.Auth.OpaqueGuardian do
     token_module: Curator.Guardian.Token.Opaque,
     token_ttl: %{
       "api" => {0, :never},
-      "confirmation" => {1, :day},
+      "confirmable" => {1, :day},
       "recoverable" => {1, :day},
+      "lockable" => {1, :day},
     }
 
   use Curator.Guardian.Token.Opaque.ContextAdapter, context: <%= inspect context.module %>

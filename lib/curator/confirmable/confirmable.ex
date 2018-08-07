@@ -76,21 +76,21 @@ defmodule Curator.Confirmable do
 
   def unauthenticated_routes(_mod) do
     quote do
-      # get "/confirmations/new", Auth.ConfirmationController, :new
-      # post "/confirmations/:token_id", Auth.ConfirmationController, :create
-      get "/confirmations/:token_id", Auth.ConfirmationController, :edit
+      # get "/confirmable/new", Auth.ConfirmableController, :new
+      # post "/confirmable/:token_id", Auth.ConfirmableController, :create
+      get "/confirmable/:token_id", Auth.ConfirmableController, :edit
     end
   end
 
   def after_create_registration(mod, user) do
     unless user.email_confirmed_at do
-      send_confirmation_email(mod, user)
+      send_confirmable_email(mod, user)
     end
   end
 
   def after_update_registration(mod, user) do
     unless user.email_confirmed_at do
-      send_confirmation_email(mod, user)
+      send_confirmable_email(mod, user)
     end
   end
 
@@ -112,9 +112,9 @@ defmodule Curator.Confirmable do
 
   # Private
 
-  defp send_confirmation_email(mod, user) do
-    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "confirmation")
-    curator(mod).deliver_email(:confirmation, [user, token_id])
+  defp send_confirmable_email(mod, user) do
+    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "confirmable")
+    curator(mod).deliver_email(:confirmable, [user, token_id])
   end
 
   defp confirm_user_unless_confirmed(mod, user) do
@@ -126,9 +126,13 @@ defmodule Curator.Confirmable do
   # User Schema / Context
 
   defp confirm_user(mod, user) do
-    user
+    user = user
     |> change(email_confirmed_at: Timex.now())
-    |> repo(mod).update()
+    |> repo(mod).update!()
+
+    curator(mod).extension(:after_confirmation, [user])
+
+    user
   end
 
   # Config

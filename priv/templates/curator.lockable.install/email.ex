@@ -5,6 +5,6 @@
     %Email{}
     |> from(email_from())
     |> to(email_to(user))
-    |> subject("#{site_name()}: Confirm Your Account")
+    |> subject("#{site_name()}: Unlock Your Account")
     |> render_body("lockable.html", %{url: url})
   end

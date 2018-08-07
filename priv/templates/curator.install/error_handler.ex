@@ -35,10 +35,13 @@ defmodule <%= inspect context.web_module %>.Auth.ErrorHandler do
   # defp translate_auth_error({:ueberauth, :invalid_user}), do: "Sorry, your email is not currently authorized to access this system"
 
   # From Curator.Confirmable
-  # defp translate_auth_error({:confirmable, :email_not_confirmed}), do: "Sorry, your email has not been confirmed yet"
+  # defp translate_auth_error({:confirmable, :email_not_confirmed}), do: "Sorry, youra email has not been confirmed yet"
 
   # From Curator.Lockable
-  # defp translate_auth_error({:lockable, :account_locked}), do: "This accout has been locked"
+  # defp translate_auth_error({:lockable, :account_locked}), do: "This account has been locked"
+
+  # From Curator.Approvable
+  # defp translate_auth_error({:approvable, :account_not_approved}), do: "This account has not been approved"
 
   defp translate_error({_type, reason}), do: reason
 end

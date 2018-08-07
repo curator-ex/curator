@@ -1,0 +1,1 @@
+A user requires approval: <%%= @email %>
