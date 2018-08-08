@@ -47,6 +47,10 @@ defmodule Curator.Lockable do
       def after_password_recovery(user),
         do: Curator.Lockable.after_password_recovery(__MODULE__, user)
 
+      # Extension: Curator.Ueberauth.find_or_create_from_auth\1
+      def after_ueberauth_find_user(user),
+        do: Curator.Lockable.after_ueberauth_find_user(__MODULE__, user)
+
     end
   end
 
@@ -114,6 +118,10 @@ defmodule Curator.Lockable do
   end
 
   def after_password_recovery(mod, user) do
+    unlock_user(mod, user)
+  end
+
+  def after_ueberauth_find_user(mod, user) do
     unlock_user(mod, user)
   end
 

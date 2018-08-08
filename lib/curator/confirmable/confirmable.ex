@@ -43,8 +43,19 @@ defmodule Curator.Confirmable do
         do: Curator.Confirmable.after_password_recovery(__MODULE__, user)
 
       # Extension: Curator.Lockable.process_token\3
-      def after_lockable(user),
-        do: Curator.Confirmable.after_lockable(__MODULE__, user)
+      def after_unlocked(user),
+        do: Curator.Confirmable.after_unlocked(__MODULE__, user)
+
+      # Extension: Curator.Ueberauth.create_user\1
+      def after_ueberauth_create_user(user),
+        do: Curator.Confirmable.after_ueberauth_create_user(__MODULE__, user)
+
+      # Extension: Curator.Ueberauth.find_or_create_from_auth\1
+      # def after_ueberauth_find_user(user),
+      #   do: Curator.Confirmable.after_ueberauth_find_user(__MODULE__, user)
+
+      def create_ueberauth_changeset(changeset, attrs),
+        do: Curator.Confirmable.create_ueberauth_changeset(__MODULE__, changeset, attrs)
 
     end
   end
@@ -106,8 +117,20 @@ defmodule Curator.Confirmable do
     confirm_user_unless_confirmed(mod, user)
   end
 
-  def after_lockable(mod, user) do
+  def after_unlocked(mod, user) do
     confirm_user_unless_confirmed(mod, user)
+  end
+
+  def after_ueberauth_create_user(mod, user) do
+    confirm_user_unless_confirmed(mod, user)
+  end
+
+  # def after_ueberauth_find_user(mod, user) do
+  #   confirm_user_unless_confirmed(mod, user)
+  # end
+
+  def create_ueberauth_changeset(_mod, changeset, _attrs) do
+    change(changeset, email_confirmed_at: Timex.now())
   end
 
   # Private
