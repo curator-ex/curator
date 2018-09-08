@@ -11,13 +11,13 @@ defmodule Mix.Tasks.Curator.Install do
 
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.Context
   alias Mix.Tasks.Phx.Gen
 
-  @switches [binary_id: :boolean, table: :string, web: :string,
-             schema: :boolean, context: :boolean, context_app: :string]
+  # @switches [binary_id: :boolean, table: :string, web: :string,
+  #            schema: :boolean, context: :boolean, context_app: :string]
 
-  @default_opts [schema: true, context: true]
+  # @default_opts [schema: true, context: true]
 
   @doc false
   def run(args) do
@@ -104,7 +104,7 @@ defmodule Mix.Tasks.Curator.Install do
   end
 
   @doc false
-  def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
+  def print_shell_instructions(%Context{context_app: context_app} = context) do
     web_prefix = Mix.Phoenix.web_path(context_app)
 
     Mix.shell.info """
