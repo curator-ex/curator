@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Curator.Install do
     [
       {:eex,     "curator.ex",                Path.join([web_prefix, web_path, "auth", "curator.ex"])},
       {:eex,     "email.ex",                  Path.join([web_prefix, web_path, "auth", "email.ex"])},
-      {:eex,     "email/layout_email.ex",     Path.join([web_prefix, "templates", web_path, "auth", "layout", "email.ex"])},
+      {:eex,     "email/layout.html.eex",     Path.join([web_prefix, "templates", web_path, "auth", "layout", "email.html.eex"])},
       {:eex,     "curator_helper.ex",         Path.join([web_prefix, "views", web_path, "auth", "curator_helper.ex"])},
       {:eex,     "error_handler.ex",          Path.join([web_prefix, "controllers", web_path, "auth", "error_handler.ex"])},
       {:eex,     "view.ex",                   Path.join([web_prefix, "views", web_path, "auth", "session_view.ex"])},
@@ -66,42 +66,42 @@ defmodule Mix.Tasks.Curator.Install do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from paths, "priv/templates/curator.install", binding, files
-    # inject_schema_access(context, paths, binding)
+    inject_schema_access(context, paths, binding)
 
     context
   end
 
-  # defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-  #   unless Context.pre_existing?(context) do
-  #     raise "No context to inject into"
-  #   end
+  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
+    unless Context.pre_existing?(context) do
+      raise "No context to inject into"
+    end
 
-  #   paths
-  #   |> Mix.Phoenix.eval_from("priv/templates/curator.install/schema_access.ex", binding)
-  #   |> inject_eex_before_final_end(file, binding)
-  # end
+    paths
+    |> Mix.Phoenix.eval_from("priv/templates/curator.install/schema_access.ex", binding)
+    |> inject_eex_before_final_end(file, binding)
+  end
 
-  # defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
-  #   file = File.read!(file_path)
+  defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
+    file = File.read!(file_path)
 
-  #   if String.contains?(file, content_to_inject) do
-  #     :ok
-  #   else
-  #     Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+    if String.contains?(file, content_to_inject) do
+      :ok
+    else
+      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
-  #     file
-  #     |> String.trim_trailing()
-  #     |> String.trim_trailing("end")
-  #     |> EEx.eval_string(binding)
-  #     |> Kernel.<>(content_to_inject)
-  #     |> Kernel.<>("end\n")
-  #     |> write_file(file_path)
-  #   end
-  # end
+      file
+      |> String.trim_trailing()
+      |> String.trim_trailing("end")
+      |> EEx.eval_string(binding)
+      |> Kernel.<>(content_to_inject)
+      |> Kernel.<>("end\n")
+      |> write_file(file_path)
+    end
+  end
 
-  # defp write_file(content, file) do
-  #   File.write!(file, content)
-  # end
+  defp write_file(content, file) do
+    File.write!(file, content)
+  end
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
@@ -119,7 +119,7 @@ defmodule Mix.Tasks.Curator.Install do
         end
 
         pipeline :authenticated_browser do
-          ...
+          ... (copy the code from browser)
           plug #{inspect context.web_module}.Auth.Curator.AuthenticatedPipeline
         end
 
@@ -149,6 +149,20 @@ defmodule Mix.Tasks.Curator.Install do
           end
         end
 
+    Configure Guardian: config/config.exs
+
+        config :#{Mix.Phoenix.otp_app()}, #{inspect context.web_module}.Auth.Guardian,
+          issuer: "#{Mix.Phoenix.otp_app()}",
+          secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
+
+    And configure Guardian for production: config/prod.exs
+
+        config :#{Mix.Phoenix.otp_app()}, #{inspect context.web_module}.Auth.Guardian,
+          issuer: "#{Mix.Phoenix.otp_app()}",
+          allowed_algos: ["HS512"],
+          ttl: { 1, :days },
+          verify_issuer: true,
+          secret_key: {#{inspect context.web_module}.Auth.Guardian, :fetch_secret_key, []}
     """
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

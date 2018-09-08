@@ -128,18 +128,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
           secret_key: {<MyAppWeb>.Auth.Guardian, :fetch_secret_key, []}
         ```
 
-        (NOTE: the sameple prod.exs is one way to keep the `secret_key` out of source code. If you use an alternative technique the `fetch_secret_key` method can be removed from `<MyAppWeb>.Auth.Guardian`)
-
-    4. Add to your Auth Context (`<my_app>/lib/<my_app>/auth/auth.ex`)
-
-        ```elixir
-        def get_user(id) do
-          case Repo.get(User, id) do
-            nil -> {:error, :no_resource_found}
-            record -> {:ok, record}
-          end
-        end
-        ```
+        (NOTE: the sample prod.exs is one way to keep the `secret_key` out of source code. If you use an alternative technique the `fetch_secret_key` method can be removed from `<MyAppWeb>.Auth.Guardian`)
 
 4. Add a sign-out link to your layout
 
@@ -180,7 +169,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     Note: This uses `conn` as an authenticated connection, so existing tests won't need to be updated.
 
-    To test, I created some special routes:
+    To test, create test-only routes:
 
     ```elixir
     scope "/", <MyAppWeb> do
@@ -220,7 +209,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
-    And wrote tests in `page_controller_test.exs`:
+    And write tests in `page_controller_test.exs`:
 
     ```
     defmodule <MyAppWeb>.PageControllerTest do
@@ -267,7 +256,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
 6. Curate.
 
-    Your authentication library is looking a bit spartan... Time to add to you collection.
+    Your authentication library is looking a bit spartan... Time to add to your collection.
 
     To allow sign in add [Ueberauth](#ueberauth) and/or [DatabaseAuthenticatable](#database_authenticatable)
 

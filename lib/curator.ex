@@ -192,7 +192,6 @@ defmodule Curator do
 
   # User Schema / Context
 
-  # This is duplicated and should be moved somewhere shared. Curator? Curator.Schema?
   def find_user_by_email(mod, email) do
     import Ecto.Query, warn: false
 
