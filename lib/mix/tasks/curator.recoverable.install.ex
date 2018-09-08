@@ -11,13 +11,13 @@ defmodule Mix.Tasks.Curator.Recoverable.Install do
 
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.Context
   alias Mix.Tasks.Phx.Gen
 
-  @switches [binary_id: :boolean, table: :string, web: :string,
-             schema: :boolean, context: :boolean, context_app: :string]
+  # @switches [binary_id: :boolean, table: :string, web: :string,
+  #            schema: :boolean, context: :boolean, context_app: :string]
 
-  @default_opts [schema: true, context: true]
+  # @default_opts [schema: true, context: true]
 
   @doc false
   def run(args) do
@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Curator.Recoverable.Install do
 
   @doc false
   def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
-    db_prefix = Mix.Phoenix.context_app_path(context_app, "")
+    # db_prefix = Mix.Phoenix.context_app_path(context_app, "")
     web_prefix = Mix.Phoenix.web_path(context_app)
     # test_prefix = Mix.Phoenix.web_test_path(context_app)
     web_path = to_string(schema.web_path)

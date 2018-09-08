@@ -103,7 +103,7 @@ defmodule Curator.Confirmable do
     {:ok, user}
   end
 
-  def after_create_registration(mod, result), do: result
+  def after_create_registration(_mod, result), do: result
 
   def after_update_registration(mod, user) do
     unless user.email_confirmed_at do
