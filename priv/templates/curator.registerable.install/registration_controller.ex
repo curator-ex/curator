@@ -1,12 +1,13 @@
 defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
   use <%= inspect context.web_module %>, :controller
 
-  alias <%= inspect schema.module %>
-  alias <%= inspect context.web_module %>.Auth.Registerable
-
   plug Curator.Plug.EnsureNoResource when action in [:new, :create]
   plug Curator.Plug.EnsureResource when action not in [:new, :create]
 
+  alias <%= inspect schema.module %>
+  alias <%= inspect context.web_module %>.Auth.Curator
+  alias <%= inspect context.web_module %>.Auth.Registerable
+    
   def new(conn, _params) do
     changeset = Registerable.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})
     render(conn, "new.html", changeset: changeset)
@@ -14,10 +15,25 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
 
   def create(conn, %{<%= inspect schema.singular %> => <%= schema.singular %>_params}) do
     case Registerable.create_<%= schema.singular %>(<%= schema.singular %>_params) do
-      {:ok, _<%= schema.singular %>} ->
-        conn
-        |> put_flash(:info, "Account created successfully.")
-        |> redirect(to: registration_path(conn, :show))
+      {:ok, <%= schema.singular %>} ->
+        case Curator.active_for_authentication?(<%= schema.singular %>) do
+          :ok ->
+            conn
+            |> put_flash(:info, "Account created successfully. Please sign in.")
+            |> redirect(to: session_path(conn, :new))
+          {:error, {:confirmable, :email_not_confirmed}} ->
+            conn
+            |> put_flash(:error, "Please confirm your account.")
+            |> redirect(to: session_path(conn, :new))
+          {:error, {:approvable, :account_not_approved}} ->
+            conn
+            |> put_flash(:error, "You will receive an email when your account is approved")
+            |> redirect(to: session_path(conn, :new))
+          {:error, _error} ->
+            conn
+            |> put_flash(:error, "Your account is not active...")
+            |> redirect(to: session_path(conn, :new))
+        end
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end

@@ -58,7 +58,7 @@ defmodule Curator.DatabaseAuthenticatable do
     user = curator(mod).find_user_by_email(email)
 
     if user do
-      case curator(mod).extension_reduce_while(:before_authenticate_user, [user]) do
+      case curator(mod).active_for_authentication?(user) do
         :ok ->
           if verify_password(mod, user, password) do
             curator(mod).extension(:after_verify_password_success, [user])
@@ -74,7 +74,7 @@ defmodule Curator.DatabaseAuthenticatable do
       end
     else
       verify_password(mod, nil, password)
-      
+
       {:error, {:database_authenticatable, :invalid_credentials}}
     end
   end

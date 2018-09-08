@@ -56,21 +56,14 @@ defmodule Curator.Ueberauth do
     curator(mod).changeset(:create_ueberauth_changeset, changeset, attrs)
   end
 
-  defp create_user(mod, attrs \\ %{}) do
+  defp create_user(mod, attrs) do
     user = user(mod)
     |> struct()
 
     result = create_changeset(mod, user, attrs)
     |> repo(mod).insert()
 
-    case result do
-      {:ok, user} ->
-        curator(mod).extension(:after_ueberauth_create_user, [user])
-      {:error, _} ->
-        nil
-    end
-
-    result
+    curator(mod).extension_pipe(:after_ueberauth_create_user, result)
   end
 
   # Extensions

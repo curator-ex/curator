@@ -86,12 +86,7 @@ defmodule Curator.Registerable do
     result = mod.create_changeset(user, attrs)
     |> repo(mod).insert()
 
-    case result do
-      {:ok, user} ->
-        curator(mod).extension(:after_create_registration, [user])
-      {:error, _} ->
-        nil
-    end
+    curator(mod).extension_pipe(:after_create_registration, result)
 
     result
   end

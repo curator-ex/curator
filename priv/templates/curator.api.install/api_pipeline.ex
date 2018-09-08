@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.Auth.Curator.ApiPipeline do
   plug Guardian.Plug.VerifyHeader, claims: %{typ: "api"}
   plug Curator.Plug.LoadResource
 
+  plug Curator.Plug.ActiveForAuthentication, curator: <%= inspect context.web_module %>.Auth.Curator
+
   # plug Curator.Timeoutable.Plug, timeoutable_module: <%= inspect context.web_module %>.Auth.Timeoutable
-  # plug Curator.Confirmable.Plug, confirmable_module: <%= inspect context.web_module %>.Auth.Confirmable
-  # plug Curator.Approvable.Plug, approvable_module: <%= inspect context.web_module %>.Auth.Approvable
 end

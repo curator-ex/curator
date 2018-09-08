@@ -22,23 +22,25 @@ defmodule Curator.Approvable do
       use Curator.Impl, mod: Curator.Approvable
 
       def verify_approved(user),
-        do: Curator.Approvable.verify_approved(user)
+        do: Curator.Approvable.verify_approved(__MODULE__, user)
 
       def approve_user(user, approver_id \\ 0),
         do: Curator.Approvable.approve_user(__MODULE__, user, approver_id)
 
       # Extension: Curator.Registerable.create_user\2
-      def after_create_registration(user),
-        do: Curator.Approvable.after_create_registration(__MODULE__, user)
+      def after_create_registration(result),
+        do: Curator.Approvable.after_create_registration(__MODULE__, result)
 
       # Extension: Curator.Confirmable.confirm_user\2
       def after_confirmation(user),
         do: Curator.Approvable.after_confirmation(__MODULE__, user)
 
+      defoverridable after_create_registration: 1,
+                     after_confirmation: 1
     end
   end
 
-  def verify_approved(user) do
+  def verify_approved(_mod, user) do
     if approved?(user) do
       :ok
     else
@@ -47,20 +49,26 @@ defmodule Curator.Approvable do
   end
 
   # Extensions
-  def before_sign_in(_mod, user, _opts) do
-    verify_approved(user)
+  def active_for_authentication?(mod, user) do
+    verify_approved(mod, user)
   end
 
-  def after_create_registration(mod, user) do
+  def after_create_registration(mod, {:ok, user}) do
     if !approved?(user) && Enum.member?(email_after(mod), :registration)  do
       send_approvable_email(mod, user)
     end
+
+    {:ok, user}
   end
+
+  def after_create_registration(_mod, result), do: result
 
   def after_confirmation(mod, user) do
     if !approved?(user) && Enum.member?(email_after(mod), :confirmation) do
       send_approvable_email(mod, user)
     end
+
+    user
   end
 
   # Private

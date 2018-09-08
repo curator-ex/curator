@@ -17,6 +17,8 @@ defmodule Curator.Lockable do
   use Curator.Extension
   import Ecto.Changeset
 
+  @token_typ "lockable"
+
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
@@ -30,10 +32,6 @@ defmodule Curator.Lockable do
 
       def process_token(token_id),
         do: Curator.Lockable.process_token(__MODULE__, token_id)
-
-      # Extension: Curator.DatabaseAuthenticatable.authenticate_user\2
-      def before_authenticate_user(user),
-        do: Curator.Lockable.before_authenticate_user(__MODULE__, user)
 
       # Extension: Curator.DatabaseAuthenticatable.authenticate_user\2
       def after_verify_password_success(user),
@@ -85,11 +83,7 @@ defmodule Curator.Lockable do
   end
 
   # Extensions
-  def before_sign_in(mod, user, _opts) do
-    verify_unlocked(mod, user)
-  end
-
-  def before_authenticate_user(mod, user) do
+  def active_for_authentication?(mod, user) do
     verify_unlocked(mod, user)
   end
 
@@ -136,7 +130,7 @@ defmodule Curator.Lockable do
   # Private
 
   defp verify_token(mod, token_id) do
-    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => "lockable"}),
+    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
          true <- confirmation_email && user_email && confirmation_email == user_email do
       {:ok, user}
     else
@@ -146,7 +140,7 @@ defmodule Curator.Lockable do
   end
 
   defp send_lockable_email(mod, user) do
-    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: "lockable")
+    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
     curator(mod).deliver_email(:lockable, [user, token_id])
   end
 

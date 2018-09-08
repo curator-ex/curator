@@ -1,4 +1,4 @@
-defmodule Curator.Approvable.Plug do
+defmodule Curator.Plug.ActiveForAuthentication do
   import Plug.Conn
 
   alias Guardian.Plug.Pipeline
@@ -18,9 +18,9 @@ defmodule Curator.Approvable.Plug do
   end
 
   defp verify?(resource, conn, opts) do
-    approvable_module = Keyword.fetch!(opts, :approvable_module)
+    curator = Keyword.fetch!(opts, :curator)
 
-    case approvable_module.verify_approved(resource) do
+    case curator.active_for_authentication?(resource) do
       :ok ->
         {:ok, resource, conn, opts}
       {:error, error} ->

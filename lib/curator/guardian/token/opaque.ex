@@ -11,7 +11,7 @@ defmodule Curator.Guardian.Token.Opaque do
     implement get_token, create_token & delete_token (the
     Curator.Guardian.Token.Opaque.Persistence behaviour). An example can be found in
     the specs (it uses a context and an ecto repo). Redis, Genserver, or other
-    stateful implementations can also be used.
+    stateful implementations can also be used to persist tokens.
    """
 
   @behaviour Guardian.Token

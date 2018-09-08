@@ -5,8 +5,8 @@ defmodule Curator.Impl do
     quote do
       @behaviour Curator.Impl
 
-      def before_sign_in(user, opts \\ [])
-      def before_sign_in(user, opts), do: apply(unquote(mod), :before_sign_in, [__MODULE__, user, opts])
+      def active_for_authentication?(user),
+        do: apply(unquote(mod), :active_for_authentication?, [__MODULE__, user])
 
       def after_sign_in(conn, user, opts \\ [])
       def after_sign_in(conn, user, opts), do: apply(unquote(mod), :after_sign_in, [__MODULE__, conn, user, opts])
@@ -14,7 +14,7 @@ defmodule Curator.Impl do
       def unauthenticated_routes(), do: apply(unquote(mod), :unauthenticated_routes, [__MODULE__])
       def authenticated_routes(), do: apply(unquote(mod), :authenticated_routes, [__MODULE__])
 
-      defoverridable before_sign_in: 2,
+      defoverridable active_for_authentication?: 1,
                      after_sign_in: 3,
                      unauthenticated_routes: 0,
                      authenticated_routes: 0
@@ -24,9 +24,8 @@ defmodule Curator.Impl do
 
   @type options :: Keyword.t()
 
-  @callback before_sign_in(
-              any,
-              options
+  @callback active_for_authentication?(
+              any
             ) :: :ok | {:error, atom}
 
   @callback after_sign_in(
@@ -34,7 +33,6 @@ defmodule Curator.Impl do
               any,
               options
             ) :: Plug.Conn.t()
-
 
   @callback unauthenticated_routes() :: nil
   @callback authenticated_routes() :: nil

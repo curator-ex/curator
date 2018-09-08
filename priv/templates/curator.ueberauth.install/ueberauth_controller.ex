@@ -18,15 +18,17 @@ defmodule <%= inspect context.web_module %>.Auth.UeberauthController do
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     case <%= context.module %>.find_or_create_from_auth(auth) do
       {:ok, user} ->
-        case <%= inspect context.web_module %>.Auth.Curator.before_sign_in(user) do
+        case Curator.active_for_authentication?(<%= schema.singular %>) do
           :ok ->
             conn
             |> put_flash(:info, "Successfully authenticated.")
             |> <%= inspect context.web_module %>.Auth.Curator.sign_in(user)
             |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(user)
             |> <%= inspect context.web_module %>.Auth.Curator.redirect_after_sign_in()
-          {:error, error} ->
-            <%= inspect context.web_module %>.Auth.ErrorHandler.auth_error(conn, error, [])
+          {:error, {:approvable, :account_not_approved}} ->
+            conn
+            |> put_flash(:error, "You will receive an email when your account is approved")
+            |> redirect(to: session_path(conn, :new))
         end
       {:error, _changeset} ->
         <%= inspect context.web_module %>.Auth.ErrorHandler.auth_error(conn, {:ueberauth, :invalid_user}, [])

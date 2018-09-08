@@ -21,6 +21,7 @@ defmodule Curator.Router do
 
     quote do
       get "/session/new", Auth.SessionController, :new
+      get "/session", Auth.SessionController, :new
       # post "/session", Auth.SessionController, :create
       # delete "/session", Auth.SessionController, :delete
 

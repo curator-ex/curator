@@ -3,7 +3,8 @@ defmodule Curator.Extension do
     quote do
       @behaviour Curator.Extension
 
-      def before_sign_in(_mod, _user, _opts), do: :ok
+      def active_for_authentication?(mod, user), do: :ok
+
       def after_sign_in(_mod, conn, _user, _opts), do: conn
 
       def unauthenticated_routes(_mod), do: nil
@@ -26,7 +27,7 @@ defmodule Curator.Extension do
         curator(mod).config(:repo, {Curator.Config, :config_error, ["repo"]})
       end
 
-      defoverridable before_sign_in: 3,
+      defoverridable active_for_authentication?: 2,
                      after_sign_in: 4,
                      unauthenticated_routes: 1,
                      authenticated_routes: 1
@@ -36,10 +37,9 @@ defmodule Curator.Extension do
 
   @type options :: Keyword.t()
 
-  @callback before_sign_in(
+  @callback active_for_authentication?(
               module,
-              any,
-              options
+              any
             ) :: :ok | {:error, atom}
 
   @callback after_sign_in(
