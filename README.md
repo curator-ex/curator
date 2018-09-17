@@ -149,11 +149,14 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
         Ecto.Adapters.SQL.Sandbox.mode(<MyApp>.Repo, {:shared, self()})
       end
 
-      # Create w/ ExMachina (or your preferred method)
       # Note: As you add additional modules, make sure this user is valid for them too.
+      # Create the user w/ ExMachina  
       auth_user = <MyApp>.Factory.insert(:auth_user)
 
-      {:ok, token, claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
+      # Or, create the user with your preferred method
+      # {:ok, auth_user} = <MyApp>.Auth.create_user(%{email: "test@test.com"})
+
+      {:ok, token, _claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
 
       conn = Phoenix.ConnTest.build_conn()
 
