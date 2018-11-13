@@ -37,6 +37,10 @@ defmodule Mix.Tasks.Curator.Install do
     context
     |> copy_new_files(paths, binding)
     |> print_shell_instructions()
+
+    if Mix.shell.yes?("Install Opaque Guardian?") do
+      Mix.Tasks.Curator.OpaqueGuardian.Install.run([])
+    end
   end
 
   def generator_paths do
@@ -163,6 +167,7 @@ defmodule Mix.Tasks.Curator.Install do
           ttl: { 1, :days },
           verify_issuer: true,
           secret_key: {#{inspect context.web_module}.Auth.Guardian, :fetch_secret_key, []}
+
     """
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

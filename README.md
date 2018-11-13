@@ -257,7 +257,22 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     These examples can be extended as additional modules are integrated (ex. using Confirmable with a user that hasn't been confirmed).
 
-6. Curate.
+6. Opaque Guardian (recommended)
+
+    Several Extensions will use guardian to store single-use tokens (ex: the confirmation module). By Default, [JWT Tokens are not tracked by the application](https://github.com/ueberauth/guardian#tracking-tokens). Guardian provides an integration to track and revoke tokens, [GuardianDB](https://github.com/ueberauth/guardian_db). However, for single-use tokens, Curator ships with an alternative called "Opaque Guardian". It provides a behaviour for guardian that allows tokens to be stored in the Database and never as a JWT. This is preferable for the extensions. Installation requires running the following command (or typing yes during the install):
+
+    ```
+    mix curator.opaque_guardian.install
+    ```
+
+    If you would like to use guardian for the single-use tokens you can update the curator configuration:
+
+    ```
+    use Curator,
+      opaque_guardian: <MyAppWeb>.Auth.Guardian
+    ```
+
+7. Curate.
 
     Your authentication library is looking a bit spartan... Time to add to your collection.
 

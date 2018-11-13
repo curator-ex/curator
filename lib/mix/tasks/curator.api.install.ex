@@ -21,13 +21,11 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
   @doc false
   def run(args) do
-    args = ["Auth", "Token", "auth_tokens", "token:string:unique", "description:string", "claims:map", "user_id:references:users", "typ:string", "exp:bigint:index"] ++ args
+    args = ["Auth", "User", "users", "email:unique"] ++ args
 
     if Mix.Project.umbrella? do
       Mix.raise "mix curator.api.install can only be run inside an application directory"
     end
-
-    Gen.Context.run(args)
 
     {context, schema} = Gen.Context.build(args)
 
@@ -50,7 +48,6 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
     [
       {:eex,        "api_error_handler.ex", Path.join([web_prefix, "controllers", web_path, "auth", "api_error_handler.ex"])},
-      {:force_eex,  "schema.ex",            schema.file}
     ]
   end
 
@@ -61,19 +58,11 @@ defmodule Mix.Tasks.Curator.Api.Install do
     Path.join([web_prefix, web_path, "auth", "curator.ex"])
   end
 
-  defp guardian_file_path(%Context{schema: schema, context_app: context_app}) do
-    web_prefix = Mix.Phoenix.web_path(context_app)
-    web_path = to_string(schema.web_path)
-
-    Path.join([web_prefix, web_path, "auth", "guardian.ex"])
-  end
-
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     copy_from paths, "priv/templates/curator.api.install", binding, files
     inject_curator_module(context, paths, binding)
-    inject_guardian_module(context, paths, binding)
 
     context
   end
@@ -82,12 +71,6 @@ defmodule Mix.Tasks.Curator.Api.Install do
     paths
     |> Mix.Phoenix.eval_from("priv/templates/curator.api.install/api_pipeline.ex", binding)
     |> inject_eex_after_final_end(curator_file_path(context), binding)
-  end
-
-  defp inject_guardian_module(context, paths, binding) do
-    paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.api.install/opaque_guardian.ex", binding)
-    |> inject_eex_after_final_end(guardian_file_path(context), binding)
   end
 
   defp write_file(content, file) do
@@ -157,10 +140,6 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
           ...
         end
-
-    Add the new association to the user schema:
-
-        has_many :tokens, #{inspect context.module}.Auth.Token
 
     """
 
