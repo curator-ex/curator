@@ -1,3 +1,13 @@
+# v 0.3.0 (TBD)
+* Major Refactoring
+  * Registerable
+  * Database Authenticatable
+  * Confirmable
+  * Recoverable
+  * Lockable
+  * Approvable
+* Support Phoenix 1.4
+
 # v 0.2.8 (6/26/2018)
 * fix infinite redirect issue
 

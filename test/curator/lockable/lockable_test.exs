@@ -12,7 +12,7 @@ defmodule Curator.LockableTest do
 
       # Lockable
       field :failed_attempts, :integer
-      field :locked_at, Timex.Ecto.DateTime
+      field :locked_at, :utc_datetime
 
       timestamps()
     end

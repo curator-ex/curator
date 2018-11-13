@@ -126,7 +126,7 @@ defmodule Mix.Tasks.Curator.Lockable.Install do
 
         # Lockable
         field :failed_attempts, :integer
-        field :locked_at, Timex.Ecto.DateTime
+        field :locked_at, :utc_datetime
     """
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

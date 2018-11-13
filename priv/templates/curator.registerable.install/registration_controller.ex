@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
   alias <%= inspect schema.module %>
   alias <%= inspect context.web_module %>.Auth.Curator
   alias <%= inspect context.web_module %>.Auth.Registerable
-    
+
   def new(conn, _params) do
     changeset = Registerable.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})
     render(conn, "new.html", changeset: changeset)
@@ -20,19 +20,19 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
           :ok ->
             conn
             |> put_flash(:info, "Account created successfully. Please sign in.")
-            |> redirect(to: session_path(conn, :new))
+            |> redirect(to: Routes.session_path(conn, :new))
           {:error, {:confirmable, :email_not_confirmed}} ->
             conn
             |> put_flash(:error, "Please confirm your account.")
-            |> redirect(to: session_path(conn, :new))
+            |> redirect(to: Routes.session_path(conn, :new))
           {:error, {:approvable, :account_not_approved}} ->
             conn
             |> put_flash(:error, "You will receive an email when your account is approved")
-            |> redirect(to: session_path(conn, :new))
+            |> redirect(to: Routes.session_path(conn, :new))
           {:error, _error} ->
             conn
             |> put_flash(:error, "Your account is not active...")
-            |> redirect(to: session_path(conn, :new))
+            |> redirect(to: Routes.session_path(conn, :new))
         end
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
@@ -57,7 +57,7 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
       {:ok, _<%= schema.singular %>} ->
         conn
         |> put_flash(:info, "Account updated successfully.")
-        |> redirect(to: registration_path(conn, :show))
+        |> redirect(to: Routes.registration_path(conn, :show))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "edit.html", <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
     end
@@ -69,7 +69,7 @@ defmodule <%= inspect context.web_module %>.Auth.RegistrationController do
 
     conn
     |> put_flash(:info, "Account deleted successfully.")
-    |> redirect(to: session_path(conn, :new))
+    |> redirect(to: Routes.session_path(conn, :new))
   end
 
   defp current_resource(conn) do

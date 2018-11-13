@@ -28,7 +28,7 @@ defmodule <%= inspect context.web_module %>.Auth.UeberauthController do
           {:error, {:approvable, :account_not_approved}} ->
             conn
             |> put_flash(:error, "You will receive an email when your account is approved")
-            |> redirect(to: session_path(conn, :new))
+            |> redirect(to: Routes.session_path(conn, :new))
         end
       {:error, _changeset} ->
         <%= inspect context.web_module %>.Auth.ErrorHandler.auth_error(conn, {:ueberauth, :invalid_user}, [])

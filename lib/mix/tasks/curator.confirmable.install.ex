@@ -125,7 +125,7 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
     The user schema requires new fields:
 
         # Confirmable
-        field :email_confirmed_at, Timex.Ecto.DateTime
+        field :email_confirmed_at, :utc_datetime
     """
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

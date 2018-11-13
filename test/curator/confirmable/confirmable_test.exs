@@ -11,7 +11,7 @@ defmodule Curator.ConfirmableTest do
       field :email, :string
 
       # Confirmable
-      field :email_confirmed_at, Timex.Ecto.DateTime
+      field :email_confirmed_at, :utc_datetime
 
       timestamps()
     end

@@ -36,7 +36,7 @@ defmodule <%= inspect context.web_module %>.Auth.SessionController do
       {:error, _error} ->
         conn
         |> put_flash(:error, "Your account is not active...")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
     end
   end
 
@@ -44,6 +44,6 @@ defmodule <%= inspect context.web_module %>.Auth.SessionController do
     conn
     |> <%= inspect context.web_module %>.Auth.Curator.sign_out
     |> put_flash(:info, "You have been signed out")
-    |> redirect(to: page_path(conn, :index))
+    |> redirect(to: Routes.page_path(conn, :index))
   end
 end

@@ -126,7 +126,7 @@ defmodule Mix.Tasks.Curator.Approvable.Install do
 
         # Approvable
         field :approval_status, :string, default: "pending"
-        field :approval_at, Timex.Ecto.DateTime
+        field :approval_at, :utc_datetime
         belongs_to :approver, #{inspect context.module}.Auth.User
     """
 

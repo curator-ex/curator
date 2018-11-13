@@ -14,7 +14,7 @@ defmodule <%= inspect context.web_module %>.Auth.RecoverableController do
 
     conn
     |> put_flash(:error, "Recoverable email sent")
-    |> redirect(to: session_path(conn, :new))
+    |> redirect(to: Routes.session_path(conn, :new))
   end
 
   def create(conn, _params) do
@@ -31,7 +31,7 @@ defmodule <%= inspect context.web_module %>.Auth.RecoverableController do
       {:error, _} ->
         conn
         |> put_flash(:info, "token is invalid.")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
     end
   end
 
@@ -40,13 +40,13 @@ defmodule <%= inspect context.web_module %>.Auth.RecoverableController do
       {:ok, _user} ->
         conn
         |> put_flash(:info, "Passsword was updated successfully. Please log in.")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "edit.html", changeset: changeset, token_id: token_id)
       {:error, _} ->
         conn
         |> put_flash(:info, "token is invalid.")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
     end
   end
 end

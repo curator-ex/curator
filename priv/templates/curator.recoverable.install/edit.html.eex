@@ -1,6 +1,6 @@
 <h2>Update Password</h2>
 
-<%%= form_for @changeset, recoverable_path(@conn, :update, @token_id), fn f -> %>
+<%%= form_for @changeset, Routes.recoverable_path(@conn, :update, @token_id), fn f -> %>
   <%%= if @changeset.action do %>
     <div class="alert alert-danger">
       <p>Oops, something went wrong! Please check the errors below.</p>

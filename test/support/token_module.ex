@@ -7,7 +7,7 @@ defmodule Curator.Support.TokenModule do
   @behaviour Guardian.Token
 
   def token_id do
-    UUID.uuid4()
+    Ecto.UUID.generate()
   end
 
   def peek(_mod, token) do
@@ -20,7 +20,7 @@ defmodule Curator.Support.TokenModule do
     %{claims: claims}
   end
 
-  def build_claims(mod, resource, sub, claims, opts) do
+  def build_claims(mod, _resource, sub, claims, opts) do
     default_token_type = apply(mod, :default_token_type, [])
     token_type = Keyword.get(opts, :token_type, default_token_type)
 

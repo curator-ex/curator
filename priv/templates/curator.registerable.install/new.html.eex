@@ -2,4 +2,4 @@
 
 <%%= render "form.html", Map.put(assigns, :action, registration_path(@conn, :create)) %>
 
-<span><%%= link "Back", to: session_path(@conn, :new) %></span>
+<span><%%= link "Back", to: Routes.session_path(@conn, :new) %></span>

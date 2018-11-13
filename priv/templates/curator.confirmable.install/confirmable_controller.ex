@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.Auth.ConfirmableController do
   #     {:ok, _<%= schema.singular %>} ->
   #       conn
   #       |> put_flash(:info, "Email sent successfully.")
-  #       |> redirect(to: registration_path(conn, :show))
+  #       |> redirect(to: Routes.registration_path(conn, :show))
   #     {:error, %Ecto.Changeset{} = changeset} ->
   #       render(conn, "new.html", changeset: changeset)
   #   end
@@ -24,11 +24,11 @@ defmodule <%= inspect context.web_module %>.Auth.ConfirmableController do
       {:ok, _user} ->
         conn
         |> put_flash(:info, "Email confirmed. Please sign in.")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
       {:error, _} ->
         conn
         |> put_flash(:info, "Token is invalid.")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
     end
   end
 end

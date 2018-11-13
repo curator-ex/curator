@@ -1,16 +1,16 @@
 defmodule Curator.Time do
   @moduledoc """
-  A Curator Helper Module to determine if Ecto.DateTime's have expired.
+  A Curator Helper Module to determine if DateTime's have expired.
   This is usually used to see if a database stored token with a *_at
   timestamp has expired.
 
-  # NOTE: Code taken from https://github.com/smpallen99/coherence/blob/master/web/controllers/controller_helpers.ex
+  # NOTE: Code originally taken from https://github.com/smpallen99/coherence/blob/master/web/controllers/controller_helpers.ex
   """
 
   @doc """
   Test if a datetime has expired.
 
-  Convert the datetime from Ecto.DateTime format to Timex format to do
+  Convert the datetime from DateTime format to Timex format to do
   the comparison given the time during in opts.
 
   ## Examples
@@ -18,13 +18,12 @@ defmodule Curator.Time do
       expired?(user.expire_at, days: 5)
       expired?(user.expire_at, minutes: 10)
 
-      iex> Ecto.DateTime.utc
+      iex> DateTime.utc_now
       ...> |> Curator.Time.expired?(days: 1)
       false
 
-      iex> Ecto.DateTime.utc
+      iex> DateTime.utc_now
       ...> |> Curator.Time.shift(days: -2)
-      ...> |> Ecto.DateTime.cast!
       ...> |> Curator.Time.expired?(days: 1)
       true
   """
@@ -35,38 +34,30 @@ defmodule Curator.Time do
   end
 
   @doc """
-  Shift a Ecto.DateTime or DateTime
+  Shift a DateTime
 
   ## Examples
 
-      iex> Ecto.DateTime.cast!("2016-10-10 10:10:10")
+      iex> DateTime.from_naive!(~N[2016-10-10 10:10:10], "Etc/UTC")
       ...> |> Curator.Time.shift(days: -2)
-      ...> |> Ecto.DateTime.cast!
       ...> |> to_string
-      "2016-10-08 10:10:10"
+      "2016-10-08 10:10:10Z"
   """
   @spec shift(struct, Keyword.t) :: struct
-  def shift(%Ecto.DateTime{} = datetime, opts) do
-    datetime
-    |> Ecto.DateTime.to_erl
-    |> Timex.to_datetime
-    |> Timex.shift(opts)
-  end
   def shift(%DateTime{} = datetime, opts) do
     datetime
     |> Timex.shift(opts)
   end
 
   @doc """
-  Shift a Ecto.DateTime (in the opposite direction).
+  Shift a DateTime (in the opposite direction).
 
   ## Examples
 
-      iex> Ecto.DateTime.cast!("2016-10-10 10:10:10")
+      iex> DateTime.from_naive!(~N[2016-10-10 10:10:10], "Etc/UTC")
       ...> |> Curator.Time.unshift(days: 2)
-      ...> |> Ecto.DateTime.cast!
       ...> |> to_string
-      "2016-10-08 10:10:10"
+      "2016-10-08 10:10:10Z"
   """
   @spec unshift(struct, Keyword.t) :: struct
   def unshift(datetime, [{unit, amount}]) do

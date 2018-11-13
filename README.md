@@ -134,7 +134,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     <%= if current_user(@conn) do %>
-      <%= link "Sign Out", to: session_path(@conn, :delete), method: :delete %>
+      <%= link "Sign Out", to: Routes.session_path(@conn, :delete), method: :delete %>
     <% end %>
     ```
 
@@ -220,7 +220,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
       test "GET /secure (Unauthenticated)", %{unauth_conn: conn} do
         conn = get conn, "/secure"
-        assert redirected_to(conn) == session_path(conn, :new)
+        assert redirected_to(conn) == Routes.session_path(conn, :new)
         assert get_flash(conn, :error) == "Please Sign In"
       end
 
@@ -232,7 +232,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
       test "GET /secure (Authenticated - User Delete)", %{conn: conn, auth_user: user} do
         <MyApp>.Auth.delete_user(user)
         conn = get conn, "/secure"
-        assert redirected_to(conn) == session_path(conn, :new)
+        assert redirected_to(conn) == Routes.session_path(conn, :new)
         assert get_flash(conn, :error) == "Please Sign In"
       end
 
@@ -249,7 +249,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
       test "GET /insecure (Authenticated - User Delete)", %{conn: conn, auth_user: user} do
         <MyApp>.Auth.delete_user(user)
         conn = get conn, "/insecure"
-        assert redirected_to(conn) == session_path(conn, :new)
+        assert redirected_to(conn) == Routes.session_path(conn, :new)
         assert get_flash(conn, :error) == "Please Sign In"
       end
     end
@@ -318,7 +318,7 @@ Ueberauth Integration
     3. Put some links to the providers on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
 
         ```elixir
-        <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
+        <%= link "Google", to: Routes.ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
         ```
 
 ### Timeoutable
@@ -407,7 +407,7 @@ Session Timeout (after configurable inactivity)
 3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
 
     ```elixir
-    <%= link to: registration_path(@conn, :new), class: "btn btn-outline-primary" do %>
+    <%= link to: Routes.registration_path(@conn, :new), class: "btn btn-outline-primary" do %>
       Register
     <% end %>
     ```
@@ -415,7 +415,7 @@ Session Timeout (after configurable inactivity)
 4. Add a registration link to your layout
 
     ```elixir
-    <%= link "My Account", to: registration_path(@conn, :edit) %>
+    <%= link "My Account", to: Routes.registration_path(@conn, :edit) %>
     ```
 
 ### Database Authenticatable
@@ -507,7 +507,7 @@ Session Timeout (after configurable inactivity)
 
     ```elixir
     # Confirmable
-    field :email_confirmed_at, Timex.Ecto.DateTime
+    field :email_confirmed_at, :utc_datetime
     ```
 
 4. Testing ... add confirmed_at
@@ -535,7 +535,7 @@ Session Timeout (after configurable inactivity)
 3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
 
     ```elixir
-    <%= link to: recoverable_path(@conn, :new), class: "btn btn-outline-primary" do %>
+    <%= link to: Routes.recoverable_path(@conn, :new), class: "btn btn-outline-primary" do %>
       Forgotten Password
     <% end %>
     ```
@@ -565,7 +565,7 @@ Session Timeout (after configurable inactivity)
     ```elixir
     # Lockable
     field :failed_attempts, :integer
-    field :locked_at, Timex.Ecto.DateTime
+    field :locked_at, :utc_datetime
     ```
 
 ### Approvable
@@ -593,7 +593,7 @@ Session Timeout (after configurable inactivity)
     ```elixir
     # Approvable
     field :approval_status, :string, default: "pending"
-    field :approval_at, Timex.Ecto.DateTime
+    field :approval_at, :utc_datetime
     belongs_to :approver, <MyApp>.Auth.User
     ```
 
