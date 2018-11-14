@@ -11,12 +11,11 @@ defmodule <%= inspect context.web_module %>.Auth.SessionController do
   def create(conn, %{"user" => user_params}) do
     case <%= inspect context.web_module %>.Auth.DatabaseAuthenticatable.authenticate_user(user_params) do
       {:ok, user} ->
-          conn
-          |> put_flash(:info, "Successfully authenticated.")
-          |> <%= inspect context.web_module %>.Auth.Curator.sign_in(user)
-          |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(user)
-          |> <%= inspect context.web_module %>.Auth.Curator.redirect_after_sign_in()
-        end
+        conn
+        |> put_flash(:info, "Successfully authenticated.")
+        |> <%= inspect context.web_module %>.Auth.Curator.sign_in(user)
+        |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(user)
+        |> <%= inspect context.web_module %>.Auth.Curator.redirect_after_sign_in()
       {:error, {:database_authenticatable, :invalid_credentials}} ->
         conn
         |> put_flash(:error, "Invalid credentials")

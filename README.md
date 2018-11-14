@@ -9,7 +9,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 ## Curator Modules
 
 * [Ueberauth](#ueberauth): Ueberauth Integration.
-* [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
+* [Database Authenticatable](#database-authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Registerable](#registerable): A Generator to support user registration.
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
