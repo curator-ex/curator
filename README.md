@@ -9,14 +9,14 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 ## Curator Modules
 
 * [Ueberauth](#ueberauth): Ueberauth Integration.
-* [Timeoutable](#timeoutable): Session Timeout (after configurable inactivity).
-* [API](#api): API login (with an opaque token).
-* [Registerable](#registerable): A Generator to support user registration.
 * [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
+* [Registerable](#registerable): A Generator to support user registration.
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
 * [Lockable](#lockable): Lock Account after configurable count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
+* [Timeoutable](#timeoutable): Session Timeout (after configurable inactivity).
+* [API](#api): API login (with an opaque token).
 
 ## Installation
 
@@ -336,103 +336,6 @@ Ueberauth Integration
         <%= link "Google", to: Routes.ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
         ```
 
-### Timeoutable
-
-#### Description
-Session Timeout (after configurable inactivity)
-
-#### Installation
-
-1. Run the install command
-
-    ```
-    mix curator.timeoutable.install
-    ```
-
-2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
-
-    ```elixir
-    use Curator,
-      otp_app: :<my_app_web>,
-      modules: [
-       <MyAppWeb>.Auth.Timeoutable,
-      ]
-    ```
-
-3. Add to the curator plugs
-
-    ```elixir
-    defmodule <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline do
-      ...
-      plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
-    end
-
-    defmodule <MyAppWeb>.Auth.Curator.AuthenticatedPipeline do
-      ...
-      plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
-    end
-    ```
-
-4. (optional) Configure Timeoutable (`<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex`)
-
-    ```elixir
-    use Curator.Timeoutable,
-      otp_app: :<my_app_web>,
-      timeout_in: 1800
-    ```
-
-5. Update tests (`<my_app_web>/test/support/conn_case.ex`)
-
-    ```elixir
-    auth_conn = conn
-    |> Plug.Test.init_test_session(%{
-      guardian_default_token: token,
-      guardian_default_timeoutable: Curator.Time.timestamp(),
-    })
-    ```
-
-    This session key usually is set as part of the after_sign_in extension.
-
-6. (optional) Update the ErrorHandler (`<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex`)
-
-    ```elixir
-    defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
-    ```
-
-### Registerable
-
-#### Installation
-
-1. Run the install command
-
-    ```
-    mix curator.registerable.install
-    ```
-
-2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
-
-    ```elixir
-    use Curator,
-      otp_app: :<my_app_web>,
-      modules: [
-       <MyAppWeb>.Auth.Registerable,
-      ]
-    ```
-
-3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
-
-    ```elixir
-    <%= link to: Routes.registration_path(@conn, :new), class: "btn btn-outline-primary" do %>
-      Register
-    <% end %>
-    ```
-
-4. Add a registration link to your layout
-
-    ```elixir
-    <%= link "My Account", to: Routes.registration_path(@conn, :edit) %>
-    ```
-
 ### Database Authenticatable
 
 #### installation
@@ -497,6 +400,40 @@ Session Timeout (after configurable inactivity)
   |> <MyAppWeb>.Auth.DatabaseAuthenticatable.update_changeset(%{password: "test"})
   |> <MyApp>.Repo.update()
   ```
+
+### Registerable
+
+#### Installation
+
+1. Run the install command
+
+    ```
+    mix curator.registerable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Registerable,
+      ]
+    ```
+
+3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+    ```elixir
+    <%= link to: Routes.registration_path(@conn, :new), class: "btn btn-outline-primary" do %>
+      Register
+    <% end %>
+    ```
+
+4. Add a registration link to your layout
+
+    ```elixir
+    <%= link "My Account", to: Routes.registration_path(@conn, :edit) %>
+    ```
 
 ### Confirmable
 
@@ -634,6 +571,69 @@ Session Timeout (after configurable inactivity)
 
   6. (Todo) The approvers will need a UI.
 
+### Timeoutable
+
+#### Description
+Session Timeout (after configurable inactivity)
+
+#### Installation
+
+1. Run the install command
+
+    ```
+    mix curator.timeoutable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Timeoutable,
+      ]
+    ```
+
+3. Add to the curator plugs
+
+    ```elixir
+    defmodule <MyAppWeb>.Auth.Curator.UnauthenticatedPipeline do
+      ...
+      plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
+    end
+
+    defmodule <MyAppWeb>.Auth.Curator.AuthenticatedPipeline do
+      ...
+      plug Curator.Timeoutable.Plug, timeoutable_module: <MyAppWeb>.Auth.Timeoutable
+    end
+    ```
+
+4. (optional) Configure Timeoutable (`<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex`)
+
+    ```elixir
+    use Curator.Timeoutable,
+      otp_app: :<my_app_web>,
+      timeout_in: 1800
+    ```
+
+5. Update tests (`<my_app_web>/test/support/conn_case.ex`)
+
+    ```elixir
+    auth_conn = conn
+    |> Plug.Test.init_test_session(%{
+      guardian_default_token: token,
+      guardian_default_timeoutable: Curator.Time.timestamp(),
+    })
+    ```
+
+    This session key usually is set as part of the after_sign_in extension.
+
+6. (optional) Update the ErrorHandler (`<my_app_web>/lib/<my_app_web>/controllers/auth/error_handler.ex`)
+
+    ```elixir
+    defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
+    ```
+
 ### API
 
 #### Description
@@ -667,13 +667,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
     end
     ```
 
-3. (optional) Update the user schema with the new association (`<my_app>/lib/<my_app>/auth/user.ex`)
-
-    ```elixir
-    has_many :tokens, <MyApp>.Auth.Token
-    ```
-
-4. Testing
+3. Testing
 
     Update `conn_case.ex`:
 
