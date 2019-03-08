@@ -18,7 +18,7 @@ defmodule <%= inspect context.web_module %>.Auth.UeberauthController do
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     case <%= context.module %>.find_or_create_from_auth(auth) do
       {:ok, user} ->
-        case Curator.active_for_authentication?(<%= schema.singular %>) do
+        case <%= inspect context.web_module %>.Auth.Curator.active_for_authentication?(<%= schema.singular %>) do
           :ok ->
             conn
             |> put_flash(:info, "Successfully authenticated.")
