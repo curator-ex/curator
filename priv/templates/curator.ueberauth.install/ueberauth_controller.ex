@@ -17,13 +17,13 @@ defmodule <%= inspect context.web_module %>.Auth.UeberauthController do
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     case <%= context.module %>.find_or_create_from_auth(auth) do
-      {:ok, user} ->
+      {:ok, <%= schema.singular %>)} ->
         case <%= inspect context.web_module %>.Auth.Curator.active_for_authentication?(<%= schema.singular %>) do
           :ok ->
             conn
             |> put_flash(:info, "Successfully authenticated.")
-            |> <%= inspect context.web_module %>.Auth.Curator.sign_in(user)
-            |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(user)
+            |> <%= inspect context.web_module %>.Auth.Curator.sign_in(<%= schema.singular %>))
+            |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(<%= schema.singular %>))
             |> <%= inspect context.web_module %>.Auth.Curator.redirect_after_sign_in()
           {:error, {:approvable, :account_not_approved}} ->
             conn
