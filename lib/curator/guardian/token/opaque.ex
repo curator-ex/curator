@@ -165,7 +165,7 @@ defmodule Curator.Guardian.Token.Opaque do
   leak info in a timing attack
   """
   def token_to_token_id(token) do
-    token.token <> Integer.to_string(token.id)
+    "#{token.token}#{token.id}"
   end
 
   @doc """
