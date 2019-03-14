@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from paths, "priv/templates/curator.database_authenticatable.install", binding, files
-    inject_tests(context, paths, binding)
+    # inject_tests(context, paths, binding)
 
     context
   end
