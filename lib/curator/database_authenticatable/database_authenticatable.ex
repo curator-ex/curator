@@ -24,6 +24,16 @@ defmodule Curator.DatabaseAuthenticatable do
       def authenticate_user(params),
         do: Curator.DatabaseAuthenticatable.authenticate_user(__MODULE__, params)
 
+      # A more complex password scheme
+      # def create_changeset(user, attrs) do
+      #   user
+      #   |> cast(attrs, [:password])
+      #   |> validate_confirmation(:password, required: true)
+      #   |> validate_required(:password)
+      #   |> validate_length(:password, min: 8)
+      #   |> put_password_hash()
+      # end
+
       def create_changeset(user, attrs),
         do: Curator.DatabaseAuthenticatable.create_changeset(__MODULE__, user, attrs)
 
@@ -108,16 +118,6 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # User Schema / Context
 
-  # A more complex password scheme
-  # def create_changeset(mod, user, attrs) do
-  #   user
-  #   |> cast(attrs, [:password])
-  #   |> validate_confirmation(:password, required: true)
-  #   |> validate_required(:password)
-  #   |> validate_length(:password, min: 8)
-  #   |> put_password_hash()
-  # end
-
   def create_changeset(mod, user, attrs) do
     user
     |> cast(attrs, [:password])
@@ -143,4 +143,9 @@ defmodule Curator.DatabaseAuthenticatable do
   defp crypto_mod(mod) do
     mod.config(:crypto_mod, Comeonin.Bcrypt)
   end
+
+  # TODO: Adjust authenticate_user so it can also work with a `username`
+  # defp user_identifier_field do
+  #   mod.config(:user_identifier_field, :email)
+  # end
 end
