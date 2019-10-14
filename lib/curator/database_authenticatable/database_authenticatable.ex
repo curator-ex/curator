@@ -5,7 +5,7 @@ defmodule Curator.DatabaseAuthenticatable do
   Options:
 
   * `curator` (required)
-  * `crypto_mod` (optional) default: Comeonin.Bcrypt
+  * `crypto_mod` (optional) default: Bcrypt
 
   Extensions:
 
@@ -141,7 +141,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   # Config
   defp crypto_mod(mod) do
-    mod.config(:crypto_mod, Comeonin.Bcrypt)
+    mod.config(:crypto_mod, Bcrypt)
   end
 
   # TODO: Adjust authenticate_user so it can also work with a `username`

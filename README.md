@@ -366,11 +366,10 @@ Ueberauth Integration
 
 4. Add your crypto_mod dependencies.
 
-  By default, Comeonin.Bcrypt is configured as the crypto_mod. This requires two dependencies:
+  By default, Bcrypt is configured as the crypto_mod. This requires two dependencies:
 
     ```
-    {:bcrypt_elixir, "~> 1.0"},
-    {:comeonin, "~> 4.0"},
+    {:bcrypt_elixir, "~> 2.0"},
     ```
 
   You can configure the crypto_mod by passing it as an arguement in the DatabaseAuthenticatable implementation.
