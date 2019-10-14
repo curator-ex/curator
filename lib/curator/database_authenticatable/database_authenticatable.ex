@@ -100,7 +100,7 @@ defmodule Curator.DatabaseAuthenticatable do
   # Private
 
   defp verify_password(mod, nil, _password) do
-    crypto_mod(mod).dummy_checkpw()
+    crypto_mod(mod).no_user_verify()
     false
   end
 
@@ -109,9 +109,9 @@ defmodule Curator.DatabaseAuthenticatable do
   # Or they went through the ueberauth workflow
   defp verify_password(mod, user, password) do
     if user.password_hash do
-      crypto_mod(mod).checkpw(password, user.password_hash)
+      crypto_mod(mod).verify_pass(password, user.password_hash)
     else
-      crypto_mod(mod).dummy_checkpw()
+      crypto_mod(mod).no_user_verify()
       false
     end
   end
