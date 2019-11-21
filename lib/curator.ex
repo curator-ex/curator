@@ -90,7 +90,7 @@ defmodule Curator do
             _ -> conn.request_path <> "?" <> conn.query_string
           end
 
-    Plug.Conn.put_session(conn, "user_return_to",  url)
+    Plug.Conn.put_session(conn, "user_return_to", url)
   end
 
   def redirect_after_sign_in(_mod, conn) do
