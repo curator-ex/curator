@@ -9,7 +9,7 @@ defmodule Curator.Guardian.Token.Opaque.ContextAdapter do
         unquote(context).get_token(id)
       end
 
-      # NOTE: We pull user_id & description our of claims
+      # NOTE: We pull user_id & description out of claims
       # We will also use the sub in place of user_id
       # Finally, the token is set here (to a random string)
       def create_token(claims) do
