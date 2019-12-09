@@ -309,8 +309,8 @@ Ueberauth Integration
         ```elixir
         defp deps do
           [
-            {:ueberauth, "~> 0.4"},
-            {:ueberauth_google, "~> 0.7"},
+            {:ueberauth_google, "~> 0.9"},
+            {:ueberauth, "~> 0.6"}
           ]
         end
         ```
