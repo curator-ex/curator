@@ -5,6 +5,7 @@ defmodule Curator.Registerable do
   Options:
 
   * `curator` (required)
+  * `actions` (optional) default: [:new, :create, :show, :edit, :update, :delete]
 
   Extensions:
 
@@ -38,6 +39,9 @@ defmodule Curator.Registerable do
       def delete_user(user),
         do: Curator.Registerable.delete_user(__MODULE__, user)
 
+      def actions(),
+        do: Curator.Registerable.actions(__MODULE__)
+
       defoverridable change_user: 1,
                      create_changeset: 2,
                      create_user: 1,
@@ -49,20 +53,24 @@ defmodule Curator.Registerable do
 
   # Extensions
 
-  def unauthenticated_routes(_mod) do
-    quote do
-      resources "/registrations", Auth.RegistrationController, only: [:new, :create]
-    end
+  def unauthenticated_routes(mod) do
+    Enum.map([:new, :create], fn action ->
+      if Enum.member?(actions(mod), action) do
+        route_quote(action)
+      else
+        []
+      end
+    end)
   end
 
-  def authenticated_routes(_mod) do
-    quote do
-      get "/registrations/edit", Auth.RegistrationController, :edit
-      get "/registrations", Auth.RegistrationController, :show
-      put "/registrations", Auth.RegistrationController, :update, as: nil
-      patch "/registrations", Auth.RegistrationController, :update
-      delete "/registrations", Auth.RegistrationController, :delete
-    end
+  def authenticated_routes(mod) do
+    Enum.map([:show, :edit, :update, :delete], fn action ->
+      if Enum.member?(actions(mod), action) do
+        route_quote(action)
+      else
+        []
+      end
+    end)
   end
 
   # User Schema / Context
@@ -119,4 +127,44 @@ defmodule Curator.Registerable do
   end
 
   # Config
+  defp actions(mod) do
+    mod.config(:actions, [:new, :create, :show, :edit, :update, :delete])
+  end
+
+  defp route_quote(:show) do
+    quote do
+      get "/registrations", Auth.RegistrationController, :show
+    end
+  end
+
+  defp route_quote(:new) do
+    quote do
+      get "/registrations/new", Auth.RegistrationController, :new
+    end
+  end
+
+  defp route_quote(:create) do
+    quote do
+      post "/registrations", Auth.RegistrationController, :create
+    end
+  end
+
+  defp route_quote(:edit) do
+    quote do
+      get "/registrations/edit", Auth.RegistrationController, :edit
+    end
+  end
+
+  defp route_quote(:update) do
+    quote do
+      put "/registrations", Auth.RegistrationController, :update, as: nil
+      patch "/registrations", Auth.RegistrationController, :update
+    end
+  end
+
+  defp route_quote(:delete) do
+    quote do
+      delete "/registrations", Auth.RegistrationController, :delete
+    end
+  end
 end
