@@ -22,8 +22,8 @@ defmodule <%= inspect context.web_module %>.Auth.UeberauthController do
           :ok ->
             conn
             |> put_flash(:info, "Successfully authenticated.")
-            |> <%= inspect context.web_module %>.Auth.Curator.sign_in(<%= schema.singular %>))
-            |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(<%= schema.singular %>))
+            |> <%= inspect context.web_module %>.Auth.Curator.sign_in(<%= schema.singular %>)
+            |> <%= inspect context.web_module %>.Auth.Curator.after_sign_in(<%= schema.singular %>)
             |> <%= inspect context.web_module %>.Auth.Curator.redirect_after_sign_in()
           {:error, {:approvable, :account_not_approved}} ->
             conn
