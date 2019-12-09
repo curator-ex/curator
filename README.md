@@ -88,7 +88,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
           pipe_through :authenticated_browser
 
           ...
-          Insert your unprotected routes here
+          Insert your protected routes here
           ...
 
           Curator.Router.mount_authenticated_routes(<MyAppWeb>.Auth.Curator)
