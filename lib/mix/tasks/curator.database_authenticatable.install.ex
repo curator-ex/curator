@@ -67,37 +67,37 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     context
   end
 
-  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless Context.pre_existing_tests?(context) do
-      raise "No context tests to inject into"
-    end
+  # defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+  #   unless Context.pre_existing_tests?(context) do
+  #     raise "No context tests to inject into"
+  #   end
+  #
+  #   paths
+  #   |> Mix.Phoenix.eval_from("priv/templates/curator.database_authenticatable.install/test_cases.exs", binding)
+  #   |> inject_eex_before_final_end(test_file, binding)
+  # end
+  #
+  # defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
+  #   file = File.read!(file_path)
+  #
+  #   if String.contains?(file, content_to_inject) do
+  #     :ok
+  #   else
+  #     Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+  #
+  #     file
+  #     |> String.trim_trailing()
+  #     |> String.trim_trailing("end")
+  #     |> EEx.eval_string(binding)
+  #     |> Kernel.<>(content_to_inject)
+  #     |> Kernel.<>("end\n")
+  #     |> write_file(file_path)
+  #   end
+  # end
 
-    paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.database_authenticatable.install/test_cases.exs", binding)
-    |> inject_eex_before_final_end(test_file, binding)
-  end
-
-  defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
-    file = File.read!(file_path)
-
-    if String.contains?(file, content_to_inject) do
-      :ok
-    else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
-
-      file
-      |> String.trim_trailing()
-      |> String.trim_trailing("end")
-      |> EEx.eval_string(binding)
-      |> Kernel.<>(content_to_inject)
-      |> Kernel.<>("end\n")
-      |> write_file(file_path)
-    end
-  end
-
-  defp write_file(content, file) do
-    File.write!(file, content)
-  end
+  # defp write_file(content, file) do
+  #   File.write!(file, content)
+  # end
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: context_app} = context) do
