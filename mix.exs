@@ -31,8 +31,6 @@ defmodule Curator.Mixfile do
 
   def application do
     [extra_applications: [:logger]]
-    # TODO: Verify what we need
-    # [applications: [:logger, :timex, :tzdata, :guardian, :secure_compare]]
   end
 
   defp deps do
@@ -41,7 +39,7 @@ defmodule Curator.Mixfile do
       # {:credo, "~> 0.10", only: [:dev, :test]},
       # {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ecto_sql, "~> 3.0"},
-      # {:ex_doc, "~> 0.19", only: :dev},
+      {:ex_doc, "~> 0.19", only: :dev},
       {:guardian, "~> 1.0"},
       {:phoenix, "~> 1.4"},
       {:plug, "~> 1.2"},
