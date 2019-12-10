@@ -8,7 +8,7 @@ defmodule <%= inspect schema.repo %>.Migrations.CreateAuthTokens do
       add :claims, :map
       add :typ, :string
       add :exp, :bigint
-      add :user_id, references(:users, on_delete: :nothing)
+      add :user_id, references(:users, on_delete: :delete_all)
 
       timestamps()
     end
