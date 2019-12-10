@@ -16,7 +16,10 @@ defmodule Curator.Extension do
       end
 
       defp opaque_guardian(mod) do
-        curator(mod).config(:opaque_guardian, {Curator.Config, :config_error, ["opaque_guardian"]})
+        curator(mod).config(
+          :opaque_guardian,
+          {Curator.Config, :config_error, ["opaque_guardian"]}
+        )
       end
 
       defp user(mod) do
@@ -31,7 +34,6 @@ defmodule Curator.Extension do
                      after_sign_in: 4,
                      unauthenticated_routes: 1,
                      authenticated_routes: 1
-
     end
   end
 

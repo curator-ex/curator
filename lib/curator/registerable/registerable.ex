@@ -76,20 +76,23 @@ defmodule Curator.Registerable do
   end
 
   def create_changeset(mod, user, attrs) do
-    changeset = user
-    |> cast(attrs, [:email])
-    |> validate_required([:email])
-    |> unique_constraint(:email)
+    changeset =
+      user
+      |> cast(attrs, [:email])
+      |> validate_required([:email])
+      |> unique_constraint(:email)
 
     curator(mod).changeset(:create_registerable_changeset, changeset, attrs)
   end
 
   def create_user(mod, attrs \\ %{}) do
-    user = user(mod)
-    |> struct()
+    user =
+      user(mod)
+      |> struct()
 
-    result = mod.create_changeset(user, attrs)
-    |> repo(mod).insert()
+    result =
+      mod.create_changeset(user, attrs)
+      |> repo(mod).insert()
 
     curator(mod).extension_pipe(:after_create_registration, result)
 
@@ -97,21 +100,24 @@ defmodule Curator.Registerable do
   end
 
   def update_changeset(mod, user, attrs) do
-    changeset = user
-    |> cast(attrs, [:email])
-    |> validate_required([:email])
-    |> unique_constraint(:email)
+    changeset =
+      user
+      |> cast(attrs, [:email])
+      |> validate_required([:email])
+      |> unique_constraint(:email)
 
     curator(mod).changeset(:update_registerable_changeset, changeset, attrs)
   end
 
   def update_user(mod, user, attrs \\ %{}) do
-    result = mod.update_changeset(user, attrs)
-    |> repo(mod).update()
+    result =
+      mod.update_changeset(user, attrs)
+      |> repo(mod).update()
 
     case result do
       {:ok, user} ->
         curator(mod).extension(:after_update_registration, [user])
+
       {:error, _} ->
         nil
     end
@@ -130,38 +136,38 @@ defmodule Curator.Registerable do
 
   defp route_quote(:show) do
     quote do
-      get "/registrations", Auth.RegistrationController, :show
+      get("/registrations", Auth.RegistrationController, :show)
     end
   end
 
   defp route_quote(:new) do
     quote do
-      get "/registrations/new", Auth.RegistrationController, :new
+      get("/registrations/new", Auth.RegistrationController, :new)
     end
   end
 
   defp route_quote(:create) do
     quote do
-      post "/registrations", Auth.RegistrationController, :create
+      post("/registrations", Auth.RegistrationController, :create)
     end
   end
 
   defp route_quote(:edit) do
     quote do
-      get "/registrations/edit", Auth.RegistrationController, :edit
+      get("/registrations/edit", Auth.RegistrationController, :edit)
     end
   end
 
   defp route_quote(:update) do
     quote do
-      put "/registrations", Auth.RegistrationController, :update, as: nil
-      patch "/registrations", Auth.RegistrationController, :update
+      put("/registrations", Auth.RegistrationController, :update, as: nil)
+      patch("/registrations", Auth.RegistrationController, :update)
     end
   end
 
   defp route_quote(:delete) do
     quote do
-      delete "/registrations", Auth.RegistrationController, :delete
+      delete("/registrations", Auth.RegistrationController, :delete)
     end
   end
 end

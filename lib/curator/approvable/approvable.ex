@@ -54,7 +54,7 @@ defmodule Curator.Approvable do
   end
 
   def after_create_registration(mod, {:ok, user}) do
-    if !approved?(user) && Enum.member?(email_after(mod), :registration)  do
+    if !approved?(user) && Enum.member?(email_after(mod), :registration) do
       send_approvable_email(mod, user)
     end
 
@@ -93,5 +93,4 @@ defmodule Curator.Approvable do
   defp email_after(mod) do
     mod.config(:email_after, [])
   end
-
 end

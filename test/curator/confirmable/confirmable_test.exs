@@ -8,10 +8,10 @@ defmodule Curator.ConfirmableTest do
     import Ecto.Changeset
 
     schema "users" do
-      field :email, :string
+      field(:email, :string)
 
       # Confirmable
-      field :email_confirmed_at, :utc_datetime
+      field(:email_confirmed_at, :utc_datetime)
 
       timestamps()
     end
@@ -48,15 +48,17 @@ defmodule Curator.ConfirmableTest do
   end
 
   defmodule ConfirmableImpl do
-    use Curator.Confirmable, otp_app: :curator,
+    use Curator.Confirmable,
+      otp_app: :curator,
       curator: Curator.ConfirmableTest.CuratorImpl
   end
 
   defmodule CuratorImpl do
-    use Curator, otp_app: :curator,
+    use Curator,
+      otp_app: :curator,
       guardian: GuardianImpl,
       modules: [
-        ConfirmableImpl,
+        ConfirmableImpl
       ]
   end
 
@@ -68,7 +70,9 @@ defmodule Curator.ConfirmableTest do
 
     test "returns an error when email_confirmed_at is NOT set" do
       user = %User{email_confirmed_at: nil}
-      assert {:error, {:confirmable, :email_not_confirmed}} == ConfirmableImpl.verify_confirmed(user)
+
+      assert {:error, {:confirmable, :email_not_confirmed}} ==
+               ConfirmableImpl.verify_confirmed(user)
     end
   end
 
@@ -84,7 +88,7 @@ defmodule Curator.ConfirmableTest do
   describe "update_registerable_changeset" do
     test "when email is changed, email_confirmed_at is cleared" do
       attrs = %{
-        email: "me@my.home",
+        email: "me@my.home"
       }
 
       user = %User{
@@ -92,8 +96,9 @@ defmodule Curator.ConfirmableTest do
         email_confirmed_at: Timex.now()
       }
 
-      changeset = Ecto.Changeset.cast(user, attrs, [:email])
-      |> ConfirmableImpl.update_registerable_changeset(attrs)
+      changeset =
+        Ecto.Changeset.cast(user, attrs, [:email])
+        |> ConfirmableImpl.update_registerable_changeset(attrs)
 
       assert changeset.valid?
 
@@ -103,7 +108,7 @@ defmodule Curator.ConfirmableTest do
 
     test "when email is NOT changed, email_confirmed_at is NOT cleared" do
       attrs = %{
-        email: "me@my.home",
+        email: "me@my.home"
       }
 
       user = %User{
@@ -111,8 +116,9 @@ defmodule Curator.ConfirmableTest do
         email_confirmed_at: Timex.now()
       }
 
-      changeset = Ecto.Changeset.cast(user, attrs, [:email])
-      |> ConfirmableImpl.update_registerable_changeset(attrs)
+      changeset =
+        Ecto.Changeset.cast(user, attrs, [:email])
+        |> ConfirmableImpl.update_registerable_changeset(attrs)
 
       assert changeset.valid?
 

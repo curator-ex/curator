@@ -27,10 +27,11 @@ defmodule Curator.Time do
       ...> |> Curator.Time.expired?(days: 1)
       true
   """
-  @spec expired?(nil | struct, Keyword.t) :: boolean
+  @spec expired?(nil | struct, Keyword.t()) :: boolean
   def expired?(nil, _), do: true
+
   def expired?(datetime, opts) do
-    not Timex.before?(Timex.now, shift(datetime, opts))
+    not Timex.before?(Timex.now(), shift(datetime, opts))
   end
 
   @doc """
@@ -43,7 +44,7 @@ defmodule Curator.Time do
       ...> |> to_string
       "2016-10-08 10:10:10Z"
   """
-  @spec shift(struct, Keyword.t) :: struct
+  @spec shift(struct, Keyword.t()) :: struct
   def shift(%DateTime{} = datetime, opts) do
     datetime
     |> Timex.shift(opts)
@@ -59,7 +60,7 @@ defmodule Curator.Time do
       ...> |> to_string
       "2016-10-08 10:10:10Z"
   """
-  @spec unshift(struct, Keyword.t) :: struct
+  @spec unshift(struct, Keyword.t()) :: struct
   def unshift(datetime, [{unit, amount}]) do
     shift(datetime, [{unit, 0 - amount}])
   end
@@ -68,7 +69,7 @@ defmodule Curator.Time do
   NOTE: Code taken from https://github.com/ueberauth/guardian/blob/master/lib/guardian/utils.ex
   """
   def timestamp do
-    {mgsec, sec, _usec} = :os.timestamp
+    {mgsec, sec, _usec} = :os.timestamp()
     mgsec * 1_000_000 + sec
   end
 end

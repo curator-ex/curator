@@ -10,12 +10,12 @@ defmodule Curator.Guardian.Token.OpaqueTest do
     import Ecto.Changeset
 
     schema "auth_tokens" do
-      field :claims, :map
-      field :description, :string
-      field :token, :string
-      field :user_id, :integer
-      field :typ, :string
-      field :exp, :integer
+      field(:claims, :map)
+      field(:description, :string)
+      field(:token, :string)
+      field(:user_id, :integer)
+      field(:typ, :string)
+      field(:exp, :integer)
 
       timestamps()
     end
@@ -41,18 +41,20 @@ defmodule Curator.Guardian.Token.OpaqueTest do
         "sub" => "1",
         "something_else" => "foo"
       },
-      typ: "access",
+      typ: "access"
     }
 
     def insert(changeset) do
-      token = changeset
-      |> Ecto.Changeset.apply_changes()
+      token =
+        changeset
+        |> Ecto.Changeset.apply_changes()
 
       if Map.get(token.claims, :error) do
         {:error, :invalid}
       else
-        token = token
-        |> Map.put(:id, 1000)
+        token =
+          token
+          |> Map.put(:id, 1000)
 
         {:ok, token}
       end
@@ -99,7 +101,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       token_module: Curator.Guardian.Token.Opaque,
       token_ttl: %{
         "api" => {0, :never},
-        "confirmation" => {7, :day},
+        "confirmation" => {7, :day}
       }
 
     alias Curator.Guardian.Token.OpaqueTest.Auth
@@ -135,25 +137,25 @@ defmodule Curator.Guardian.Token.OpaqueTest do
   }
 
   describe "peek" do
-    test "with a nil token"  do
+    test "with a nil token" do
       result = @token_module.peek(GuardianImpl, nil)
 
       assert result == nil
     end
 
-    test "with a valid token"  do
+    test "with a valid token" do
       result = @token_module.peek(GuardianImpl, @token_id)
 
       assert result == %{
-              claims: %{
-                "something_else" => "foo",
-                "sub" => "1",
-                "typ" => "access"
-              }
-            }
+               claims: %{
+                 "something_else" => "foo",
+                 "sub" => "1",
+                 "typ" => "access"
+               }
+             }
     end
 
-    test "with an invalid token"  do
+    test "with an invalid token" do
       result = @token_module.peek(GuardianImpl, @invalid_token_id)
 
       assert result == nil
@@ -165,7 +167,7 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       {:ok, _token_id} = @token_module.create_token(GuardianImpl, @claims)
     end
 
-     test "(when invalid) returns an error" do
+    test "(when invalid) returns an error" do
       {:error, :invalid} = @token_module.create_token(GuardianImpl, %{error: "invalid"})
     end
   end
@@ -207,7 +209,9 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{})
       assert result["typ"] == "access"
 
-      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, token_type: "refresh")
+      assert {:ok, result} =
+               @token_module.build_claims(GuardianImpl, @user, "1", %{}, token_type: "refresh")
+
       assert result["typ"] == "refresh"
     end
 
@@ -215,14 +219,20 @@ defmodule Curator.Guardian.Token.OpaqueTest do
       assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{})
       assert result["exp"] == nil
 
-      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, token_type: "confirmation")
+      assert {:ok, result} =
+               @token_module.build_claims(GuardianImpl, @user, "1", %{},
+                 token_type: "confirmation"
+               )
+
       diff = Guardian.timestamp() + 7 * 24 * 60 * 60 - result["exp"]
       assert diff <= 1
 
       assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{exp: 1000})
       assert result["exp"] == 1000
 
-      assert {:ok, result} = @token_module.build_claims(GuardianImpl, @user, "1", %{}, ttl: {1, :day})
+      assert {:ok, result} =
+               @token_module.build_claims(GuardianImpl, @user, "1", %{}, ttl: {1, :day})
+
       diff = Guardian.timestamp() + 1 * 24 * 60 * 60 - result["exp"]
       assert diff <= 1
     end
@@ -262,7 +272,8 @@ defmodule Curator.Guardian.Token.OpaqueTest do
 
   describe "exchange" do
     test "returns an error" do
-      assert {:error, :not_applicable} = @token_module.exchange(GuardianImpl, @token_id, "access", "refresh", [])
+      assert {:error, :not_applicable} =
+               @token_module.exchange(GuardianImpl, @token_id, "access", "refresh", [])
     end
   end
 end

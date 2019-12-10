@@ -23,8 +23,10 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
   def run(args) do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
-    if Mix.Project.umbrella? do
-      Mix.raise "mix curator.database_authenticatable.install can only be run inside an application directory"
+    if Mix.Project.umbrella?() do
+      Mix.raise(
+        "mix curator.database_authenticatable.install can only be run inside an application directory"
+      )
     end
 
     # Gen.Context.run(args)
@@ -51,17 +53,31 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "database_authenticatable.ex", Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])},
-      {:eex,     "new.html.eex",                Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
-      {:eex,     "session_controller.ex",       Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
-      {:eex,     "migration.exs",               Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_database_authenticatable_to_users.exs"])},
+      {:eex, "database_authenticatable.ex",
+       Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])},
+      {:eex, "new.html.eex",
+       Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
+      {:eex, "session_controller.ex",
+       Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
+      {:eex, "migration.exs",
+       Path.join([
+         db_prefix,
+         "priv/repo/migrations/#{timestamp()}_add_database_authenticatable_to_users.exs"
+       ])}
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/curator.database_authenticatable.install", binding, files
+
+    Mix.Phoenix.copy_from(
+      paths,
+      "priv/templates/curator.database_authenticatable.install",
+      binding,
+      files
+    )
+
     # inject_tests(context, paths, binding)
 
     context
@@ -104,27 +120,29 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     web_prefix = Mix.Phoenix.web_path(context_app)
     web_path = to_string(schema.web_path)
 
-    Mix.shell.info """
+    Mix.shell().info("""
 
-    The DatabaseAuthenticatable module was created at: #{Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])}
+    The DatabaseAuthenticatable module was created at: #{
+      Path.join([web_prefix, web_path, "auth", "database_authenticatable.ex"])
+    }
 
     You can configure it like so:
 
         use Curator.DatabaseAuthenticatable,
           otp_app: :#{Mix.Phoenix.otp_app()},
-          curator: #{inspect context.web_module}.Auth.Curator
+          curator: #{inspect(context.web_module)}.Auth.Curator
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
         use Curator,
-          modules: [#{inspect context.web_module}.Auth.DatabaseAuthenticatable]
+          modules: [#{inspect(context.web_module)}.Auth.DatabaseAuthenticatable]
 
     The user schema requires new fields:
 
         # DatabaseAuthenticatable
         field :password, :string, virtual: true
         field :password_hash, :string
-    """
+    """)
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
@@ -133,6 +151,7 @@ defmodule Mix.Tasks.Curator.DatabaseAuthenticatable.Install do
     {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
     "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
   end
-  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+
+  defp pad(i) when i < 10, do: <<?0, ?0 + i>>
   defp pad(i), do: to_string(i)
 end

@@ -26,7 +26,6 @@ defmodule Curator.Ueberauth do
         do: Curator.Ueberauth.find_or_create_from_auth(__MODULE__, auth)
 
       defoverridable find_or_create_from_auth: 1
-
     end
   end
 
@@ -38,8 +37,9 @@ defmodule Curator.Ueberauth do
     case repo(mod).get_by(user(mod), email: email) do
       nil ->
         create_user(mod, %{
-          email: email,
+          email: email
         })
+
       user ->
         curator(mod).extension(:after_ueberauth_find_user, [user])
 
@@ -48,20 +48,23 @@ defmodule Curator.Ueberauth do
   end
 
   defp create_changeset(mod, user, attrs) do
-    changeset = user
-    |> cast(attrs, [:email])
-    |> validate_required([:email])
-    |> unique_constraint(:email)
+    changeset =
+      user
+      |> cast(attrs, [:email])
+      |> validate_required([:email])
+      |> unique_constraint(:email)
 
     curator(mod).changeset(:create_ueberauth_changeset, changeset, attrs)
   end
 
   defp create_user(mod, attrs) do
-    user = user(mod)
-    |> struct()
+    user =
+      user(mod)
+      |> struct()
 
-    result = create_changeset(mod, user, attrs)
-    |> repo(mod).insert()
+    result =
+      create_changeset(mod, user, attrs)
+      |> repo(mod).insert()
 
     curator(mod).extension_pipe(:after_ueberauth_create_user, result)
   end
@@ -71,9 +74,9 @@ defmodule Curator.Ueberauth do
   def unauthenticated_routes(_mod) do
     quote do
       scope "/auth" do
-        get "/:provider", Auth.UeberauthController, :request
-        get "/:provider/callback", Auth.UeberauthController, :callback
-        post "/:provider/callback", Auth.UeberauthController, :callback
+        get("/:provider", Auth.UeberauthController, :request)
+        get("/:provider/callback", Auth.UeberauthController, :callback)
+        post("/:provider/callback", Auth.UeberauthController, :callback)
       end
     end
   end

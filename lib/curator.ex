@@ -1,5 +1,4 @@
 defmodule Curator do
-
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
@@ -9,6 +8,7 @@ defmodule Curator do
         do: Curator.active_for_authentication?(__MODULE__, user)
 
       def after_sign_in(conn, resource, opts \\ [])
+
       def after_sign_in(conn, resource, opts),
         do: Curator.after_sign_in(__MODULE__, conn, resource, opts)
 
@@ -57,7 +57,6 @@ defmodule Curator do
 
       defoverridable redirect_after_sign_in: 1,
                      find_user_by_email: 1
-
     end
   end
 
@@ -79,25 +78,27 @@ defmodule Curator do
   def after_sign_in(mod, conn, resource, opts) do
     modules = modules(mod)
 
-    Enum.reduce(modules, conn, fn (module, conn) ->
+    Enum.reduce(modules, conn, fn module, conn ->
       apply(module, :after_sign_in, [conn, resource, opts])
     end)
   end
 
   def store_return_to_url(_mod, conn) do
-    url = case conn.query_string do
-            "" -> conn.request_path
-            _ -> conn.request_path <> "?" <> conn.query_string
-          end
+    url =
+      case conn.query_string do
+        "" -> conn.request_path
+        _ -> conn.request_path <> "?" <> conn.query_string
+      end
 
     Plug.Conn.put_session(conn, "user_return_to", url)
   end
 
   def redirect_after_sign_in(_mod, conn) do
-    url = case Plug.Conn.get_session(conn, "user_return_to") do
-      nil -> "/"
-      value -> value
-    end
+    url =
+      case Plug.Conn.get_session(conn, "user_return_to") do
+        nil -> "/"
+        value -> value
+      end
 
     conn
     |> Plug.Conn.put_session("user_return_to", nil)
@@ -114,7 +115,7 @@ defmodule Curator do
     modules = modules(mod)
     arity = Enum.count(args)
 
-    Enum.each(modules, fn(module) ->
+    Enum.each(modules, fn module ->
       if function_exported?(module, fun, arity) do
         apply(module, fun, args)
       end
@@ -131,7 +132,7 @@ defmodule Curator do
     modules = modules(mod)
     arity = Enum.count(args)
 
-    Enum.reduce_while(modules, :ok, fn (module, :ok) ->
+    Enum.reduce_while(modules, :ok, fn module, :ok ->
       if function_exported?(module, fun, arity) do
         case apply(module, fun, args) do
           :ok -> {:cont, :ok}
@@ -146,7 +147,7 @@ defmodule Curator do
   def extension_pipe(mod, fun, args) do
     modules = modules(mod)
 
-    Enum.reduce(modules, args, fn (module, args) ->
+    Enum.reduce(modules, args, fn module, args ->
       if function_exported?(module, fun, 1) do
         apply(module, fun, [args])
       else
@@ -163,7 +164,7 @@ defmodule Curator do
   def changeset(mod, fun, changeset, attrs) do
     modules = modules(mod)
 
-    Enum.reduce(modules, changeset, fn (module, changeset) ->
+    Enum.reduce(modules, changeset, fn module, changeset ->
       if function_exported?(module, fun, 2) do
         apply(module, fun, [changeset, attrs])
       else

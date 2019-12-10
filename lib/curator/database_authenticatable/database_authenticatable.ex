@@ -79,6 +79,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
             {:error, {:database_authenticatable, :invalid_credentials}}
           end
+
         {:error, error} ->
           {:error, error}
       end
@@ -93,7 +94,7 @@ defmodule Curator.DatabaseAuthenticatable do
 
   def unauthenticated_routes(_mod) do
     quote do
-      post "/session", Auth.SessionController, :create
+      post("/session", Auth.SessionController, :create)
     end
   end
 
@@ -133,7 +134,10 @@ defmodule Curator.DatabaseAuthenticatable do
     |> mod.put_password_hash()
   end
 
-  def put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset, mod) do
+  def put_password_hash(
+        %Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset,
+        mod
+      ) do
     change(changeset, crypto_mod(mod).add_hash(password))
   end
 

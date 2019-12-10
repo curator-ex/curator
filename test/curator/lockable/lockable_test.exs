@@ -8,11 +8,11 @@ defmodule Curator.LockableTest do
     import Ecto.Changeset
 
     schema "users" do
-      field :email, :string
+      field(:email, :string)
 
       # Lockable
-      field :failed_attempts, :integer
-      field :locked_at, :utc_datetime
+      field(:failed_attempts, :integer)
+      field(:locked_at, :utc_datetime)
 
       timestamps()
     end
@@ -83,30 +83,34 @@ defmodule Curator.LockableTest do
   # end
 
   defmodule LockableImpl do
-    use Curator.Lockable, otp_app: :curator,
+    use Curator.Lockable,
+      otp_app: :curator,
       curator: Curator.LockableTest.CuratorImpl
   end
 
   defmodule LockableImplTime do
-    use Curator.Lockable, otp_app: :curator,
+    use Curator.Lockable,
+      otp_app: :curator,
       curator: Curator.LockableTest.CuratorImpl,
       unlock_strategy: [:time],
       unlock_in: [hours: 12]
   end
 
   defmodule LockableImplEmail do
-    use Curator.Lockable, otp_app: :curator,
+    use Curator.Lockable,
+      otp_app: :curator,
       curator: Curator.LockableTest.CuratorImpl,
       unlock_strategy: [:email]
   end
 
   defmodule CuratorImpl do
-    use Curator, otp_app: :curator,
+    use Curator,
+      otp_app: :curator,
       guardian: GuardianImpl,
       # opaque_guardian: GuardianOpaqueImpl,
       repo: Repo,
       modules: [
-        LockableImpl,
+        LockableImpl
       ]
   end
 
@@ -122,17 +126,17 @@ defmodule Curator.LockableTest do
     end
 
     test "returns an error when locked_at is NOT nil AND lock is expired (but time is not an unlock strategy)" do
-      user = %User{locked_at: Timex.now |> Timex.shift(days: -1)}
+      user = %User{locked_at: Timex.now() |> Timex.shift(days: -1)}
       assert {:error, {:lockable, :account_locked}} == LockableImpl.verify_unlocked(user)
     end
 
     test "return an error when locked_at is NOT nil AND lock is not expired (and time is NOT an unlock strategy)" do
-      user = %User{locked_at: Timex.now |> Timex.shift(hours: -11)}
+      user = %User{locked_at: Timex.now() |> Timex.shift(hours: -11)}
       assert {:error, {:lockable, :account_locked}} == LockableImplTime.verify_unlocked(user)
     end
 
     test "return :ok when locked_at is NOT nil AND lock_expired (and time is an unlock strategy)" do
-      user = %User{locked_at: Timex.now |> Timex.shift(hours: -13)}
+      user = %User{locked_at: Timex.now() |> Timex.shift(hours: -13)}
       assert :ok == LockableImplTime.verify_unlocked(user)
     end
   end
@@ -142,7 +146,7 @@ defmodule Curator.LockableTest do
 
   describe "after_verify_password_success" do
     test "it clears locked_at and resets failed_attempts to 0" do
-      user = %User{locked_at: Timex.now, failed_attempts: 5}
+      user = %User{locked_at: Timex.now(), failed_attempts: 5}
       user = LockableImpl.after_verify_password_success(user)
       refute user.locked_at
       assert user.failed_attempts == 0
@@ -165,7 +169,7 @@ defmodule Curator.LockableTest do
     end
 
     test "it doesn't update the locked_at timestamp on subsequent failures" do
-      original_user = %User{locked_at: Timex.now |> Timex.shift(hours: -13), failed_attempts: 5}
+      original_user = %User{locked_at: Timex.now() |> Timex.shift(hours: -13), failed_attempts: 5}
       user = LockableImpl.after_verify_password_failure(original_user)
       assert user.locked_at
       assert original_user.locked_at == user.locked_at
@@ -188,11 +192,10 @@ defmodule Curator.LockableTest do
 
   describe "after_password_recovery" do
     test "it clears locked_at and resets failed_attempts to 0" do
-      user = %User{locked_at: Timex.now, failed_attempts: 5}
+      user = %User{locked_at: Timex.now(), failed_attempts: 5}
       user = LockableImpl.after_password_recovery(user)
       refute user.locked_at
       assert user.failed_attempts == 0
     end
   end
-
 end

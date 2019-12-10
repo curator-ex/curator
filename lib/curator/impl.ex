@@ -9,7 +9,9 @@ defmodule Curator.Impl do
         do: apply(unquote(mod), :active_for_authentication?, [__MODULE__, user])
 
       def after_sign_in(conn, user, opts \\ [])
-      def after_sign_in(conn, user, opts), do: apply(unquote(mod), :after_sign_in, [__MODULE__, conn, user, opts])
+
+      def after_sign_in(conn, user, opts),
+        do: apply(unquote(mod), :after_sign_in, [__MODULE__, conn, user, opts])
 
       def unauthenticated_routes(), do: apply(unquote(mod), :unauthenticated_routes, [__MODULE__])
       def authenticated_routes(), do: apply(unquote(mod), :authenticated_routes, [__MODULE__])
@@ -18,15 +20,12 @@ defmodule Curator.Impl do
                      after_sign_in: 3,
                      unauthenticated_routes: 0,
                      authenticated_routes: 0
-
     end
   end
 
   @type options :: Keyword.t()
 
-  @callback active_for_authentication?(
-              any
-            ) :: :ok | {:error, atom}
+  @callback active_for_authentication?(any) :: :ok | {:error, atom}
 
   @callback after_sign_in(
               Plug.Conn.t(),

@@ -46,7 +46,9 @@ if Code.ensure_loaded?(Plug) do
     end
 
     defp respond({:error, :no_claims, conn, _opts}, true), do: conn
-    defp respond({:error, :no_claims, conn, opts}, false), do: return_error(conn, :no_claims, opts)
+
+    defp respond({:error, :no_claims, conn, opts}, false),
+      do: return_error(conn, :no_claims, opts)
 
     defp respond({:error, reason, conn, opts}, _) do
       return_error(conn, reason, opts)

@@ -45,9 +45,10 @@ defmodule Curator.Config do
       """
       @spec config() :: Keyword.t()
       def config,
-        do: unquote(otp_app)
-            |> Application.get_env(__MODULE__, [])
-            |> Keyword.merge(unquote(opts))
+        do:
+          unquote(otp_app)
+          |> Application.get_env(__MODULE__, [])
+          |> Keyword.merge(unquote(opts))
 
       @doc """
       Returns a resolved value of the configuration found at a key

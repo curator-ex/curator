@@ -33,7 +33,6 @@ defmodule Curator.Recoverable do
 
       def process_token(token_id, attrs),
         do: Curator.Recoverable.process_token(__MODULE__, token_id, attrs)
-
     end
   end
 
@@ -41,13 +40,15 @@ defmodule Curator.Recoverable do
     case curator(mod).find_user_by_email(email) do
       nil ->
         nil
+
       user ->
         send_recoverable_email(mod, user)
     end
   end
 
   def verify_token(mod, token_id) do
-    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
+    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <-
+           opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
          true <- confirmation_email && user_email && confirmation_email == user_email do
       {:ok, user}
     else
@@ -60,7 +61,6 @@ defmodule Curator.Recoverable do
     with {:ok, user} <- mod.verify_token(token_id),
          {:ok, user} <- update_user(mod, user, attrs),
          {:ok, _claims} <- opaque_guardian(mod).revoke(token_id) do
-
       # NOTE: We verified the token email matches the user email, so this will be used by the confirmation module (if enabled)
       curator(mod).extension(:after_password_recovery, [user])
 
@@ -71,17 +71,19 @@ defmodule Curator.Recoverable do
   # Extensions
   def unauthenticated_routes(_mod) do
     quote do
-      get "/recoverable/new", Auth.RecoverableController, :new
-      post "/recoverable/", Auth.RecoverableController, :create
-      get "/recoverable/:token_id", Auth.RecoverableController, :edit
-      put "/recoverable/:token_id", Auth.RecoverableController, :update
+      get("/recoverable/new", Auth.RecoverableController, :new)
+      post("/recoverable/", Auth.RecoverableController, :create)
+      get("/recoverable/:token_id", Auth.RecoverableController, :edit)
+      put("/recoverable/:token_id", Auth.RecoverableController, :update)
     end
   end
 
   # Private
 
   defp send_recoverable_email(mod, user) do
-    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
+    {:ok, token_id, _claims} =
+      opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
+
     curator(mod).deliver_email(:recoverable, [user, token_id])
   end
 
@@ -92,9 +94,10 @@ defmodule Curator.Recoverable do
   end
 
   defp update_changeset(mod, user, attrs) do
-    changeset = user
-    |> cast(attrs, [:password])
-    |> validate_required(:password)
+    changeset =
+      user
+      |> cast(attrs, [:password])
+      |> validate_required(:password)
 
     curator(mod).changeset(:update_recoverable_changeset, changeset, attrs)
   end

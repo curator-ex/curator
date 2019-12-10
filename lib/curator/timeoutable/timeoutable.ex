@@ -28,7 +28,6 @@ defmodule Curator.Timeoutable do
 
       def verify_timeoutable_timestamp(conn, opts \\ []),
         do: Curator.Timeoutable.verify_timeoutable_timestamp(__MODULE__, conn, opts)
-
     end
   end
 

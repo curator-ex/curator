@@ -46,7 +46,7 @@ defmodule Curator.Guardian.Token.Opaque do
   def token_id do
     @token_length
     |> :crypto.strong_rand_bytes()
-    |> Base.url_encode64
+    |> Base.url_encode64()
     |> binary_part(0, @token_length)
   end
 
@@ -148,6 +148,7 @@ defmodule Curator.Guardian.Token.Opaque do
   """
   def decode_token(mod, token_id, _options \\ [])
   def decode_token(_mod, nil, _options), do: {:error, :invalid}
+
   def decode_token(mod, token_id, _options) do
     with {:ok, token} <- get_token_from_token_id(mod, token_id) do
       {:ok, token.claims}
@@ -196,7 +197,9 @@ defmodule Curator.Guardian.Token.Opaque do
       _ ->
         # Poorly formatted token... I'm not sure how try / rescue impacts timing...
         "v5AaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e"
-        |> SecureCompare.compare("XXXaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e")
+        |> SecureCompare.compare(
+          "XXXaBD39Wr+nZvqqjIyODZn2OcXIIOkLCZs35kS6p+OUR96McpwR1nBK3vn/SF6e"
+        )
 
         {:error, :invalid}
     end
