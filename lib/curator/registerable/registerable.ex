@@ -39,9 +39,6 @@ defmodule Curator.Registerable do
       def delete_user(user),
         do: Curator.Registerable.delete_user(__MODULE__, user)
 
-      def actions(),
-        do: Curator.Registerable.actions(__MODULE__)
-
       defoverridable change_user: 1,
                      create_changeset: 2,
                      create_user: 1,
