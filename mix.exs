@@ -1,7 +1,7 @@
 defmodule Curator.Mixfile do
   use Mix.Project
 
-  @version "0.2.8"
+  @version "0.3.0"
   @url "https://github.com/curator-ex/curator"
   @maintainers [
     "Eric Sullivan",
@@ -30,23 +30,23 @@ defmodule Curator.Mixfile do
   defp elixirc_paths(_), do: ["lib"]
 
   def application do
-    [applications: [:logger, :timex, :timex_ecto, :tzdata, :guardian]]
+    [extra_applications: [:logger]]
+    # TODO: Verify what we need
+    # [applications: [:logger, :timex, :tzdata, :guardian, :secure_compare]]
   end
 
   defp deps do
     [
-      {:bcrypt_elixir, "~> 1.0", optional: true},
-      {:comeonin, "~> 4.0", optional: true},
-      {:credo, "~> 0.5", only: [:dev, :test]},
-      {:dialyxir, "~> 0.4", only: [:dev, :test], runtime: false},
-      {:ecto, "~> 2.0"},
-      {:ex_doc, "~> 0.10", only: :dev},
+      {:bcrypt_elixir, "~> 2.0", optional: true},
+      # {:credo, "~> 0.10", only: [:dev, :test]},
+      # {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
+      {:ecto_sql, "~> 3.0"},
+      # {:ex_doc, "~> 0.19", only: :dev},
       {:guardian, "~> 1.0"},
-      {:phoenix, "~> 1.3"},
+      {:phoenix, "~> 1.4"},
       {:plug, "~> 1.2"},
       {:secure_compare, "~> 0.1.0"},
       {:timex, "~> 3.0"},
-      {:timex_ecto, "~> 3.0"},
     ]
   end
 
@@ -68,7 +68,7 @@ defmodule Curator.Mixfile do
   end
 
   defp aliases do
-    ["publish": ["hex.publish", &git_tag/1]]
+    [publish: ["hex.publish", &git_tag/1]]
   end
 
   defp git_tag(_args) do

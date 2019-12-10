@@ -24,10 +24,11 @@ defmodule Curator.Timeoutable.Plug do
   defp verify?(resource, conn, opts) do
     timeoutable_module = Keyword.fetch!(opts, :timeoutable_module)
 
-    if timeoutable_module.verify_timeoutable_timestamp(conn, opts) do
-      {:ok, resource, conn, opts}
-    else
-      {:error, :timeout, conn, opts}
+    case timeoutable_module.verify_timeoutable_timestamp(conn, opts) do
+      :ok ->
+        {:ok, resource, conn, opts}
+      {:error, error} ->
+        {:error, error, conn, opts}
     end
   end
 
@@ -44,7 +45,7 @@ defmodule Curator.Timeoutable.Plug do
 
   defp return_error(conn, reason, opts) do
     handler = Pipeline.fetch_error_handler!(conn, opts)
-    conn = apply(handler, :auth_error, [conn, {:timeoutable, reason}, opts])
+    conn = apply(handler, :auth_error, [conn, reason, opts])
     halt(conn)
   end
 end

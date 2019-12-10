@@ -52,6 +52,22 @@ defmodule Curator.DatabaseAuthenticatableTest do
     use Curator.DatabaseAuthenticatable, otp_app: :curator,
       curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
+    def after_verify_password_failure(%{email: "exception@test.com"}) do
+      raise "Password Failure"
+    end
+
+    def after_verify_password_failure(_user) do
+      nil
+    end
+  end
+
+  defmodule CuratorImpl do
+    use Curator, otp_app: :curator,
+      guardian: GuardianImpl,
+      modules: [
+        DatabaseAuthenticatableImpl,
+      ]
+
     def find_user_by_email("test@test.com") do
       %{
         email: "test@test.com",
@@ -69,48 +85,45 @@ defmodule Curator.DatabaseAuthenticatableTest do
     def find_user_by_email(_) do
       nil
     end
+  end
 
-    def verify_password_failure(%{email: "exception@test.com"}) do
-      raise "Password Failure"
-    end
+  describe "create_changeset" do
+    test "password is hashed" do
+      attrs = %{
+        password: "not_hashed",
+      }
 
-    def verify_password_failure(_user) do
-      nil
+      changeset = DatabaseAuthenticatableImpl.create_changeset(%User{}, attrs)
+
+      assert changeset.valid?
+
+      user = Ecto.Changeset.apply_changes(changeset)
+      refute user.password
+      assert user.password_hash
     end
   end
 
-  defmodule CuratorImpl do
-    use Curator, otp_app: :curator,
-      guardian: GuardianImpl,
-      modules: [
-        DatabaseAuthenticatableImpl,
-      ]
-  end
+  describe "update_changeset" do
+    test "password is hashed" do
+      attrs = %{
+        password: "not_hashed",
+      }
 
-  test "changeset" do
-    attrs = %{
-      email: "test@test.com",
-      password: "not_hashed",
-    }
+      changeset = DatabaseAuthenticatableImpl.update_changeset(%User{}, attrs)
 
-    # Not sure if you'll need to combine changesets...
-    # As a next step, you'll likely want to pipe it into a repo (if valid)...
-    changeset = User.changeset(%User{}, attrs)
-    |> DatabaseAuthenticatableImpl.changeset(attrs)
+      assert changeset.valid?
 
-    assert changeset.valid?
-
-    user = Ecto.Changeset.apply_changes(changeset)
-    assert user.email == "test@test.com"
-    refute user.password
-    assert user.password_hash
+      user = Ecto.Changeset.apply_changes(changeset)
+      refute user.password
+      assert user.password_hash
+    end
   end
 
   test "authenticate_user" do
     assert {:ok, _user} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "not_hashed"})
-    assert {:error, :invalid_credentials} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "Xnot_hashed"})
+    assert {:error, {:database_authenticatable, :invalid_credentials}} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "Xnot_hashed"})
 
-    # Test extension :verify_password_failure
+    # Test extension :after_verify_password_failure
     assert_raise RuntimeError, fn ->
       DatabaseAuthenticatableImpl.authenticate_user(%{email: "exception@test.com", password: "Xnot_hashed"})
     end

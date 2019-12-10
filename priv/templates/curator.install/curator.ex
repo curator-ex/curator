@@ -1,6 +1,12 @@
 defmodule <%= inspect context.web_module %>.Auth.Curator do
-  use Curator, otp_app: :<%= Mix.Phoenix.otp_app() %>,
+  use Curator,
+    otp_app: :<%= Mix.Phoenix.otp_app() %>,
     guardian: <%= inspect context.web_module %>.Auth.Guardian,
+    opaque_guardian: <%= inspect context.web_module %>.Auth.OpaqueGuardian,
+    repo: <%= inspect schema.repo %>,
+    user: <%= inspect schema.module %>,
+    mailer: <%= inspect context.web_module %>.Mailer,
+    email: <%= inspect context.web_module %>.Auth.Email,
     modules: []
 end
 
@@ -24,6 +30,8 @@ defmodule <%= inspect context.web_module %>.Auth.Curator.AuthenticatedPipeline d
 
   plug Guardian.Plug.VerifySession
   plug Curator.Plug.LoadResource
+
+  plug Curator.Plug.ActiveForAuthentication, curator: <%= inspect context.web_module %>.Auth.Curator
 
   # plug Curator.Timeoutable.Plug, timeoutable_module: <%= inspect context.web_module %>.Auth.Timeoutable
 end

@@ -1,4 +1,17 @@
 defmodule Curator.Timeoutable do
+  @moduledoc """
+  TODO
+
+  Options:
+
+  * `timeout_in` (optional) default: 1800 (30 min)
+
+  Extensions:
+
+  N/A
+
+  """
+
   use Curator.Extension
 
   alias Guardian.Plug.Pipeline
@@ -8,25 +21,19 @@ defmodule Curator.Timeoutable do
   defmacro __using__(opts \\ []) do
     quote do
       use Curator.Config, unquote(opts)
-      use Curator.Extension, mod: Curator.Timeoutable
+      use Curator.Impl, mod: Curator.Timeoutable
 
-      def update_timeoutable_timestamp(conn, opts \\ []) do
-        Curator.Timeoutable.update_timeoutable_timestamp(conn, opts)
-      end
+      def update_timeoutable_timestamp(conn, opts \\ []),
+        do: Curator.Timeoutable.update_timeoutable_timestamp(conn, opts)
 
-      def verify_timeoutable_timestamp(conn, opts \\ []) do
-        Curator.Timeoutable.verify_timeoutable_timestamp(__MODULE__, conn, opts)
-      end
+      def verify_timeoutable_timestamp(conn, opts \\ []),
+        do: Curator.Timeoutable.verify_timeoutable_timestamp(__MODULE__, conn, opts)
+
     end
   end
 
-  # Config
-  def timeout_in(mod) do
-    apply(mod, :config, [:timeout_in, 1800])
-  end
-
   # Extensions
-  def after_sign_in(conn, _user, opts) do
+  def after_sign_in(_mod, conn, _user, opts) do
     update_timeoutable_timestamp(conn, opts)
   end
 
@@ -39,7 +46,11 @@ defmodule Curator.Timeoutable do
     last_request_at = get_timeoutable_timestamp(conn, opts)
     timeout_in = timeout_in(mod)
 
-    verify_exp(timeout_in, last_request_at)
+    if verify_exp(timeout_in, last_request_at) do
+      :ok
+    else
+      {:error, {:timeoutable, :timeout}}
+    end
   end
 
   # Private
@@ -75,4 +86,9 @@ defmodule Curator.Timeoutable do
   @doc false
   @spec timeoutable_key(String.t() | atom) :: atom
   defp timeoutable_key(key), do: String.to_atom("#{Guardian.Plug.Keys.base_key(key)}_timeoutable")
+
+  # Config
+  defp timeout_in(mod) do
+    apply(mod, :config, [:timeout_in, 1800])
+  end
 end

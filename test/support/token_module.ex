@@ -7,7 +7,7 @@ defmodule Curator.Support.TokenModule do
   @behaviour Guardian.Token
 
   def token_id do
-    UUID.uuid4()
+    Ecto.UUID.generate()
   end
 
   def peek(_mod, token) do
@@ -20,8 +20,7 @@ defmodule Curator.Support.TokenModule do
     %{claims: claims}
   end
 
-  def build_claims(mod, resource, sub, claims, opts) do
-    args = [mod, resource, sub, claims, opts]
+  def build_claims(mod, _resource, sub, claims, opts) do
     default_token_type = apply(mod, :default_token_type, [])
     token_type = Keyword.get(opts, :token_type, default_token_type)
 
@@ -37,20 +36,20 @@ defmodule Curator.Support.TokenModule do
     end
   end
 
-  def create_token(mod, claims, opts) do
+  def create_token(_mod, claims, opts) do
     if Keyword.get(opts, :fail_create_token) do
       {:error, Keyword.get(opts, :fail_create_token)}
     else
       token =
         %{"claims" => claims}
         |> Poison.encode!()
-        |> Base.url_encode64(padding: true)
+        |> Base.url_encode64
 
       {:ok, token}
     end
   end
 
-  def decode_token(mod, token, opts) do
+  def decode_token(_mod, token, opts) do
     if Keyword.get(opts, :fail_decode_token) do
       {:error, Keyword.get(opts, :fail_decode_token)}
     else
@@ -68,7 +67,7 @@ defmodule Curator.Support.TokenModule do
     end
   end
 
-  def verify_claims(mod, claims, opts) do
+  def verify_claims(_mod, claims, opts) do
     if Keyword.get(opts, :fail_verify_claims) do
       {:error, Keyword.get(opts, :fail_verify_claims)}
     else
@@ -76,7 +75,7 @@ defmodule Curator.Support.TokenModule do
     end
   end
 
-  def revoke(mod, claims, token, opts) do
+  def revoke(_mod, claims, _token, opts) do
     if Keyword.get(opts, :fail_revoke) do
       {:error, Keyword.get(opts, :fail_revoke)}
     else
@@ -94,7 +93,7 @@ defmodule Curator.Support.TokenModule do
     end
   end
 
-  def exchange(mod, old_token, from_type, to_type, opts) do
+  def exchange(mod, old_token, _from_type, to_type, opts) do
     if Keyword.get(opts, :fail_exchange) do
       {:error, Keyword.get(opts, :fail_exchange)}
     else

@@ -1,0 +1,3 @@
+Forgot your password?
+
+<a href="<%%= @url %>">Click Here</a>

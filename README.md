@@ -2,24 +2,21 @@
 
 An Authentication Framework for Phoenix.
 
-Curator is meant to mimic [Devise](https://github.com/plataformatec/devise), as such it provides [several modules](#curator-modules) to accomplish authentication and various aspects of user lifecycle mangement. It's build with a modular architecture that differs from existing Elixir Authentication solutions. Each curator module can be combined to handle various authentication scenarios, passing coordination through a curator module](#curator-module). Under the hood, this uses [Guardian](https://github.com/ueberauth/guardian) for session management.
+Curator is meant to mimic [Devise](https://github.com/plataformatec/devise), as such it provides [several modules](#curator-modules) to accomplish authentication and various aspects of user lifecycle mangement. It's build with a modular architecture that differs from existing Elixir Authentication solutions. Each curator module can be combined to handle various authentication scenarios, passing coordination through a [curator module](#curator-module). Under the hood, this uses [Guardian](https://github.com/ueberauth/guardian) for session management.
 
 For an example, see the [PhoenixCurator Application](https://github.com/curator-ex/phoenix_curator)
 
 ## Curator Modules
 
 * [Ueberauth](#ueberauth): Ueberauth Integration.
-* [Timeoutable](#timeoutable): Session Timeout (after configurable inactivity).
-* [API](#api): API login (with an opaque token).
-
-(TODO)
-
+* [Database Authenticatable](#database-authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Registerable](#registerable): A Generator to support user registration.
-* [Database Authenticatable](#database_authenticatable): Compare a password to a hashed password to support password based sign-in. Also provide a generator for creating a session page.
 * [Confirmable](#confirmable): Account email verification.
 * [Recoverable](#recoverable): Reset the User Password.
-* [Lockable](#lockable): Lock Account after configurbale count of invalid sign-ins.
+* [Lockable](#lockable): Lock Account after configurable count of invalid sign-ins.
 * [Approvable](#approvable): Require an approval step before user sign-in.
+* [Timeoutable](#timeoutable): Session Timeout (after configurable inactivity).
+* [API](#api): API login (with an opaque token).
 
 ## Installation
 
@@ -27,7 +24,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     ```elixir
     def deps do
-      [{:curator, "~> 0.2.5"}]
+      [{:curator, "~> 0.3.0"}]
     end
     ```
 
@@ -91,7 +88,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
           pipe_through :authenticated_browser
 
           ...
-          Insert your unprotected routes here
+          Insert your protected routes here
           ...
 
           Curator.Router.mount_authenticated_routes(<MyAppWeb>.Auth.Curator)
@@ -131,24 +128,13 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
           secret_key: {<MyAppWeb>.Auth.Guardian, :fetch_secret_key, []}
         ```
 
-        (NOTE: the sameple prod.exs is one way to keep the `secret_key` out of source code. If you use an alternative technique the `fetch_secret_key` method can be removed from `<MyAppWeb>.Auth.Guardian`)
+        (NOTE: the sample prod.exs is one way to keep the `secret_key` out of source code. If you use an alternative technique the `fetch_secret_key` method can be removed from `<MyAppWeb>.Auth.Guardian`)
 
-    4. Add to your Auth Context (`<my_app>/lib/<my_app>/auth/auth.ex`)
-
-        ```elixir
-        def get_user(id) do
-          case Repo.get(User, id) do
-            nil -> {:error, :no_resource_found}
-            record -> {:ok, record}
-          end
-        end
-        ```
-
-4. Add a signout link to your layout
+4. Add a sign-out link to your layout
 
     ```elixir
     <%= if current_user(@conn) do %>
-      <%= link "Sign Out", to: session_path(@conn, :delete), method: :delete %>
+      <%= link "Sign Out", to: Routes.session_path(@conn, :delete), method: :delete %>
     <% end %>
     ```
 
@@ -163,11 +149,14 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
         Ecto.Adapters.SQL.Sandbox.mode(<MyApp>.Repo, {:shared, self()})
       end
 
-      # Create w/ ExMachina (or your preferred method)
       # Note: As you add additional modules, make sure this user is valid for them too.
+      # Create the user w/ ExMachina  
       auth_user = <MyApp>.Factory.insert(:auth_user)
 
-      {:ok, token, claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
+      # Or, create the user with your preferred method
+      # {:ok, auth_user} = <MyApp>.Auth.create_user(%{email: "test@test.com"})
+
+      {:ok, token, _claims} = <MyAppWeb>.Auth.Guardian.encode_and_sign(auth_user)
 
       conn = Phoenix.ConnTest.build_conn()
 
@@ -183,7 +172,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     Note: This uses `conn` as an authenticated connection, so existing tests won't need to be updated.
 
-    To test, I created some special routes:
+    To test, create test-only routes:
 
     ```elixir
     scope "/", <MyAppWeb> do
@@ -223,7 +212,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
     end
     ```
 
-    And wrote tests in `page_controller_test.exs`:
+    And write tests in `page_controller_test.exs`:
 
     ```
     defmodule <MyAppWeb>.PageControllerTest do
@@ -231,7 +220,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
       test "GET /secure (Unauthenticated)", %{unauth_conn: conn} do
         conn = get conn, "/secure"
-        assert redirected_to(conn) == session_path(conn, :new)
+        assert redirected_to(conn) == Routes.session_path(conn, :new)
         assert get_flash(conn, :error) == "Please Sign In"
       end
 
@@ -243,7 +232,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
       test "GET /secure (Authenticated - User Delete)", %{conn: conn, auth_user: user} do
         <MyApp>.Auth.delete_user(user)
         conn = get conn, "/secure"
-        assert redirected_to(conn) == session_path(conn, :new)
+        assert redirected_to(conn) == Routes.session_path(conn, :new)
         assert get_flash(conn, :error) == "Please Sign In"
       end
 
@@ -260,7 +249,7 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
       test "GET /insecure (Authenticated - User Delete)", %{conn: conn, auth_user: user} do
         <MyApp>.Auth.delete_user(user)
         conn = get conn, "/insecure"
-        assert redirected_to(conn) == session_path(conn, :new)
+        assert redirected_to(conn) == Routes.session_path(conn, :new)
         assert get_flash(conn, :error) == "Please Sign In"
       end
     end
@@ -268,11 +257,26 @@ For an example, see the [PhoenixCurator Application](https://github.com/curator-
 
     These examples can be extended as additional modules are integrated (ex. using Confirmable with a user that hasn't been confirmed).
 
-6. Curate.
+6. Opaque Guardian (recommended)
 
-    Your authentication library is looking a bit spartan... Time to add to you collection.
+    Several Extensions will use guardian to store single-use tokens (ex: the confirmation module). By Default, [JWT Tokens are not tracked by the application](https://github.com/ueberauth/guardian#tracking-tokens). Guardian provides an integration to track and revoke tokens, [GuardianDB](https://github.com/ueberauth/guardian_db). However, for single-use tokens, Curator ships with an alternative called "Opaque Guardian". It provides a behaviour for guardian that allows tokens to be stored in the Database and never as a JWT. This is preferable for the extensions. Installation requires running the following command (or typing yes during the install):
 
-    Currently only an oauth workflow is supported, so start with [Ueberauth](#ueberauth)
+    ```
+    mix curator.opaque_guardian.install
+    ```
+
+    If you would like to use guardian for the single-use tokens you can update the curator configuration:
+
+    ```
+    use Curator,
+      opaque_guardian: <MyAppWeb>.Auth.Guardian
+    ```
+
+7. Curate.
+
+    Your authentication library is looking a bit spartan... Time to add to your collection.
+
+    To allow sign in add [Ueberauth](#ueberauth) and/or [DatabaseAuthenticatable](#database_authenticatable)
 
 ## Module Documentation
 
@@ -305,8 +309,8 @@ Ueberauth Integration
         ```elixir
         defp deps do
           [
-            {:ueberauth, "~> 0.4"},
-            {:ueberauth_google, "~> 0.7"},
+            {:ueberauth_google, "~> 0.9"},
+            {:ueberauth, "~> 0.6"}
           ]
         end
         ```
@@ -326,11 +330,245 @@ Ueberauth Integration
           client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
         ```
 
-    3. Put some links to the providers (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+    3. Put some links to the providers on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
 
         ```elixir
-        <%= link "Google", to: ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
+        <%= link "Google", to: Routes.ueberauth_path(@conn, :request, "google"), class: "btn btn-default" %>
         ```
+
+### Database Authenticatable
+
+#### installation
+
+1. Run the install command
+
+    ```
+    mix curator.database_authenticatable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.DatabaseAuthenticatable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    # DatabaseAuthenticatable
+    field :password, :string, virtual: true
+    field :password_hash, :string
+    ```
+
+4. Add your crypto_mod dependencies.
+
+  By default, Bcrypt is configured as the crypto_mod. This requires two dependencies:
+
+    ```
+    {:bcrypt_elixir, "~> 2.0"},
+    ```
+
+  You can configure the crypto_mod by passing it as an arguement in the DatabaseAuthenticatable implementation.
+
+5. Update the new session page as needed (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+6. run the migration
+
+    ```
+    mix ecto.migrate
+    ```
+
+7. If using [Registerable](#registerable), Update the registration form
+
+    ```elixir
+    <div class="form-group">
+      <%= label f, :password, class: "control-label" %>
+      <%= password_input f, :password, class: "form-control" %>
+      <%= error_tag f, :password %>
+    </div>
+    ```
+
+8. If you have other use cases, you can use the changeset directly:
+
+  ```elixir
+  <MyApp>.Auth.find_user_by_email("test@test.com")
+  |> <MyAppWeb>.Auth.DatabaseAuthenticatable.update_changeset(%{password: "test"})
+  |> <MyApp>.Repo.update()
+  ```
+
+### Registerable
+
+#### Installation
+
+1. Run the install command
+
+    ```
+    mix curator.registerable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Registerable,
+      ]
+    ```
+
+3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+    ```elixir
+    <%= link to: Routes.registration_path(@conn, :new), class: "btn btn-outline-primary" do %>
+      Register
+    <% end %>
+    ```
+
+4. Add a registration link to your layout
+
+    ```elixir
+    <%= link "My Account", to: Routes.registration_path(@conn, :edit) %>
+    ```
+
+### Confirmable
+
+#### installation
+
+1. Run the install command
+
+    ```
+    mix curator.confirmable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Confirmable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    # Confirmable
+    field :email_confirmed_at, :utc_datetime
+    ```
+
+4. Testing ... add confirmed_at
+
+### Recoverable
+
+#### installation
+
+1. Run the install command
+
+    ```
+    mix curator.recoverable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Recoverable,
+      ]
+    ```
+
+3. Put a link on the new session page (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
+
+    ```elixir
+    <%= link to: Routes.recoverable_path(@conn, :new), class: "btn btn-outline-primary" do %>
+      Forgotten Password
+    <% end %>
+    ```
+
+### Lockable
+
+#### Installation
+
+1. Run the install command
+
+    ```
+    mix curator.lockable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.LockableImpl,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    # Lockable
+    field :failed_attempts, :integer
+    field :locked_at, :utc_datetime
+    ```
+
+### Approvable
+
+#### installation
+
+1. Run the install command
+
+    ```
+    mix curator.approvable.install
+    ```
+
+2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
+
+    ```elixir
+    use Curator,
+      otp_app: :<my_app_web>,
+      modules: [
+       <MyAppWeb>.Auth.Approvable,
+      ]
+    ```
+
+3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
+
+    ```elixir
+    # Approvable
+    field :approval_status, :string, default: "pending"
+    field :approval_at, :utc_datetime
+    belongs_to :approver, <MyApp>.Auth.User
+    ```
+
+4. Enable Approvable emails (`<my_app_web>/lib/<my_app_web>/auth/approvable.ex`)
+
+  Emails can be sent after a users registers or confirms their account (or both) by setting the `email_after` configuration to a list of `:registration` and/or `:confirmation`
+
+    ```elixir
+    defmodule <MyAppWeb>.Auth.Approvable do
+      use Curator.Approvable,
+        otp_app: :<my_app_web>,
+        curator: <MyAppWeb>.Auth.Curator,
+        email_after: [:confirmation] # Add this
+    end
+    ```
+  5. Set the email recipients (`<my_app_web>/lib/<my_app_web>/auth/email.ex`)
+
+    ```elixir
+    defp approvable_emails do
+      # Add your list here
+    end
+    ```
+
+  6. (Todo) The approvers will need a UI.
 
 ### Timeoutable
 
@@ -348,7 +586,8 @@ Session Timeout (after configurable inactivity)
 2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
 
     ```elixir
-    use Curator, otp_app: :<my_app_web>,
+    use Curator,
+      otp_app: :<my_app_web>,
       modules: [
        <MyAppWeb>.Auth.Timeoutable,
       ]
@@ -371,7 +610,8 @@ Session Timeout (after configurable inactivity)
 4. (optional) Configure Timeoutable (`<my_app_web>/lib/<my_app_web>/auth/timeoutable.ex`)
 
     ```elixir
-    use Curator.Timeoutable, otp_app: :<my_app_web>,
+    use Curator.Timeoutable,
+      otp_app: :<my_app_web>,
       timeout_in: 1800
     ```
 
@@ -392,69 +632,6 @@ Session Timeout (after configurable inactivity)
     ```elixir
     defp translate_error({:timeoutable, :timeout}), do: "You have been signed out due to inactivity"
     ```
-
-### Registerable (TODO)
-
-### Database Authenticatable
-1. Run the install command
-
-    ```
-    mix curator.database_authenticatable.install
-    ```
-
-2. Add to the curator modules (`<my_app_web>/lib/<my_app_web>/auth/curator.ex`)
-
-    ```elixir
-    use Curator, otp_app: :<my_app_web>,
-      modules: [
-       <MyAppWeb>.Auth.DatabaseAuthenticatable,
-      ]
-    ```
-
-3. Update the user schema (`<my_app>/lib/<my_app>/auth/user.ex`)
-
-    ```elixir
-    field :password, :string, virtual: true
-    field :password_hash, :string
-    ```
-
-4. Add your crypto_mod dependencies.
-
-  By default, Comeonin.Bcrypt is configured as the crypto_mod. This requires two dependencies:
-
-    ```
-    {:bcrypt_elixir, "~> 1.0"},
-    {:comeonin, "~> 4.0"},
-    ```
-
-  You can configure the crypto_mod by passing it as an arguement in the DatabaseAuthenticatable implementation.
-
-5. Update the new session page as needed (`<my_app_web>/lib/<my_app_web>/templates/auth/session/new.html.eex`)
-
-6. run the migration
-
-    ```
-    mix ecto.migrate
-    ```
-
-7. Add a way for users to manage their passwords, like: [Registerable](#registerable)
-
-  If you have other use cases, you can use the changeset directly:
-
-  ```elixir
-  <MyApp>.Auth.find_user_by_email("test@test.com")
-  |> <MyAppWeb>.Auth.DatabaseAuthenticatable.changeset(%{password: "test"})
-  |> <MyApp>.Repo.update()
-  ```
-
-
-### Confirmable (TODO)
-
-### Recoverable (TODO)
-
-### Lockable (TODO)
-
-### Approvable (TODO)
 
 ### API
 
@@ -489,13 +666,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
     end
     ```
 
-3. (optional) Update the user schema with the new association (`<my_app>/lib/<my_app>/auth/user.ex`)
-
-    ```elixir
-    has_many :tokens, <MyApp>.Auth.Token
-    ```
-
-4. Testing
+3. Testing
 
     Update `conn_case.ex`:
 
@@ -505,7 +676,7 @@ This generator uses the `Curator.Guardian.Token.Opaque` module in place of the g
 
       api_unauth_conn = Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept", "application/json")
 
-      {:ok, token_id, _claims} = <MyAppWeb>.Auth.ApiGuardian.encode_and_sign(auth_user, %{description: "TEST"})
+      {:ok, token_id, _claims} = <MyAppWeb>.Auth.OpaqueGuardian.encode_and_sign(auth_user, %{description: "TEST"}, token_type: "api")
       api_auth_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: #{token_id}")
 
       api_invalid_conn = Plug.Conn.put_req_header(api_unauth_conn, "authorization", "Bearer: NOT_A_REAL_TOKEN")
