@@ -23,8 +23,8 @@ defmodule Mix.Tasks.Curator.Install do
   def run(args) do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
-    if Mix.Project.umbrella? do
-      Mix.raise "mix curator.install can only be run inside an application directory"
+    if Mix.Project.umbrella?() do
+      Mix.raise("mix curator.install can only be run inside an application directory")
     end
 
     Gen.Context.run(args)
@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Curator.Install do
     |> copy_new_files(paths, binding)
     |> print_shell_instructions()
 
-    if Mix.shell.yes?("Install Opaque Guardian?") do
+    if Mix.shell().yes?("Install Opaque Guardian?") do
       Mix.Tasks.Curator.OpaqueGuardian.Install.run([])
     end
   end
@@ -54,22 +54,27 @@ defmodule Mix.Tasks.Curator.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "curator.ex",                Path.join([web_prefix, web_path, "auth", "curator.ex"])},
-      {:eex,     "email.ex",                  Path.join([web_prefix, web_path, "auth", "email.ex"])},
-      {:eex,     "email/layout.html.eex",     Path.join([web_prefix, "templates", web_path, "auth", "layout", "email.html.eex"])},
-      {:eex,     "curator_helper.ex",         Path.join([web_prefix, "views", web_path, "auth", "curator_helper.ex"])},
-      {:eex,     "error_handler.ex",          Path.join([web_prefix, "controllers", web_path, "auth", "error_handler.ex"])},
-      {:eex,     "view.ex",                   Path.join([web_prefix, "views", web_path, "auth", "session_view.ex"])},
-      {:eex,     "new.html.eex",              Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
-      {:eex,     "session_controller.ex",     Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
-      {:eex,     "guardian.ex",               Path.join([web_prefix, web_path, "auth", "guardian.ex"])},
+      {:eex, "curator.ex", Path.join([web_prefix, web_path, "auth", "curator.ex"])},
+      {:eex, "email.ex", Path.join([web_prefix, web_path, "auth", "email.ex"])},
+      {:eex, "email/layout.html.eex",
+       Path.join([web_prefix, "templates", web_path, "auth", "layout", "email.html.eex"])},
+      {:eex, "curator_helper.ex",
+       Path.join([web_prefix, "views", web_path, "auth", "curator_helper.ex"])},
+      {:eex, "error_handler.ex",
+       Path.join([web_prefix, "controllers", web_path, "auth", "error_handler.ex"])},
+      {:eex, "view.ex", Path.join([web_prefix, "views", web_path, "auth", "session_view.ex"])},
+      {:eex, "new.html.eex",
+       Path.join([web_prefix, "templates", web_path, "auth", "session", "new.html.eex"])},
+      {:eex, "session_controller.ex",
+       Path.join([web_prefix, "controllers", web_path, "auth", "session_controller.ex"])},
+      {:eex, "guardian.ex", Path.join([web_prefix, web_path, "auth", "guardian.ex"])}
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/curator.install", binding, files
+    Mix.Phoenix.copy_from(paths, "priv/templates/curator.install", binding, files)
     inject_schema_access(context, paths, binding)
 
     context
@@ -91,7 +96,7 @@ defmodule Mix.Tasks.Curator.Install do
     if String.contains?(file, content_to_inject) do
       :ok
     else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+      Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
       file
       |> String.trim_trailing()
@@ -111,7 +116,7 @@ defmodule Mix.Tasks.Curator.Install do
   def print_shell_instructions(%Context{context_app: context_app} = context) do
     web_prefix = Mix.Phoenix.web_path(context_app)
 
-    Mix.shell.info """
+    Mix.shell().info("""
 
     Add curator to your router #{Mix.Phoenix.web_path(context_app)}/router.ex:
 
@@ -119,28 +124,28 @@ defmodule Mix.Tasks.Curator.Install do
 
         pipeline :browser do
           ...
-          plug #{inspect context.web_module}.Auth.Curator.UnauthenticatedPipeline
+          plug #{inspect(context.web_module)}.Auth.Curator.UnauthenticatedPipeline
         end
 
         pipeline :authenticated_browser do
           ... (copy the code from browser)
-          plug #{inspect context.web_module}.Auth.Curator.AuthenticatedPipeline
+          plug #{inspect(context.web_module)}.Auth.Curator.AuthenticatedPipeline
         end
 
-        scope "/", #{inspect context.web_module} do
+        scope "/", #{inspect(context.web_module)} do
           pipe_through :browser
 
           ...
 
-          Curator.Router.mount_unauthenticated_routes(#{inspect context.web_module}.Auth.Curator)
+          Curator.Router.mount_unauthenticated_routes(#{inspect(context.web_module)}.Auth.Curator)
         end
 
-        scope "/", #{inspect context.web_module} do
+        scope "/", #{inspect(context.web_module)} do
           pipe_through :authenticated_browser
 
           ...
 
-          Curator.Router.mount_authenticated_routes(#{inspect context.web_module}.Auth.Curator)
+          Curator.Router.mount_authenticated_routes(#{inspect(context.web_module)}.Auth.Curator)
         end
 
     Add the view_helper to your Web module: #{Path.join([web_prefix, "#{web_prefix}.ex"])}
@@ -149,26 +154,26 @@ defmodule Mix.Tasks.Curator.Install do
           quote do
             ...
 
-            import #{inspect context.web_module}.Auth.CuratorHelper
+            import #{inspect(context.web_module)}.Auth.CuratorHelper
           end
         end
 
     Configure Guardian: config/config.exs
 
-        config :#{Mix.Phoenix.otp_app()}, #{inspect context.web_module}.Auth.Guardian,
+        config :#{Mix.Phoenix.otp_app()}, #{inspect(context.web_module)}.Auth.Guardian,
           issuer: "#{Mix.Phoenix.otp_app()}",
           secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
 
     And configure Guardian for production: config/prod.exs
 
-        config :#{Mix.Phoenix.otp_app()}, #{inspect context.web_module}.Auth.Guardian,
+        config :#{Mix.Phoenix.otp_app()}, #{inspect(context.web_module)}.Auth.Guardian,
           issuer: "#{Mix.Phoenix.otp_app()}",
           allowed_algos: ["HS512"],
           ttl: { 1, :days },
           verify_issuer: true,
-          secret_key: {#{inspect context.web_module}.Auth.Guardian, :fetch_secret_key, []}
+          secret_key: {#{inspect(context.web_module)}.Auth.Guardian, :fetch_secret_key, []}
 
-    """
+    """)
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end

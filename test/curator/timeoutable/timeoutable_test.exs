@@ -8,7 +8,7 @@ defmodule Curator.TimeoutableTest do
     import Ecto.Changeset
 
     schema "users" do
-      field :email, :string
+      field(:email, :string)
 
       timestamps()
     end
@@ -49,16 +49,18 @@ defmodule Curator.TimeoutableTest do
   end
 
   defmodule CuratorImpl do
-    use Curator, otp_app: :curator,
+    use Curator,
+      otp_app: :curator,
       guardian: GuardianImpl,
       modules: [
-        TimeoutableImpl,
+        TimeoutableImpl
       ]
   end
 
   test "after_sign_in" do
-    conn = Phoenix.ConnTest.build_conn()
-    |> Plug.Test.init_test_session(%{})
+    conn =
+      Phoenix.ConnTest.build_conn()
+      |> Plug.Test.init_test_session(%{})
 
     user = %User{
       email: "test@test.com"

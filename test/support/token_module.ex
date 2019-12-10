@@ -43,7 +43,7 @@ defmodule Curator.Support.TokenModule do
       token =
         %{"claims" => claims}
         |> Poison.encode!()
-        |> Base.url_encode64
+        |> Base.url_encode64()
 
       {:ok, token}
     end

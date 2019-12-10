@@ -15,7 +15,7 @@ defmodule Curator.Test.PlugHelper do
     the_conn.secret_key_base
     |> put_in(@secret)
     |> Plug.Session.call(@signing_opts)
-    |> Plug.Conn.fetch_session
+    |> Plug.Conn.fetch_session()
   end
 
   @doc """

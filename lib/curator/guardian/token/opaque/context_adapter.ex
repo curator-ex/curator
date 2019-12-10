@@ -18,8 +18,9 @@ defmodule Curator.Guardian.Token.Opaque.ContextAdapter do
         typ = Map.get(claims, "typ")
         exp = Map.get(claims, "exp")
 
-        claims = claims
-        |> Map.drop(["user_id", "description"])
+        claims =
+          claims
+          |> Map.drop(["user_id", "description"])
 
         token = Curator.Guardian.Token.Opaque.token_id()
 
@@ -29,7 +30,7 @@ defmodule Curator.Guardian.Token.Opaque.ContextAdapter do
           "description" => description,
           "token" => token,
           "typ" => typ,
-          "exp" => exp,
+          "exp" => exp
         }
 
         unquote(context).create_token(attrs)
@@ -39,6 +40,7 @@ defmodule Curator.Guardian.Token.Opaque.ContextAdapter do
         case get_token(id) do
           {:ok, token} ->
             unquote(context).delete_token(token)
+
           result ->
             result
         end

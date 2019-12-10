@@ -23,8 +23,8 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
   def run(args) do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
-    if Mix.Project.umbrella? do
-      Mix.raise "mix curator.confirmable.install can only be run inside an application directory"
+    if Mix.Project.umbrella?() do
+      Mix.raise("mix curator.confirmable.install can only be run inside an application directory")
     end
 
     # Gen.Context.run(args)
@@ -51,17 +51,20 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "confirmable.ex",              Path.join([web_prefix, web_path, "auth", "confirmable.ex"])},
-      {:eex,     "confirmable_controller.ex",   Path.join([web_prefix, "controllers", web_path, "auth", "confirmable_controller.ex"])},
-      {:eex,     "migration.exs",               Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_confirmable_to_users.exs"])},
-      {:eex,     "email/confirmable.html.eex",  Path.join([web_prefix, "templates", web_path, "auth", "email", "confirmable.html.eex"])},
+      {:eex, "confirmable.ex", Path.join([web_prefix, web_path, "auth", "confirmable.ex"])},
+      {:eex, "confirmable_controller.ex",
+       Path.join([web_prefix, "controllers", web_path, "auth", "confirmable_controller.ex"])},
+      {:eex, "migration.exs",
+       Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_add_confirmable_to_users.exs"])},
+      {:eex, "email/confirmable.html.eex",
+       Path.join([web_prefix, "templates", web_path, "auth", "email", "confirmable.html.eex"])}
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/curator.confirmable.install", binding, files
+    Mix.Phoenix.copy_from(paths, "priv/templates/curator.confirmable.install", binding, files)
     inject_email_module(context, paths, binding)
 
     context
@@ -86,7 +89,7 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
     if String.contains?(file, content_to_inject) do
       :ok
     else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+      Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
       file
       |> String.trim_trailing()
@@ -107,26 +110,28 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
     web_prefix = Mix.Phoenix.web_path(context_app)
     web_path = to_string(schema.web_path)
 
-    Mix.shell.info """
+    Mix.shell().info("""
 
-    The Confirmable module was created at: #{Path.join([web_prefix, web_path, "auth", "confirmable.ex"])}
+    The Confirmable module was created at: #{
+      Path.join([web_prefix, web_path, "auth", "confirmable.ex"])
+    }
 
     You can configure it like so:
 
         use Curator.Confirmable,
           otp_app: :#{Mix.Phoenix.otp_app()},
-          curator: #{inspect context.web_module}.Auth.Curator
+          curator: #{inspect(context.web_module)}.Auth.Curator
 
     Be sure to add it to Curator: #{Path.join([web_prefix, web_path, "auth", "curator.ex"])}
 
         use Curator,
-          modules: [#{inspect context.web_module}.Auth.Confirmable]
+          modules: [#{inspect(context.web_module)}.Auth.Confirmable]
 
     The user schema requires new fields:
 
         # Confirmable
         field :email_confirmed_at, :utc_datetime
-    """
+    """)
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
@@ -135,6 +140,7 @@ defmodule Mix.Tasks.Curator.Confirmable.Install do
     {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
     "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
   end
-  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+
+  defp pad(i) when i < 10, do: <<?0, ?0 + i>>
   defp pad(i), do: to_string(i)
 end

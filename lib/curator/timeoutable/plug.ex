@@ -27,6 +27,7 @@ defmodule Curator.Timeoutable.Plug do
     case timeoutable_module.verify_timeoutable_timestamp(conn, opts) do
       :ok ->
         {:ok, resource, conn, opts}
+
       {:error, error} ->
         {:error, error, conn, opts}
     end

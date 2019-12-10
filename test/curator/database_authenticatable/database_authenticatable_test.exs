@@ -8,11 +8,11 @@ defmodule Curator.DatabaseAuthenticatableTest do
     import Ecto.Changeset
 
     schema "users" do
-      field :email, :string
+      field(:email, :string)
 
       # DatabaseAuthenticatable
-      field :password, :string, virtual: true
-      field :password_hash, :string
+      field(:password, :string, virtual: true)
+      field(:password_hash, :string)
 
       timestamps()
     end
@@ -49,7 +49,8 @@ defmodule Curator.DatabaseAuthenticatableTest do
   end
 
   defmodule DatabaseAuthenticatableImpl do
-    use Curator.DatabaseAuthenticatable, otp_app: :curator,
+    use Curator.DatabaseAuthenticatable,
+      otp_app: :curator,
       curator: Curator.DatabaseAuthenticatableTest.CuratorImpl
 
     def after_verify_password_failure(%{email: "exception@test.com"}) do
@@ -62,23 +63,24 @@ defmodule Curator.DatabaseAuthenticatableTest do
   end
 
   defmodule CuratorImpl do
-    use Curator, otp_app: :curator,
+    use Curator,
+      otp_app: :curator,
       guardian: GuardianImpl,
       modules: [
-        DatabaseAuthenticatableImpl,
+        DatabaseAuthenticatableImpl
       ]
 
     def find_user_by_email("test@test.com") do
       %{
         email: "test@test.com",
-        password_hash: "$2b$12$kmIIozbAUtpTILVM9QuwU.0AAJCtqnYhBLwJ/6UBLfLkdllKAa7XO",
+        password_hash: "$2b$12$kmIIozbAUtpTILVM9QuwU.0AAJCtqnYhBLwJ/6UBLfLkdllKAa7XO"
       }
     end
 
     def find_user_by_email("exception@test.com") do
       %{
         email: "exception@test.com",
-        password_hash: "$2b$12$kmIIozbAUtpTILVM9QuwU.0AAJCtqnYhBLwJ/6UBLfLkdllKAa7XO",
+        password_hash: "$2b$12$kmIIozbAUtpTILVM9QuwU.0AAJCtqnYhBLwJ/6UBLfLkdllKAa7XO"
       }
     end
 
@@ -90,7 +92,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
   describe "create_changeset" do
     test "password is hashed" do
       attrs = %{
-        password: "not_hashed",
+        password: "not_hashed"
       }
 
       changeset = DatabaseAuthenticatableImpl.create_changeset(%User{}, attrs)
@@ -106,7 +108,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
   describe "update_changeset" do
     test "password is hashed" do
       attrs = %{
-        password: "not_hashed",
+        password: "not_hashed"
       }
 
       changeset = DatabaseAuthenticatableImpl.update_changeset(%User{}, attrs)
@@ -120,12 +122,24 @@ defmodule Curator.DatabaseAuthenticatableTest do
   end
 
   test "authenticate_user" do
-    assert {:ok, _user} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "not_hashed"})
-    assert {:error, {:database_authenticatable, :invalid_credentials}} = DatabaseAuthenticatableImpl.authenticate_user(%{email: "test@test.com", password: "Xnot_hashed"})
+    assert {:ok, _user} =
+             DatabaseAuthenticatableImpl.authenticate_user(%{
+               email: "test@test.com",
+               password: "not_hashed"
+             })
+
+    assert {:error, {:database_authenticatable, :invalid_credentials}} =
+             DatabaseAuthenticatableImpl.authenticate_user(%{
+               email: "test@test.com",
+               password: "Xnot_hashed"
+             })
 
     # Test extension :after_verify_password_failure
     assert_raise RuntimeError, fn ->
-      DatabaseAuthenticatableImpl.authenticate_user(%{email: "exception@test.com", password: "Xnot_hashed"})
+      DatabaseAuthenticatableImpl.authenticate_user(%{
+        email: "exception@test.com",
+        password: "Xnot_hashed"
+      })
     end
   end
 end

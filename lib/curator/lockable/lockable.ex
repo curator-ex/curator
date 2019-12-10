@@ -48,7 +48,6 @@ defmodule Curator.Lockable do
       # Extension: Curator.Ueberauth.find_or_create_from_auth\1
       def after_ueberauth_find_user(user),
         do: Curator.Lockable.after_ueberauth_find_user(__MODULE__, user)
-
     end
   end
 
@@ -74,7 +73,6 @@ defmodule Curator.Lockable do
     with {:ok, user} <- verify_token(mod, token_id),
          {:ok, user} <- unlock_user(mod, user),
          {:ok, _claims} <- opaque_guardian(mod).revoke(token_id) do
-
       # NOTE: We verified the token email matches the user email, so this will be used by the confirmation module (if enabled)
       curator(mod).extension(:after_unlocked, [user])
 
@@ -91,13 +89,17 @@ defmodule Curator.Lockable do
     unlock_user(mod, user)
   end
 
-  def after_verify_password_failure(mod, %{failed_attempts: failed_attempts, locked_at: locked_at} = user) do
+  def after_verify_password_failure(
+        mod,
+        %{failed_attempts: failed_attempts, locked_at: locked_at} = user
+      ) do
     failed_attempts = failed_attempts + 1
 
     if failed_attempts >= maximum_attempts(mod) && !locked_at do
-      user = user
-      |> change(failed_attempts: failed_attempts, locked_at: Timex.now())
-      |> repo(mod).update!()
+      user =
+        user
+        |> change(failed_attempts: failed_attempts, locked_at: Timex.now())
+        |> repo(mod).update!()
 
       if Enum.member?(unlock_strategy(mod), :email) do
         send_lockable_email(mod, user)
@@ -123,14 +125,15 @@ defmodule Curator.Lockable do
     quote do
       # get "/lockable/new", Auth.LockableController, :new
       # post "/lockable/", Auth.LockableController, :create
-      get "/lockable/:token_id", Auth.LockableController, :edit
+      get("/lockable/:token_id", Auth.LockableController, :edit)
     end
   end
 
   # Private
 
   defp verify_token(mod, token_id) do
-    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
+    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <-
+           opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
          true <- confirmation_email && user_email && confirmation_email == user_email do
       {:ok, user}
     else
@@ -140,7 +143,9 @@ defmodule Curator.Lockable do
   end
 
   defp send_lockable_email(mod, user) do
-    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
+    {:ok, token_id, _claims} =
+      opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
+
     curator(mod).deliver_email(:lockable, [user, token_id])
   end
 
@@ -169,11 +174,11 @@ defmodule Curator.Lockable do
     mod.config(:maximum_attempts, 5)
   end
 
-  defp unlock_strategy(mod)do
+  defp unlock_strategy(mod) do
     mod.config(:unlock_strategy, [])
   end
 
   defp unlock_in(mod) do
-    mod.config(:unlock_in, [hours: 6])
+    mod.config(:unlock_in, hours: 6)
   end
 end

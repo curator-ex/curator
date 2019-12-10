@@ -23,8 +23,9 @@ defmodule Curator.Plug.LoadResourceTest do
   defmodule Impl do
     @moduledoc false
 
-    use Guardian, otp_app: :curator,
-                  token_module: Curator.Support.TokenModule
+    use Guardian,
+      otp_app: :curator,
+      token_module: Curator.Support.TokenModule
 
     def subject_for_token(%{id: id}, _claims), do: {:ok, id}
     def subject_for_token(%{"id" => id}, _claims), do: {:ok, id}
@@ -43,7 +44,13 @@ defmodule Curator.Plug.LoadResourceTest do
 
   describe "with no token" do
     test "it does nothing (allow_unauthenticated == true)", ctx do
-      conn = LoadResource.call(ctx.conn, module: ctx.impl, error_handler: ctx.handler, allow_unauthenticated: true)
+      conn =
+        LoadResource.call(ctx.conn,
+          module: ctx.impl,
+          error_handler: ctx.handler,
+          allow_unauthenticated: true
+        )
+
       refute conn.status == 401
       refute conn.halted
     end

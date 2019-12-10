@@ -23,8 +23,8 @@ defmodule Mix.Tasks.Curator.Api.Install do
   def run(args) do
     args = ["Auth", "User", "users", "email:unique"] ++ args
 
-    if Mix.Project.umbrella? do
-      Mix.raise "mix curator.api.install can only be run inside an application directory"
+    if Mix.Project.umbrella?() do
+      Mix.raise("mix curator.api.install can only be run inside an application directory")
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -47,7 +47,8 @@ defmodule Mix.Tasks.Curator.Api.Install do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,        "api_error_handler.ex", Path.join([web_prefix, "controllers", web_path, "auth", "api_error_handler.ex"])},
+      {:eex, "api_error_handler.ex",
+       Path.join([web_prefix, "controllers", web_path, "auth", "api_error_handler.ex"])}
     ]
   end
 
@@ -61,7 +62,7 @@ defmodule Mix.Tasks.Curator.Api.Install do
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    copy_from paths, "priv/templates/curator.api.install", binding, files
+    copy_from(paths, "priv/templates/curator.api.install", binding, files)
     inject_curator_module(context, paths, binding)
 
     context
@@ -83,7 +84,7 @@ defmodule Mix.Tasks.Curator.Api.Install do
     if String.contains?(file, content_to_inject) do
       :ok
     else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+      Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
       file
       |> String.trim_trailing()
@@ -104,27 +105,34 @@ defmodule Mix.Tasks.Curator.Api.Install do
         end) || raise "could not find #{source_file_path} in any of the sources"
 
       case format do
-        :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :text ->
+          Mix.Generator.create_file(target, File.read!(source))
+
+        :eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+
         :new_eex ->
           if File.exists?(target) do
             :ok
           else
             Mix.Generator.create_file(target, EEx.eval_file(source, binding))
           end
-        :force_eex -> Mix.Generator.create_file(target, EEx.eval_file(source, binding), force: true)
+
+        :force_eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding), force: true)
       end
     end
   end
 
   defp to_app_source(path, source_dir) when is_binary(path),
     do: Path.join(path, source_dir)
+
   defp to_app_source(app, source_dir) when is_atom(app),
     do: Application.app_dir(app, source_dir)
 
   @doc false
   def print_shell_instructions(%Context{context_app: context_app} = context) do
-    Mix.shell.info """
+    Mix.shell().info("""
 
     Add curator to your router #{Mix.Phoenix.web_path(context_app)}/router.ex:
 
@@ -132,16 +140,16 @@ defmodule Mix.Tasks.Curator.Api.Install do
 
         pipeline :api do
           ...
-          plug #{inspect context.web_module}.Auth.Curator.ApiPipeline
+          plug #{inspect(context.web_module)}.Auth.Curator.ApiPipeline
         end
 
-        scope "/api", #{inspect context.web_module} do
+        scope "/api", #{inspect(context.web_module)} do
           pipe_through :api
 
           ...
         end
 
-    """
+    """)
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end

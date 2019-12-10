@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
-@shortdoc "Install Curator (for Opaque Guardian)"
+  @shortdoc "Install Curator (for Opaque Guardian)"
 
   @moduledoc """
   Generates Opaque Guardian files.
@@ -16,10 +16,23 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
 
   @doc false
   def run(args) do
-    args = ["Auth", "Token", "auth_tokens", "token:string:unique", "description:string", "claims:map", "user_id:references:users", "typ:string", "exp:integer"] ++ args
+    args =
+      [
+        "Auth",
+        "Token",
+        "auth_tokens",
+        "token:string:unique",
+        "description:string",
+        "claims:map",
+        "user_id:references:users",
+        "typ:string",
+        "exp:integer"
+      ] ++ args
 
-    if Mix.Project.umbrella? do
-      Mix.raise "mix curator.opaque_guardian.install can only be run inside an application directory"
+    if Mix.Project.umbrella?() do
+      Mix.raise(
+        "mix curator.opaque_guardian.install can only be run inside an application directory"
+      )
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -30,6 +43,7 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
     binding = [context: context, schema: schema]
 
     paths = Mix.Phoenix.generator_paths()
+
     context
     |> Gen.Context.copy_new_files(paths, binding)
 
@@ -51,8 +65,9 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
     # web_path = to_string(schema.web_path)
 
     [
-      {:force_eex,  "schema.ex",            schema.file},
-      {:eex,     "migration.exs",           Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_create_auth_tokens.exs"])},
+      {:force_eex, "schema.ex", schema.file},
+      {:eex, "migration.exs",
+       Path.join([db_prefix, "priv/repo/migrations/#{timestamp()}_create_auth_tokens.exs"])}
     ]
   end
 
@@ -66,7 +81,7 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    copy_from paths, "priv/templates/curator.opaque_guardian.install", binding, files
+    copy_from(paths, "priv/templates/curator.opaque_guardian.install", binding, files)
     inject_guardian_module(context, paths, binding)
     inject_schema_access(context, paths, binding)
 
@@ -75,7 +90,10 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
 
   defp inject_guardian_module(context, paths, binding) do
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.opaque_guardian.install/opaque_guardian.ex", binding)
+    |> Mix.Phoenix.eval_from(
+      "priv/templates/curator.opaque_guardian.install/opaque_guardian.ex",
+      binding
+    )
     |> inject_eex_after_final_end(guardian_file_path(context), binding)
   end
 
@@ -85,7 +103,10 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
     end
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/curator.opaque_guardian.install/schema_access.ex", binding)
+    |> Mix.Phoenix.eval_from(
+      "priv/templates/curator.opaque_guardian.install/schema_access.ex",
+      binding
+    )
     |> inject_eex_before_final_end(file, binding)
   end
 
@@ -99,7 +120,7 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
     if String.contains?(file, content_to_inject) do
       :ok
     else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+      Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
       file
       |> String.trim_trailing()
@@ -115,7 +136,7 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
     if String.contains?(file, content_to_inject) do
       :ok
     else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+      Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
       file
       |> String.trim_trailing()
@@ -138,33 +159,40 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
         end) || raise "could not find #{source_file_path} in any of the sources"
 
       case format do
-        :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :text ->
+          Mix.Generator.create_file(target, File.read!(source))
+
+        :eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+
         :new_eex ->
           if File.exists?(target) do
             :ok
           else
             Mix.Generator.create_file(target, EEx.eval_file(source, binding))
           end
-        :force_eex -> Mix.Generator.create_file(target, EEx.eval_file(source, binding), force: true)
+
+        :force_eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding), force: true)
       end
     end
   end
 
   defp to_app_source(path, source_dir) when is_binary(path),
     do: Path.join(path, source_dir)
+
   defp to_app_source(app, source_dir) when is_atom(app),
     do: Application.app_dir(app, source_dir)
 
   @doc false
   def print_shell_instructions(%Context{} = context) do
-    Mix.shell.info """
+    Mix.shell().info("""
 
     Add the new association to the user schema:
 
-        has_many :tokens, #{inspect context.module}.Token
+        has_many :tokens, #{inspect(context.module)}.Token
 
-    """
+    """)
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
@@ -173,6 +201,7 @@ defmodule Mix.Tasks.Curator.OpaqueGuardian.Install do
     {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
     "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
   end
-  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+
+  defp pad(i) when i < 10, do: <<?0, ?0 + i>>
   defp pad(i), do: to_string(i)
 end

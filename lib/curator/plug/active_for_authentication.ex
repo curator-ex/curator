@@ -23,6 +23,7 @@ defmodule Curator.Plug.ActiveForAuthentication do
     case curator.active_for_authentication?(resource) do
       :ok ->
         {:ok, resource, conn, opts}
+
       {:error, error} ->
         {:error, error, conn, opts}
     end

@@ -58,7 +58,6 @@ defmodule Curator.Confirmable do
 
       def create_ueberauth_changeset(changeset, attrs),
         do: Curator.Confirmable.create_ueberauth_changeset(__MODULE__, changeset, attrs)
-
     end
   end
 
@@ -71,7 +70,8 @@ defmodule Curator.Confirmable do
   end
 
   def process_token(mod, token_id) do
-    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <- opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
+    with {:ok, %{email: user_email} = user, %{"email" => confirmation_email} = _claims} <-
+           opaque_guardian(mod).resource_from_token(token_id, %{"typ" => @token_typ}),
          true <- confirmation_email && user_email && confirmation_email == user_email,
          user <- confirm_user(mod, user),
          {:ok, _claims} <- opaque_guardian(mod).revoke(token_id) do
@@ -91,7 +91,7 @@ defmodule Curator.Confirmable do
     quote do
       # get "/confirmable/new", Auth.ConfirmableController, :new
       # post "/confirmable/:token_id", Auth.ConfirmableController, :create
-      get "/confirmable/:token_id", Auth.ConfirmableController, :edit
+      get("/confirmable/:token_id", Auth.ConfirmableController, :edit)
     end
   end
 
@@ -146,7 +146,9 @@ defmodule Curator.Confirmable do
   # Private
 
   defp send_confirmable_email(mod, user) do
-    {:ok, token_id, _claims} = opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
+    {:ok, token_id, _claims} =
+      opaque_guardian(mod).encode_and_sign(user, %{email: user.email}, token_type: @token_typ)
+
     curator(mod).deliver_email(:confirmable, [user, token_id])
   end
 
@@ -161,9 +163,10 @@ defmodule Curator.Confirmable do
   # User Schema / Context
 
   defp confirm_user(mod, user) do
-    user = user
-    |> change(email_confirmed_at: Timex.now())
-    |> repo(mod).update!()
+    user =
+      user
+      |> change(email_confirmed_at: Timex.now())
+      |> repo(mod).update!()
 
     curator(mod).extension_pipe(:after_confirmation, user)
   end
