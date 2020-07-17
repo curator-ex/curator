@@ -198,4 +198,13 @@ defmodule Curator.LockableTest do
       assert user.failed_attempts == 0
     end
   end
+
+  describe "unlock_user" do
+    test "it clears locked_at and resets failed_attempts to 0" do
+      user = %User{locked_at: Timex.now(), failed_attempts: 5}
+      user = LockableImpl.unlock_user(user)
+      refute user.locked_at
+      assert user.failed_attempts == 0
+    end
+  end
 end

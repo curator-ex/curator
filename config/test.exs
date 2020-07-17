@@ -9,3 +9,5 @@ config :guardian, Guardian,
   secret_key: "woiuerojksldkjoierwoiejrlskjdf"
 
 config :curator, Curator, []
+
+config :phoenix, :json_library, Jason

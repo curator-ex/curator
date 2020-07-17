@@ -24,6 +24,14 @@ defmodule Curator.ConfirmableTest do
     end
   end
 
+  defmodule Repo do
+    import Ecto.Changeset
+
+    def update!(user) do
+      apply_changes(user)
+    end
+  end
+
   defmodule GuardianImpl do
     use Guardian,
       otp_app: :curator
@@ -57,6 +65,7 @@ defmodule Curator.ConfirmableTest do
     use Curator,
       otp_app: :curator,
       guardian: GuardianImpl,
+      repo: Repo,
       modules: [
         ConfirmableImpl
       ]
@@ -124,6 +133,24 @@ defmodule Curator.ConfirmableTest do
 
       user = Ecto.Changeset.apply_changes(changeset)
       assert user.email_confirmed_at
+    end
+  end
+
+  describe "confirm_user_unless_confirmed" do
+    test "confirms and returns the user when email_confirmed_at is NOT set" do
+      user = %User{email_confirmed_at: nil}
+
+      updated_user = ConfirmableImpl.confirm_user_unless_confirmed(user)
+
+      assert updated_user.email_confirmed_at
+    end
+
+    test "returns the user when email_confirmed_at is set" do
+      user = %User{email_confirmed_at: Timex.now() |> Timex.shift(hours: -2)}
+
+      updated_user = ConfirmableImpl.confirm_user_unless_confirmed(user)
+
+      assert updated_user.email_confirmed_at == user.email_confirmed_at
     end
   end
 end

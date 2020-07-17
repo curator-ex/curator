@@ -1,4 +1,12 @@
-# v 0.3.0 (TBD)
+# v 0.3.2 (7/17/2019)
+* Expose `Confirmable.confirm_user_unless_confirmed\1`
+* Expose `Lockable.unlock_user\1`
+* Switch from Poison to Jason
+
+# v 0.3.1 (12/10/2019)
+* run `mix format`
+
+# v 0.3.0 (12/10/2019)
 * Major Refactoring
   * Registerable
   * Database Authenticatable
