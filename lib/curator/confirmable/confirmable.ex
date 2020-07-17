@@ -58,6 +58,9 @@ defmodule Curator.Confirmable do
 
       def create_ueberauth_changeset(changeset, attrs),
         do: Curator.Confirmable.create_ueberauth_changeset(__MODULE__, changeset, attrs)
+
+      def confirm_user_unless_confirmed(user),
+        do: Curator.Confirmable.confirm_user_unless_confirmed(__MODULE__, user)
     end
   end
 
@@ -152,7 +155,7 @@ defmodule Curator.Confirmable do
     curator(mod).deliver_email(:confirmable, [user, token_id])
   end
 
-  defp confirm_user_unless_confirmed(mod, user) do
+  def confirm_user_unless_confirmed(mod, user) do
     unless user.email_confirmed_at do
       confirm_user(mod, user)
     else

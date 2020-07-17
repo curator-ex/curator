@@ -48,6 +48,9 @@ defmodule Curator.Lockable do
       # Extension: Curator.Ueberauth.find_or_create_from_auth\1
       def after_ueberauth_find_user(user),
         do: Curator.Lockable.after_ueberauth_find_user(__MODULE__, user)
+
+      def unlock_user(user),
+        do: Curator.Lockable.unlock_user(__MODULE__, user)
     end
   end
 
@@ -163,7 +166,7 @@ defmodule Curator.Lockable do
 
   # User Schema / Context
 
-  defp unlock_user(mod, user) do
+  def unlock_user(mod, user) do
     user
     |> change(failed_attempts: 0, locked_at: nil)
     |> repo(mod).update!()

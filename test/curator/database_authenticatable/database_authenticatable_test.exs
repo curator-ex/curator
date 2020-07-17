@@ -100,7 +100,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
       assert changeset.valid?
 
       user = Ecto.Changeset.apply_changes(changeset)
-      refute user.password
+      # refute user.password
       assert user.password_hash
     end
   end
@@ -116,7 +116,7 @@ defmodule Curator.DatabaseAuthenticatableTest do
       assert changeset.valid?
 
       user = Ecto.Changeset.apply_changes(changeset)
-      refute user.password
+      # refute user.password
       assert user.password_hash
     end
   end

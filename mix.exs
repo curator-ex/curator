@@ -41,6 +41,7 @@ defmodule Curator.Mixfile do
       {:ecto_sql, "~> 3.0"},
       {:ex_doc, "~> 0.19", only: :dev},
       {:guardian, "~> 1.0"},
+      {:jason, "~> 1.2"},
       {:phoenix, "~> 1.4"},
       {:plug, "~> 1.2"},
       {:secure_compare, "~> 0.1.0"},

@@ -14,7 +14,7 @@ defmodule Curator.Support.TokenModule do
     claims =
       token
       |> Base.decode64!()
-      |> Poison.decode!()
+      |> Jason.decode!()
       |> Map.get("claims")
 
     %{claims: claims}
@@ -42,7 +42,7 @@ defmodule Curator.Support.TokenModule do
     else
       token =
         %{"claims" => claims}
-        |> Poison.encode!()
+        |> Jason.encode!()
         |> Base.url_encode64()
 
       {:ok, token}
@@ -57,7 +57,7 @@ defmodule Curator.Support.TokenModule do
         claims =
           token
           |> Base.decode64!()
-          |> Poison.decode!()
+          |> Jason.decode!()
           |> Map.get("claims")
 
         {:ok, claims}
@@ -99,7 +99,7 @@ defmodule Curator.Support.TokenModule do
     else
       {:ok, old_claims} = decode_token(mod, old_token, opts)
       new_c = Map.put(old_claims, "typ", to_type)
-      new_t = Poison.encode!(%{"claims" => new_c})
+      new_t = Jason.encode!(%{"claims" => new_c})
       {:ok, {old_token, old_claims}, {new_t, new_c}}
     end
   end
