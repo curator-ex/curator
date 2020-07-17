@@ -12,3 +12,13 @@
   defp approvable_emails do
     raise "TODO"
   end
+
+  def approved(user) do
+    url = <%= inspect context.web_module %>.Endpoint.url()
+
+    %Email{}
+    |> from(email_from())
+    |> to(email_to(user))
+    |> subject("#{site_name()}: Account Approved")
+    |> render_body("approved.html", %{url: url})
+  end

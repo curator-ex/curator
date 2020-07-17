@@ -81,6 +81,10 @@ defmodule Curator.Approvable do
     curator(mod).deliver_email(:approvable, [user])
   end
 
+  defp send_approved_email(mod, user) do
+    curator(mod).deliver_email(:approved, [user])
+  end
+
   # User Schema / Context
 
   def approve_user(mod, user, approver_id \\ 0) do
@@ -89,6 +93,8 @@ defmodule Curator.Approvable do
     user
     |> change(approval_at: now, approval_status: "approved", approver_id: approver_id)
     |> repo(mod).update!()
+
+    send_approved_email(mod, user)
   end
 
   # Config
