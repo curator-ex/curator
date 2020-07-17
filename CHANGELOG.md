@@ -1,3 +1,6 @@
+# v 0.3.3 (7/17/2019)
+* truncate DB timestamps
+
 # v 0.3.2 (7/17/2019)
 * Expose `Confirmable.confirm_user_unless_confirmed\1`
 * Expose `Lockable.unlock_user\1`
