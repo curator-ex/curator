@@ -95,6 +95,8 @@ defmodule Curator.Approvable do
     |> repo(mod).update!()
 
     send_approved_email(mod, user)
+
+    user
   end
 
   # Config
