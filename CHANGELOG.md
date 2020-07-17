@@ -1,3 +1,6 @@
+# v 0.3.4 (7/17/2019)
+* add approved email to Approvable
+
 # v 0.3.3 (7/17/2019)
 * truncate DB timestamps
 
