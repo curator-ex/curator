@@ -84,8 +84,10 @@ defmodule Curator.Approvable do
   # User Schema / Context
 
   def approve_user(mod, user, approver_id \\ 0) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
     user
-    |> change(approval_at: Timex.now(), approval_status: "approved", approver_id: approver_id)
+    |> change(approval_at: now, approval_status: "approved", approver_id: approver_id)
     |> repo(mod).update!()
   end
 

@@ -143,7 +143,9 @@ defmodule Curator.Confirmable do
   # end
 
   def create_ueberauth_changeset(_mod, changeset, _attrs) do
-    change(changeset, email_confirmed_at: Timex.now())
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    change(changeset, email_confirmed_at: now)
   end
 
   # Private
@@ -166,9 +168,11 @@ defmodule Curator.Confirmable do
   # User Schema / Context
 
   defp confirm_user(mod, user) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
     user =
       user
-      |> change(email_confirmed_at: Timex.now())
+      |> change(email_confirmed_at: now)
       |> repo(mod).update!()
 
     curator(mod).extension_pipe(:after_confirmation, user)

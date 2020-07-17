@@ -73,7 +73,9 @@ defmodule Curator.ConfirmableTest do
 
   describe "verify_confirmed" do
     test "returns true when email_confirmed_at is set" do
-      user = %User{email_confirmed_at: Timex.now()}
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      user = %User{email_confirmed_at: now}
       assert :ok == ConfirmableImpl.verify_confirmed(user)
     end
 
@@ -96,13 +98,15 @@ defmodule Curator.ConfirmableTest do
 
   describe "update_registerable_changeset" do
     test "when email is changed, email_confirmed_at is cleared" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       attrs = %{
         email: "me@my.home"
       }
 
       user = %User{
         email: "you@your.home",
-        email_confirmed_at: Timex.now()
+        email_confirmed_at: now
       }
 
       changeset =
@@ -116,13 +120,15 @@ defmodule Curator.ConfirmableTest do
     end
 
     test "when email is NOT changed, email_confirmed_at is NOT cleared" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       attrs = %{
         email: "me@my.home"
       }
 
       user = %User{
         email: "me@my.home",
-        email_confirmed_at: Timex.now()
+        email_confirmed_at: now
       }
 
       changeset =
@@ -146,7 +152,9 @@ defmodule Curator.ConfirmableTest do
     end
 
     test "returns the user when email_confirmed_at is set" do
-      user = %User{email_confirmed_at: Timex.now() |> Timex.shift(hours: -2)}
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      user = %User{email_confirmed_at: now |> Timex.shift(hours: -2)}
 
       updated_user = ConfirmableImpl.confirm_user_unless_confirmed(user)
 

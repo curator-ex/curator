@@ -99,9 +99,11 @@ defmodule Curator.Lockable do
     failed_attempts = failed_attempts + 1
 
     if failed_attempts >= maximum_attempts(mod) && !locked_at do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       user =
         user
-        |> change(failed_attempts: failed_attempts, locked_at: Timex.now())
+        |> change(failed_attempts: failed_attempts, locked_at: now)
         |> repo(mod).update!()
 
       if Enum.member?(unlock_strategy(mod), :email) do
